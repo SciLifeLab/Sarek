@@ -1,5 +1,5 @@
 #ASCAT
-Ascat is a software for performing allele-specific copy number analysis of tumor samples and for estimating tumor ploidy and purity (normal contamination). Ascat is written in R and available here:https://github.com/Crick-CancerGenomics/ascat    
+Ascat is a software for performing allele-specific copy number analysis of tumor samples and for estimating tumor ploidy and purity (normal contamination). Ascat is written in R and available here: https://github.com/Crick-CancerGenomics/ascat    
 To run Ascat on NGS data we need .bam files for the tumor and normal samples, as well as a loci file with SNP positions.  
 If Ascat is run on SNP array data, the loci file contains the SNPs on the chip. When runnig Ascat on NGS data we can use the same loci file, for exampe the one corresponding to the AffymetrixGenome-Wide Human SNP Array 6.0, but we can also choose a loci file of our choice with i.e. SNPs detected in the 1000 Genomes project.  
   
@@ -43,14 +43,13 @@ To run AlleleCount on the sample ST438N:
 $ salloc -A b2011185 -p core -n 5:00:00
  salloc: Pending job allocation 7409264
  ...
- $ cd /proj/b2011185/nobackup/wabi/run_all_b37/ST438N_ST438T
  $ module load bioinfo-tools
  $ module load samtools
  $ LOCIFILE=/sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.01.loci
  $ REFERENCE=/sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/human_g1k_v37.fasta
- $ alleleCounter -l $LOCIFILE -r $REFERENCE -b ST438N.md.real.recal.bam -o ST438N.allecount
+ $ alleleCounter -l $LOCIFILE -r $REFERENCE -b sample.bam -o sample.allecount
 ```
-The above code (and some additional logistics) has been implemented in the script "run_allelecount.sh" and included in Malins git repository for somatic variant calling. (https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git)
+The above code (and some additional logistics) has been implemented in the script "run_allelecount.sh" and included in Malins git repository for somatic variant calling at https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git. 
 To start an sbatch job that runs allele counter for one particular .bam file (in this example the file ST438N.md.real.recal.bam):
 ```
 sbatch -A b2011185 -p core -n 4 -t 240:00:00 -J allelecounter_ST438N -o allelecounter_normal.out -e allelecounter_normal.err /proj/b2011185/nobackup/wabi/somatic_wgs_pipeline/run_allelecount.sh ST438N.md.real.recal.bam /proj/b2011185/nobackup/wabi/run_all_b37/configfile.sh
