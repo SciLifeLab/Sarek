@@ -2,8 +2,7 @@
 Ascat is a software for performing allele-specific copy number analysis of tumor samples and for estimating tumor ploidy and purity (normal contamination). Ascat is written in R and available here: https://github.com/Crick-CancerGenomics/ascat    
 To run Ascat on NGS data we need .bam files for the tumor and normal samples, as well as a loci file with SNP positions.  
 If Ascat is run on SNP array data, the loci file contains the SNPs on the chip. When runnig Ascat on NGS data we can use the same loci file, for exampe the one corresponding to the AffymetrixGenome-Wide Human SNP Array 6.0, but we can also choose a loci file of our choice with i.e. SNPs detected in the 1000 Genomes project.  
-
-##BAF and LogR values  
+###BAF and LogR values  
 Running Ascat on NGS data requires that the .bam files are converted into BAF and LogR values. This can be done using the software AlleleCount (https://github.com/cancerit/alleleCount) followed by a simple R script. AlleleCount extracts the number of reads in a bam file supporting each allele at specified SNP positions. Based on this, the BAF and logR can be calculated as   
 BAFi(tumor)=countsBi(tumor)/(countsAi(tumor)+countsBi(tumor))
 BAFi(normal)=countsBi(normal)/(countsAi(normal)+countsBi(normal))
@@ -14,8 +13,7 @@ CountsA and CountsB are vectors containing number of reads supporting the A and 
 A = the major allele 
 B = the minor allele 
 Minor and major alleles are defined in the loci file (it actually doesn't matter which one is defied as A and B in this application). 
-  
-##Loci file
+###Loci file
 The loci file was created based on the 1000Genomes latest release (phase 3, releasedate 20130502), available here:  
 ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp//release/20130502/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz  
 The following filter was applied: Only bi-allelc SNPs with minor allele frequencies > 0.3
@@ -23,7 +21,7 @@ The filtered file is stored on Milou in:
 ```
 /sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.3.loci
 ```
-##Run AlleleCount
+###Run AlleleCount
 To run Ascat we first need to convert .bam files to allele counts. This is done using the software AlleleCount. 
 AlleleCount was installed in Malins home directory on Milou:
 ```
@@ -55,7 +53,7 @@ To start an sbatch job that runs allele counter for one particular .bam file:
 ```
 sbatch -A projectID -p core -n 4 -t 240:00:00 -J jobname -o allelecounter.out -e allelecounter.err /path/to/somatic_wgs_pipeline/run_allelecount.sh sample.bam /path/to/somatic_wgs_pipeline/configfile.sh
 ```
-##Convert allele counts to LogR and BAF values
+###Convert allele counts to LogR and BAF values
 First, run AlleleCount as described above on the tumor and normal bam files.
 The allele counts can then be converted into LogR and BAF values acceding to the formulas above using the script "convertAlleleCounts.r". The script is available in the same git repository (https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git). 
 To run the script type for example (for a male sample, Gender = "XY"):
@@ -63,12 +61,11 @@ To run the script type for example (for a male sample, Gender = "XY"):
 sbatch -A b2011185 -p core -n 2 -t 240:00:00 -J convertAllelecounts -e convertAllelecounts.err -o convertAllelecounts.out /path/to/somatic_wgs_pipeline/convertAlleleCounts.r tumor_sample tumor.allelecount normal_sample normal.allelecount XY
 ```
 This creates the BAF and LogR data for the tumor and normal samples, to be used as input to ASCAT.
-##Run ASCAT
+###Run ASCAT
 To run ASCAT in the simplest possible way without compensating for the local CG content across the genome, the script "run_ascat.r" can be used. (Included in the same git repository).
 ```
 run_ascat.r tumor_baf tumor_logr normal_baf normal_logr
 ```
-
 #First results
 Here are the first ASCAT results from the analysis of whole genome data of an arbitrary tumor - normal pair. 
 The tumor data was sequenced to ~60 x coverage and the normal sample was sequenced to ~30 x coverage. 
@@ -81,7 +78,7 @@ As you can see in the plot, there is a wide range of BAF values from ~0.2 to ~0.
 
 Below is the output from ASCAT. ASCAT predicts that the analyzed sample has a tumor purity of 85%, and an average ploidy of 2.54. The Goodness of fit is 98.2%. 
 We will discuss the results further with the PIs. 
-![ASCAT profile](ASCATProfile.png)
+![ASCAT profile](ASCATprofile.png)
 
 
 
