@@ -41,7 +41,7 @@ $ alleleCounter
 Note - other users must either install AlleleCount themselves or point to my installation.
 To run AlleleCount on the sample ST438N:
 ```
-$ salloc -A b2011185 -p core -n 5:00:00
+$ salloc -A projectID -p core -n 5:00:00
  salloc: Pending job allocation 7409264
  ...
  $ module load bioinfo-tools
@@ -51,15 +51,16 @@ $ salloc -A b2011185 -p core -n 5:00:00
  $ alleleCounter -l $LOCIFILE -r $REFERENCE -b sample.bam -o sample.allecount
 ```
 The above code (and some additional logistics) has been implemented in the script "run_allelecount.sh" and included in Malins git repository for somatic variant calling at https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git. 
-To start an sbatch job that runs allele counter for one particular .bam file (in this example the file ST438N.md.real.recal.bam):
+To start an sbatch job that runs allele counter for one particular .bam file:
 ```
-sbatch -A b2011185 -p core -n 4 -t 240:00:00 -J allelecounter_ST438N -o allelecounter_normal.out -e allelecounter_normal.err /proj/b2011185/nobackup/wabi/somatic_wgs_pipeline/run_allelecount.sh ST438N.md.real.recal.bam /proj/b2011185/nobackup/wabi/run_all_b37/configfile.sh
+sbatch -A projectID -p core -n 4 -t 240:00:00 -J jobname -o allelecounter.out -e allelecounter.err /path/to/somatic_wgs_pipeline/run_allelecount.sh sample.bam /path/to/somatic_wgs_pipeline/configfile.sh
 ```
 ##Convert allele counts to LogR and BAF values
 First, run AlleleCount as described above on the tumor and normal bam files.
-The allele counts can then be converted into LogR and BAF values acceding to the formulas above using the script "convertAlleleCounts.r". The script is available in the same git repository (https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git). To run the script type for example (for the ST438 sample):
+The allele counts can then be converted into LogR and BAF values acceding to the formulas above using the script "convertAlleleCounts.r". The script is available in the same git repository (https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git). 
+To run the script type for example (for a male sample, Gender = "XY"):
 ```
-sbatch -A b2011185 -p core -n 2 -t 240:00:00 -J convertAllelecounts_ST438 -e convertAllelecounts.err -o convertAllelecounts.out /proj/b2011185/nobackup/wabi/somatic_wgs_pipeline/convertAlleleCounts.r ST438T ST438T.allelecount ST438N ST438N.allelecount XY
+sbatch -A b2011185 -p core -n 2 -t 240:00:00 -J convertAllelecounts -e convertAllelecounts.err -o convertAllelecounts.out /path/to/somatic_wgs_pipeline/convertAlleleCounts.r tumor_sample tumor.allelecount normal_sample normal.allelecount XY
 ```
 This creates the BAF and LogR data for the tumor and normal samples, to be used as input to ASCAT.
 ##Run ASCAT
