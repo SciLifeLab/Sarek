@@ -1,5 +1,5 @@
 #ASCAT
-Ascat is a software for performing allele-specific copy number analysis of tumor samples and for estimating tumor ploidy and purity (normal contamination). Ascat is written in R and available here:https://github.com/Crick-CancerGenomics/ascat  
+Ascat is a software for performing allele-specific copy number analysis of tumor samples and for estimating tumor ploidy and purity (normal contamination). Ascat is written in R and available here:https://github.com/Crick-CancerGenomics/ascat    
 To run Ascat on NGS data we need .bam files for the tumor and normal samples, as well as a loci file with SNP positions.  
 If Ascat is run on SNP array data, the loci file contains the SNPs on the chip. When runnig Ascat on NGS data we can use the same loci file, for exampe the one corresponding to the AffymetrixGenome-Wide Human SNP Array 6.0, but we can also choose a loci file of our choice with i.e. SNPs detected in the 1000 Genomes project.  
   
@@ -15,7 +15,8 @@ B = the minor allele
 Minor and major alleles are defined in the loci file (it actually doesn't matter which one is defied as A and B in this application). 
   
 ##Loci file
-The loci file was created based on the 1000Genomes latest release (phase 3, releasedate 20130502), available here:ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp//release/20130502/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz
+The loci file was created based on the 1000Genomes latest release (phase 3, releasedate 20130502), available here:  
+ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp//release/20130502/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz  
 The following filter was applied: Only bi-allelc SNPs with minor allele frequencies > 0.3
 The filtered file is stored on Milou in:
 ```
