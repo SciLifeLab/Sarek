@@ -17,26 +17,28 @@ Minor and major alleles are defined in the loci file (it actually doesn't matter
 ##Loci file
 The loci file was created based on the 1000Genomes latest release (phase 3, releasedate 20130502), available here:ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp//release/20130502/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz
 The following filter was applied: Only bi-allelc SNPs with minor allele frequencies > 0.3
-The filtered file is stored on Milou in: /sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.3.loci
-  
+The filtered file is stored on Milou in:
+```
+/sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.3.loci
+```
 ##Run AlleleCount
 To run Ascat we first need to convert .bam files to allele counts. This is done using the software AlleleCount. 
 AlleleCount was installed in Malins home directory on Milou:
-'''
+```
 $ cd /home/malin
  $ git cloneÊhttps://github.com/cancerit/alleleCount
  $ cd alleleCount
  $ module load bioinfo-tools
  $ module load samtools
  $ ./setup.sh /home/malin/
- '''
+ ```
 This added the executable file alleleCounter in /home/malin/bin. This folder is included in my $PATH so I can run it anywhere on Milou by typing:
-'''
+```
 $ alleleCounter
-'''
+```
 Note - other users must either install AlleleCount themselves or point to my installation.
 To run AlleleCount on the sample ST438N:
-'''
+```
 $ salloc -A b2011185 -p core -n 5:00:00
  salloc: Pending job allocation 7409264
  ...
@@ -46,21 +48,21 @@ $ salloc -A b2011185 -p core -n 5:00:00
  $ LOCIFILE=/sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.01.loci
  $ REFERENCE=/sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/human_g1k_v37.fasta
  $ alleleCounter -l $LOCIFILE -r $REFERENCE -b ST438N.md.real.recal.bam -o ST438N.allecount
- '''
+```
 The above code (and some additional logistics) has been implemented in the script "run_allelecount.sh" and included in Malins git repository for somatic variant calling. (https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git)
 To start an sbatch job that runs allele counter for one particular .bam file (in this example the file ST438N.md.real.recal.bam):
-'''
+```
 sbatch -A b2011185 -p core -n 4 -t 240:00:00 -J allelecounter_ST438N -o allelecounter_normal.out -e allelecounter_normal.err /proj/b2011185/nobackup/wabi/somatic_wgs_pipeline/run_allelecount.sh ST438N.md.real.recal.bam /proj/b2011185/nobackup/wabi/run_all_b37/configfile.sh
-'''
+```
 ##Convert allele counts to LogR and BAF values
 First, run AlleleCount as described above on the tumor and normal bam files.
 The allele counts can then be converted into LogR and BAF values acceding to the formulas above using the script "convertAlleleCounts.r". The script is available in the same git repository (https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git). To run the script type for example (for the ST438 sample):
-'''
+```
 sbatch -A b2011185 -p core -n 2 -t 240:00:00 -J convertAllelecounts_ST438 -e convertAllelecounts.err -o convertAllelecounts.out /proj/b2011185/nobackup/wabi/somatic_wgs_pipeline/convertAlleleCounts.r ST438T ST438T.allelecount ST438N ST438N.allelecount XY
-'''
+```
 This creates the BAF and LogR data for the tumor and normal samples, to be used as input to ASCAT.
 ##Run ASCAT
 To run ASCAT in the simplest possible way without compensating for the local CG content across the genome, the script "run_ascat.r" can be used. (Included in the same git repository).
-'''
+```
 run_ascat.r tumor_baf tumor_logr normal_baf normal_logr
-'''
+```
