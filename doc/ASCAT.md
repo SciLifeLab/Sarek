@@ -75,5 +75,5 @@ The tumor data was sequenced to ~60 x coverage and the normal sample was sequenc
 
 ##Plot of raw data
 Here is the BAF and LogR plot in the tumor sample: 
-![Tumor raw data](/ascat.tumor.png)
+![Tumor raw data](ascat.tumor.png)
 
