@@ -68,3 +68,12 @@ To run ASCAT in the simplest possible way without compensating for the local CG 
 ```
 run_ascat.r tumor_baf tumor_logr normal_baf normal_logr
 ```
+
+#First results
+Here are the first ASCAT results from the analysis of whole genome data of an arbitrary tumor - normal pair. 
+The tumor data was sequenced to ~60 x coverage and the normal sample was sequenced to ~30 x coverage. 
+
+##Plot of raw data
+Here is the BAF and LogR plot in the tumor sample: 
+
+
