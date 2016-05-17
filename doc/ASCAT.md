@@ -76,6 +76,7 @@ BAF and LogR plot in the normal sample:
 ![Normal raw data](ascat.germline.png)
 Note - the tumor LogR values are normalized against the normal LogR values before Log transformation, which sets the normal LogR to zero at all positions. 
 As you can see in the plot, there is a wide range of BAF values from ~0.2 to ~0.8 in the normal sample. For heterozygous SNPs BAF is expected to be close to 0.5. It is likely that the relatively low covarage in the normal sample (30 x) is contributing to this effect. We will try to filter the input data so that for example only positions that are covered by > 25-30 reads are used, and see if it reduces the noice. 
+The Oslo team also experienced that WGS data with "too low coverage" gave noisy data, so it was not totally unexpected. 
 ###ASCAT profile
 Below is the output from ASCAT. ASCAT predicts that the analyzed sample has a tumor purity of 85%, and an average ploidy of 2.54. The Goodness of fit is 98.2%. 
 We will discuss the results further with the PIs. 
