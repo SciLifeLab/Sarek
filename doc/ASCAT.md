@@ -27,7 +27,7 @@ To run Ascat we first need to convert .bam files to allele counts. This is done 
 AlleleCount was installed in Malins home directory on Milou:
 ```
 $ cd /home/malin
- $ git cloneÊhttps://github.com/cancerit/alleleCount
+ $ git clone https://github.com/cancerit/alleleCount
  $ cd alleleCount
  $ module load bioinfo-tools
  $ module load samtools
