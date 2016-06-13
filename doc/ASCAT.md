@@ -51,7 +51,7 @@ $ salloc -A projectID -p core -n 5:00:00
 The above code (and some additional logistics) has been implemented in the script "run_allelecount.sh" and included in Malins git repository for somatic variant calling at https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git. 
 To start an sbatch job that runs allele counter for one particular .bam file:
 ```
-sbatch -A projectID -p core -n 4 -t 240:00:00 -J jobname -o allelecounter.out -e allelecounter.err /path/to/somatic_wgs_pipeline/run_allelecount.sh sample.bam /path/to/somatic_wgs_pipeline/configfile.sh
+sbatch -A projectID -p core -n 4 -t 240:00:00 -J jobname -o allelecounter.out -e allelecounter.err /path/to/somatic_wgs_pipeline/run_allelecount.sh sample.bam /path/to/somatic_wgs_pipeline/configfile.sh sample.allelecount
 ```
 ###Convert allele counts to LogR and BAF values
 First, run AlleleCount as described above on the tumor and normal bam files.
