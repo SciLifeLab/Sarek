@@ -82,5 +82,15 @@ Below is the output from ASCAT. ASCAT predicts that the analyzed sample has a tu
 We will discuss the results further with the PIs. 
 ![ASCAT profile](ASCATprofile.png)
 
-
+#Analysis of TCGA data
+The TCGA with known tumor/normal fractions could be a good test of how well ASCAT calculates aberrant cell fractions. The following BAM files with known aberrant cell fractions (reads from the tumor was mixed with a known amount of reads from the normal)were analysed:  
+HCC1143
+/sw/data/uppnex/ToolBox/TCGAbenchmark/4bcf3463-ea9c-414e-a1f5-948f72477602/HCC1143.NORMAL.30x.compare.bam
+/sw/data/uppnex/ToolBox/TCGAbenchmark/048de7d8-682f-4e72-99d9-be2d072af67b/HCC1143.mix1.n5t95.bam
+/sw/data/uppnex/ToolBox/TCGAbenchmark/712a71eb-e62d-46e4-acd6-883b4dbc5053/HCC1143.mix1.n20t80.bam
+/sw/data/uppnex/ToolBox/TCGAbenchmark/708f1069-f91d-4111-a3e9-cbc690b9dda6/HCC1143.mix1.n40t60.bam
+/sw/data/uppnex/ToolBox/TCGAbenchmark/47e16d4c-fe0f-4ce0-9678-645efe53ca30/HCC1143.mix1.n60t40.bam
+/sw/data/uppnex/ToolBox/TCGAbenchmark/e90b4f61-6ac1-4632-aea0-051438e9ab22/HCC1143.mix1.n80t20.bam
+/sw/data/uppnex/ToolBox/TCGAbenchmark/048de7d8-682f-4e72-99d9-be2d072af67b/HCC1143.mix1.n95t5.bam
+/sw/data/uppnex/ToolBox/TCGAbenchmark/ad3d4757-f358-40a3-9d92-742463a95e88/G15511.HCC1143.1.bam
 
