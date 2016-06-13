@@ -84,7 +84,7 @@ We will discuss the results further with the PIs.
 
 #Analysis of TCGA data
 The TCGA with known tumor/normal fractions could be a good test of how well ASCAT calculates aberrant cell fractions. The following BAM files with known aberrant cell fractions (reads from the tumor was mixed with a known amount of reads from the normal)were analysed:  
-HCC1143
+HCC1143  
 /sw/data/uppnex/ToolBox/TCGAbenchmark/4bcf3463-ea9c-414e-a1f5-948f72477602/HCC1143.NORMAL.30x.compare.bam
 /sw/data/uppnex/ToolBox/TCGAbenchmark/048de7d8-682f-4e72-99d9-be2d072af67b/HCC1143.mix1.n5t95.bam
 /sw/data/uppnex/ToolBox/TCGAbenchmark/712a71eb-e62d-46e4-acd6-883b4dbc5053/HCC1143.mix1.n20t80.bam
