@@ -51,7 +51,7 @@ $ salloc -A projectID -p core -n 5:00:00
 The above code (and some additional logistics) has been implemented in the script "run_allelecount.sh" and included in Malins git repository for somatic variant calling at https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git. 
 To start an sbatch job that runs allele counter for one particular .bam file:
 ```
-sbatch -A projectID -p core -n 4 -t 240:00:00 -J jobname -o allelecounter.out -e allelecounter.err /path/to/somatic_wgs_pipeline/run_allelecount.sh sample.bam /path/to/somatic_wgs_pipeline/configfile.sh
+sbatch -A projectID -p core -n 4 -t 240:00:00 -J jobname -o allelecounter.out -e allelecounter.err /path/to/somatic_wgs_pipeline/run_allelecount.sh sample.bam /path/to/somatic_wgs_pipeline/configfile.sh sample.allelecount
 ```
 ###Convert allele counts to LogR and BAF values
 First, run AlleleCount as described above on the tumor and normal bam files.
@@ -86,7 +86,7 @@ We will discuss the results further with the PIs.
 The TCGA with known tumor/normal fractions could be a good test of how well ASCAT calculates aberrant cell fractions. The following BAM files with known aberrant cell fractions (reads from the tumor was mixed with a known amount of reads from the normal)were analysed:  
 HCC1143  
 /sw/data/uppnex/ToolBox/TCGAbenchmark/4bcf3463-ea9c-414e-a1f5-948f72477602/HCC1143.NORMAL.30x.compare.bam  
-/sw/data/uppnex/ToolBox/TCGAbenchmark/048de7d8-682f-4e72-99d9-be2d072af67b/HCC1143.mix1.n5t95.bam  
+/sw/data/uppnex/ToolBox/TCGAbenchmark/5462741b-774b-41cc-b3a2-d3cc7eaad676/HCC1143.mix1.n5t95.bam  
 /sw/data/uppnex/ToolBox/TCGAbenchmark/712a71eb-e62d-46e4-acd6-883b4dbc5053/HCC1143.mix1.n20t80.bam  
 /sw/data/uppnex/ToolBox/TCGAbenchmark/708f1069-f91d-4111-a3e9-cbc690b9dda6/HCC1143.mix1.n40t60.bam  
 /sw/data/uppnex/ToolBox/TCGAbenchmark/47e16d4c-fe0f-4ce0-9678-645efe53ca30/HCC1143.mix1.n60t40.bam  
