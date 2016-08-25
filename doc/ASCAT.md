@@ -38,13 +38,13 @@ AlleleCount is installed as part of the bioinfo-tools on Milou. It runs on singl
 ```
 ###Convert allele counts to LogR and BAF values
 The allele counts can then be converted into LogR and BAF values using the script "convertAlleleCounts.r". 
-Usage for a male sample (Gender = "XY"):
+Usage for a male sample (Gender = "XY", replace with "XX" for a female sample):
 ```
 sbatch -A PROJID -p core -n 2 -t 240:00:00 -J convertAllelecounts -e convertAllelecounts.err -o convertAllelecounts.out /path/to/your/CAW-fork/convertAlleleCounts.r tumor_sample tumor.allelecount normal_sample normal.allelecount XY
 ```
 This creates the BAF and LogR data for the tumor and normal samples, to be used as input to ASCAT.
 ###Run ASCAT
-To run ASCAT in the simplest possible way without compensating for the local CG content across the genome, the script "run_ascat.r" can be used. (Included in the same git repository).
+To run ASCAT in the simplest possible way without compensating for the local CG content across the genome, the script "run_ascat.r" can be used. This script calls the public version of ASCAT available here:https://github.com/Crick-CancerGenomics/ascat/tree/master/ASCAT/R/ascat.R
 ```
 run_ascat.r tumor_baf tumor_logr normal_baf normal_logr
 ```
