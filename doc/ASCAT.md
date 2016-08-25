@@ -37,10 +37,10 @@ AlleleCount is installed as part of the bioinfo-tools on Milou. It runs on singl
  $ alleleCounter -l /sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.3.loci -r /sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/human_g1k_v37_decoy.fasta -b sample.bam -o sample.allecount
 ```
 ###Convert allele counts to LogR and BAF values
-The allele counts can then be converted into LogR and BAF values acceding to the formulas above using the script "convertAlleleCounts.r". The script is available in the same git repository (https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git). 
-To run the script type for example (for a male sample, Gender = "XY"):
+The allele counts can then be converted into LogR and BAF values using the script "convertAlleleCounts.r". 
+Usage for a male sample (Gender = "XY"):
 ```
-sbatch -A b2011185 -p core -n 2 -t 240:00:00 -J convertAllelecounts -e convertAllelecounts.err -o convertAllelecounts.out /path/to/somatic_wgs_pipeline/convertAlleleCounts.r tumor_sample tumor.allelecount normal_sample normal.allelecount XY
+sbatch -A PROJID -p core -n 2 -t 240:00:00 -J convertAllelecounts -e convertAllelecounts.err -o convertAllelecounts.out /path/to/your/CAW-fork/convertAlleleCounts.r tumor_sample tumor.allelecount normal_sample normal.allelecount XY
 ```
 This creates the BAF and LogR data for the tumor and normal samples, to be used as input to ASCAT.
 ###Run ASCAT
@@ -48,31 +48,7 @@ To run ASCAT in the simplest possible way without compensating for the local CG 
 ```
 run_ascat.r tumor_baf tumor_logr normal_baf normal_logr
 ```
-#First results
-Here are the first ASCAT results from the analysis of whole genome data of an arbitrary tumor - normal pair. 
-The tumor data was sequenced to ~60 x coverage and the normal sample was sequenced to ~30 x coverage. 
-###Raw data
-BAF and LogR plot in the tumor sample: 
-![Tumor raw data](ascat.tumor.png)
-BAF and LogR plot in the normal sample:
-![Normal raw data](ascat.germline.png)
-Note - the tumor LogR values are normalized against the normal LogR values before Log transformation, which sets the normal LogR to zero at all positions. 
-As you can see in the plot, there is a wide range of BAF values from ~0.2 to ~0.8 in the normal sample. For heterozygous SNPs BAF is expected to be close to 0.5. It is likely that the relatively low covarage in the normal sample (30 x) is contributing to this effect. We will try to filter the input data so that for example only positions that are covered by > 25-30 reads are used, and see if it reduces the noice. 
-The Oslo team also experienced that WGS data with "too low coverage" gave noisy data, so it was not totally unexpected. 
-###ASCAT profile
-Below is the output from ASCAT. ASCAT predicts that the analyzed sample has a tumor purity of 85%, and an average ploidy of 2.54. The Goodness of fit is 98.2%. 
-We will discuss the results further with the PIs. 
-![ASCAT profile](ASCATprofile.png)
 
-#Analysis of TCGA data
-The TCGA with known tumor/normal fractions could be a good test of how well ASCAT calculates aberrant cell fractions. The following BAM files with known aberrant cell fractions (reads from the tumor was mixed with a known amount of reads from the normal)were analysed:  
-HCC1143  
-/sw/data/uppnex/ToolBox/TCGAbenchmark/4bcf3463-ea9c-414e-a1f5-948f72477602/HCC1143.NORMAL.30x.compare.bam  
-/sw/data/uppnex/ToolBox/TCGAbenchmark/5462741b-774b-41cc-b3a2-d3cc7eaad676/HCC1143.mix1.n5t95.bam  
-/sw/data/uppnex/ToolBox/TCGAbenchmark/712a71eb-e62d-46e4-acd6-883b4dbc5053/HCC1143.mix1.n20t80.bam  
-/sw/data/uppnex/ToolBox/TCGAbenchmark/708f1069-f91d-4111-a3e9-cbc690b9dda6/HCC1143.mix1.n40t60.bam  
-/sw/data/uppnex/ToolBox/TCGAbenchmark/47e16d4c-fe0f-4ce0-9678-645efe53ca30/HCC1143.mix1.n60t40.bam  
-/sw/data/uppnex/ToolBox/TCGAbenchmark/e90b4f61-6ac1-4632-aea0-051438e9ab22/HCC1143.mix1.n80t20.bam  
-/sw/data/uppnex/ToolBox/TCGAbenchmark/048de7d8-682f-4e72-99d9-be2d072af67b/HCC1143.mix1.n95t5.bam  
-/sw/data/uppnex/ToolBox/TCGAbenchmark/ad3d4757-f358-40a3-9d92-742463a95e88/G15511.HCC1143.1.bam  
+
+
 
