@@ -9,6 +9,8 @@ BAFi(tumor)=countsBi(tumor)/(countsAi(tumor)+countsBi(tumor))
 BAFi(normal)=countsBi(normal)/(countsAi(normal)+countsBi(normal))
 LogRi(tumor)=log2((countsAi(tumor)+countsBi(tumor))/(countsAi(normal)+countsBi(normal)) - median(log2((countsA(tumor)+countsB(tumor))/(countsA(normal)+countsB(normal)))
 LogRi(normal)=0  
+For male samples, the X chromosome markers have special treatment:
+LogRi(tumor)=log2((countsAi(tumor)+countsBi(tumor))/(countsAi(normal)+countsBi(normal))-1 - median(log2((countsA(tumor)+countsB(tumor))/(countsA(normal)+countsB(normal))-1)
 
 where  
 i corresponds to the postions of all SNPs in the loci file. 
@@ -30,13 +32,9 @@ AlleleCount is installed as part of the bioinfo-tools on Milou. It runs on singl
 ```
  $ module load bioinfo-tools
  $ module load alleleCount
- $ alleleCounter -l $LOCIFILE -r $REFERENCE -b sample.bam -o sample.allecount
+ $ alleleCounter -l /sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.3.loci -r /sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/human_g1k_v37_decoy.fasta -b sample.bam -o sample.allecount
 ```
-where REFERENCE = /sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/human_g1k_v37.fasta
-and LOCIFILE=/sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.3.loci
-
 ###Convert allele counts to LogR and BAF values
-First, run AlleleCount as described above for the tumor and normal bam files.
 The allele counts can then be converted into LogR and BAF values acceding to the formulas above using the script "convertAlleleCounts.r". The script is available in the same git repository (https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git). 
 To run the script type for example (for a male sample, Gender = "XY"):
 ```
