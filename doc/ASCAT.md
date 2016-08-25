@@ -17,7 +17,8 @@ i corresponds to the postions of all SNPs in the loci file.
 CountsA and CountsB are vectors containing number of reads supporting the A and B alleles of all SNPs 
 A = the major allele 
 B = the minor allele 
-Minor and major alleles are defined in the loci file (it actually doesn't matter which one is defied as A and B in this application). 
+Minor and major alleles are defined in the loci file (it actually doesn't matter which one is defied as A and B in this application).  
+
 Caclculation of LogR and BAF based on AlleleCount output is done as in https://github.com/cancerit/ascatNgs/tree/dev/perl/share/ascat/runASCAT.R
 ###Loci file
 The loci file was created based on the 1000Genomes latest release (phase 3, releasedate 20130502), available here:  
