@@ -44,7 +44,7 @@ sbatch -A PROJID -p core -n 2 -t 240:00:00 -J convertAllelecounts -e convertAlle
 ```
 This creates the BAF and LogR data for the tumor and normal samples, to be used as input to ASCAT.
 ###Run ASCAT
-To run ASCAT in the simplest possible way without compensating for the local CG content across the genome, the script "run_ascat.r" can be used. This script calls the main ASCAT R script ascat.R, available here:https://github.com/Crick-CancerGenomics/ascat/tree/master/ASCAT/R/ascat.R
+The script "run_ascat.r" can be used to run ASCAT in the simplest possible way without compensating for the local CG content across the genome. It calls the main ASCAT R script ascat.R, available here:https://github.com/Crick-CancerGenomics/ascat/tree/master/ASCAT/R/ascat.R
 ```
 run_ascat.r tumor_baf tumor_logr normal_baf normal_logr
 ```
