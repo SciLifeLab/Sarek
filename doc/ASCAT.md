@@ -1,14 +1,16 @@
 #ASCAT
+##Introduction
 Ascat is a software for performing allele-specific copy number analysis of tumor samples and for estimating tumor ploidy and purity (normal contamination). Ascat is written in R and available here: https://github.com/Crick-CancerGenomics/ascat    
 To run Ascat on NGS data we need .bam files for the tumor and normal samples, as well as a loci file with SNP positions.  
 If Ascat is run on SNP array data, the loci file contains the SNPs on the chip. When runnig Ascat on NGS data we can use the same loci file, for exampe the one corresponding to the AffymetrixGenome-Wide Human SNP Array 6.0, but we can also choose a loci file of our choice with i.e. SNPs detected in the 1000 Genomes project.  
 ###BAF and LogR values  
-Running Ascat on NGS data requires that the .bam files are converted into BAF and LogR values. This can be done using the software AlleleCount (https://github.com/cancerit/alleleCount) followed by a simple R script. AlleleCount extracts the number of reads in a bam file supporting each allele at specified SNP positions. Based on this, the BAF and logR can be calculated as   
+Running Ascat on NGS data requires that the .bam files are converted into BAF and LogR values. This can be done using the software AlleleCount (https://github.com/cancerit/alleleCount) followed by a simple R script. AlleleCount extracts the number of reads in a bam file supporting each allele at specified SNP positions. Based on this, BAF and logR can be calculated for every SNP position i as:  
 BAFi(tumor)=countsBi(tumor)/(countsAi(tumor)+countsBi(tumor))
 BAFi(normal)=countsBi(normal)/(countsAi(normal)+countsBi(normal))
-LogRi(tumor)=log ((countsAi(tumor)+countsBi(tumor)/(countsAi(normal)+countsBi(normal)) - median(countsA(tumor)+countsB(tumor))
+LogRi(tumor)=log2((countsAi(tumor)+countsBi(tumor))/(countsAi(normal)+countsBi(normal)) - median(log2((countsA(tumor)+countsB(tumor))/(countsA(normal)+countsB(normal)))
 LogRi(normal)=0
-Where i corresponds to the list of SNPs in the loci file. 
+where  
+i corresponds to the postions of all SNPs in the loci file. 
 CountsA and CountsB are vectors containing number of reads supporting the A and B alleles of all SNPs 
 A = the major allele 
 B = the minor allele 
@@ -21,40 +23,19 @@ The filtered file is stored on Milou in:
 ```
 /sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.3.loci
 ```
-###Run AlleleCount
-To run Ascat we first need to convert .bam files to allele counts. This is done using the software AlleleCount. 
-AlleleCount was installed in Malins home directory on Milou:
+##Running
+###1. Run AlleleCount
+AlleleCount is installed as part of the bioinfo-tools on Milou. It runs on single bam files (tumor and normal separately) with the command below:
 ```
-$ cd /home/malin
- $ git clone https://github.com/cancerit/alleleCount
- $ cd alleleCount
  $ module load bioinfo-tools
- $ module load samtools
- $ ./setup.sh /home/malin/
- ```
-This added the executable file alleleCounter in /home/malin/bin. This folder is included in my $PATH so I can run it anywhere on Milou by typing:
-```
-$ alleleCounter
-```
-Note - other users must either install AlleleCount themselves or point to my installation.
-To run AlleleCount on the sample ST438N:
-```
-$ salloc -A projectID -p core -n 5:00:00
- salloc: Pending job allocation 7409264
- ...
- $ module load bioinfo-tools
- $ module load samtools
- $ LOCIFILE=/sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.01.loci
- $ REFERENCE=/sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/human_g1k_v37.fasta
+ $ module load alleleCount
  $ alleleCounter -l $LOCIFILE -r $REFERENCE -b sample.bam -o sample.allecount
 ```
-The above code (and some additional logistics) has been implemented in the script "run_allelecount.sh" and included in Malins git repository for somatic variant calling at https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git. 
-To start an sbatch job that runs allele counter for one particular .bam file:
-```
-sbatch -A projectID -p core -n 4 -t 240:00:00 -J jobname -o allelecounter.out -e allelecounter.err /path/to/somatic_wgs_pipeline/run_allelecount.sh sample.bam /path/to/somatic_wgs_pipeline/configfile.sh sample.allelecount
-```
+where REFERENCE = /sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/human_g1k_v37.fasta
+and LOCIFILE=/sw/data/uppnex/ToolBox/ReferenceAssemblies/hg38make/bundle/2.8/b37/1000G_phase3_20130502_SNP_maf0.3.loci
+
 ###Convert allele counts to LogR and BAF values
-First, run AlleleCount as described above on the tumor and normal bam files.
+First, run AlleleCount as described above for the tumor and normal bam files.
 The allele counts can then be converted into LogR and BAF values acceding to the formulas above using the script "convertAlleleCounts.r". The script is available in the same git repository (https://malinlarsson@bitbucket.org/malinlarsson/somatic_wgs_pipeline.git). 
 To run the script type for example (for a male sample, Gender = "XY"):
 ```
