@@ -8,8 +8,8 @@ Running Ascat on NGS data requires that the .bam files are converted into BAF an
 BAFi(tumor)=countsBi(tumor)/(countsAi(tumor)+countsBi(tumor))
 BAFi(normal)=countsBi(normal)/(countsAi(normal)+countsBi(normal))
 LogRi(tumor)=log2((countsAi(tumor)+countsBi(tumor))/(countsAi(normal)+countsBi(normal)) - median(log2((countsA(tumor)+countsB(tumor))/(countsA(normal)+countsB(normal)))
-LogRi(normal)=0
-where  
+LogRi(normal)=0  
+where    
 i corresponds to the postions of all SNPs in the loci file. 
 CountsA and CountsB are vectors containing number of reads supporting the A and B alleles of all SNPs 
 A = the major allele 
