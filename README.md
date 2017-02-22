@@ -1,4 +1,6 @@
 # CAW
+
+[![Join the chat at https://gitter.im/SciLifeLab/CAW](https://badges.gitter.im/SciLifeLab/CAW.svg)](https://gitter.im/SciLifeLab/CAW?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![caw version][version-badge]][version-link] [![Licence][licence-badge]][licence-link] [![nextflow version][nextflow-badge]][nextflow-link]
 
 CAW (Cancer Analysis Workflow) is a complete open source pipeline to detect somatic variants from WGS data:
