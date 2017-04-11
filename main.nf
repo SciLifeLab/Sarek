@@ -220,7 +220,12 @@ verbose ? mergedBam = mergedBam.view {"BAM for MarkDuplicates: $it"} : ''
 process MarkDuplicates {
   tag {idPatient + "-" + idSample}
 
-  publishDir '.', saveAs: { it == "${bam}.metrics" ? "$directoryMap.markDuplicatesQC/$it" : "$directoryMap.nonRealigned/$it" }, mode: 'copy'
+  publishDir '.',
+    mode: 'copy',
+    saveAs: {
+      if (it == "${bam}.metrics") "$directoryMap.markDuplicatesQC/$it"
+      else params.saveDuplicates ? "$directoryMap.nonRealigned/$it" : null
+    }
 
   input:
     set idPatient, gender, status, idSample, file(bam) from mergedBam
@@ -246,12 +251,14 @@ process MarkDuplicates {
   """
 }
 
-// Creating a TSV file to restart from this step
-markDuplicatesTSV.map { idPatient, gender, status, idSample, bam, bai ->
-  "$idPatient\t$gender\t$status\t$idSample\t$directoryMap.nonRealigned/$bam\t$directoryMap.nonRealigned/$bai\n"
-}.collectFile(
-  name: 'nonRealigned.tsv', sort: true, storeDir: directoryMap.nonRealigned
-)
+if (params.saveDuplicates) {
+  // Creating a TSV file to restart from this step
+  markDuplicatesTSV.map { idPatient, gender, status, idSample, bam, bai ->
+    "$idPatient\t$gender\t$status\t$idSample\t$directoryMap.nonRealigned/$bam\t$directoryMap.nonRealigned/$bai\n"
+  }.collectFile(
+    name: 'nonRealigned.tsv', sort: true, storeDir: directoryMap.nonRealigned
+  )
+} else {markDuplicatesTSV.close()}
 
 // Create intervals for realignement using both tumor+normal as input
 // Group the marked duplicates BAMs for intervals and realign by idPatient
@@ -366,7 +373,11 @@ verbose ? realignedBam = realignedBam.view {"Realigned BAM to CreateRecalibratio
 process CreateRecalibrationTable {
   tag {idPatient + "-" + idSample}
 
-  publishDir directoryMap.nonRecalibrated, mode: 'copy'
+  publishDir ".",
+    mode: 'copy',
+    saveAs: {
+      params.saveRecalibrationTables ? "$directoryMap.nonRecalibrated/$it" : null
+    }
 
   input:
     set idPatient, gender, status, idSample, file(bam), file(bai) from realignedBam
@@ -405,12 +416,15 @@ process CreateRecalibrationTable {
   -o ${idSample}.recal.table
   """
 }
-// Creating a TSV file to restart from this step
-recalibrationTableTSV.map { idPatient, gender, status, idSample, bam, bai, recalTable ->
-  "$idPatient\t$gender\t$status\t$idSample\t$directoryMap.nonRecalibrated/$bam\t$directoryMap.nonRecalibrated/$bai\t\t$directoryMap.nonRecalibrated/$recalTable\n"
-}.collectFile(
-  name: 'nonRecalibrated.tsv', sort: true, storeDir: directoryMap.nonRecalibrated
-)
+
+if (params.saveRecalibrationTables) {
+  // Creating a TSV file to restart from this step
+  recalibrationTableTSV.map { idPatient, gender, status, idSample, bam, bai, recalTable ->
+    "$idPatient\t$gender\t$status\t$idSample\t$directoryMap.nonRecalibrated/$bam\t$directoryMap.nonRecalibrated/$bai\t\t$directoryMap.nonRecalibrated/$recalTable\n"
+  }.collectFile(
+    name: 'nonRecalibrated.tsv', sort: true, storeDir: directoryMap.nonRecalibrated
+  )
+} else {recalibrationTableTSV.close()}
 
 recalibrationTable = step == 'recalibrate' ? bamFiles : recalibrationTable
 
@@ -1262,21 +1276,25 @@ def checkParameterList(list, realList) {
 def checkParams(it) {
   // Check if params is in this given list
   return it in [
-    'callName',
     'call-name',
-    'contactMail',
+    'callName',
     'contact-mail',
+    'contactMail',
     'genome',
     'genomes',
     'help',
     'project',
-    'runTime',
     'run-time',
+    'runTime',
+    'sample-dir',
     'sample',
     'sampleDir',
-    'sample-dir',
-    'singleCPUMem',
+    'save-duplicates',
+    'save-recalibration-tables',
+    'saveDuplicates',
+    'saveRecalibrationTables',
     'single-CPUMem',
+    'singleCPUMem',
     'step',
     'test',
     'tools',
