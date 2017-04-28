@@ -200,6 +200,7 @@ process MapReads { // also merges libraries and marks duplicates
   // adjust mismatch penalty for tumor samples
   extra = status == 1 ? "-B 3 " : ""
   fastq = [fastqFiles1.collect{"$it"}, fastqFiles2.collect{"$it"}].transpose().flatten().join(' ')
+  samtools_threads = task.cpus > 4 ? 4 : task.cpus
   // TODO redirect samblaster report somewhere
   """
   mkfifo fifo.bam
@@ -207,7 +208,7 @@ process MapReads { // also merges libraries and marks duplicates
   idxpid=\$!
   bwa_multifastq -M --sample $idSample ${extra}-t $task.cpus -r $genomeFile $fastq | \
   samblaster -M | \
-  samtools sort --threads $task.cpus -m 4G - | tee fifo.bam > ${idSample}_${status}.bam
+  samtools sort --threads $samtools_threads -m 4G - | tee fifo.bam > ${idSample}_${status}.bam
   wait \$idxpid
   """
 }
