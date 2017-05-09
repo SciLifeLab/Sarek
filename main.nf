@@ -184,7 +184,7 @@ groupedFastq = fastqFiles.groupTuple(by:[0, 1, 2])
 process MapReads { // also merges libraries and marks duplicates
   tag {idPatient + "-" + idSample}
 
-  publishDir '.', saveAs: { "$directoryMap.nonRealigned/$it" }, mode: 'copy'
+  publishDir '.', saveAs: { it == "${idSample}_${status}.samblaster" ? "$directoryMap.samblaster/$it" : "$directoryMap.nonRealigned/$it" }, mode: 'copy'
 
   input:  // TODO idRun is unused
     set idPatient, status, idSample, idRun, file(fastqFiles1), file(fastqFiles2) from groupedFastq
@@ -193,6 +193,7 @@ process MapReads { // also merges libraries and marks duplicates
   output:
     set idPatient, status, idSample, file("${idSample}_${status}.bam"), file("${idSample}_${status}.bai") into mappedBam
     set idPatient, file("${idSample}_${status}.bam"), file("${idSample}_${status}.bai") into duplicates
+    file("${idSample}_${status}.samblaster") into samblasterReport
 
   when: step == 'preprocessing'
 
@@ -201,13 +202,12 @@ process MapReads { // also merges libraries and marks duplicates
   extra = status == 1 ? "-B 3 " : ""
   fastq = [fastqFiles1.collect{"$it"}, fastqFiles2.collect{"$it"}].transpose().flatten().join(' ')
   samtools_threads = task.cpus > 4 ? 4 : task.cpus
-  // TODO redirect samblaster report somewhere
   """
   mkfifo fifo.bam
   samtools index fifo.bam ${idSample}_${status}.bai &
   idxpid=\$!
   bwa_multifastq -M --sample $idSample ${extra}-t $task.cpus -r $genomeFile $fastq | \
-  samblaster -M | \
+  samblaster -M 2> ${idSample}_${status}.samblaster | \
   samtools sort --threads $samtools_threads -m 4G - | tee fifo.bam > ${idSample}_${status}.bam
   wait \$idxpid
   """
@@ -1217,6 +1217,7 @@ process GenerateMultiQCconfig {
   echo "- 'qualimap'" >> multiqc_config.yaml
   echo "- 'snpeff'" >> multiqc_config.yaml
   echo "- 'vep'" >> multiqc_config.yaml
+  echo "- 'samblaster'" >> multiqc_config.yaml
   """
 }
 
@@ -1231,6 +1232,7 @@ reportsForMultiQC = Channel.empty()
     fastQCreport,
     multiQCconfig,
     samtoolsStatsReport,
+    samblasterReport,
     snpeffReport,
     vepReport
   ).flatten().unique().toList()
@@ -1363,6 +1365,7 @@ def defineDirectoryMap() {
     'bamQC'            : 'Reports/bamQC',
     'bcftoolsStats'    : 'Reports/BCFToolsStats',
     'fastQC'           : 'Reports/FastQC',
+    'samblaster'       : 'Reports/samblaster',
     'multiQC'          : 'Reports/MultiQC',
     'samtoolsStats'    : 'Reports/SamToolsStats',
     'ascat'            : 'VariantCalling/Ascat',
