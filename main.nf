@@ -890,7 +890,7 @@ process RunStrelka {
     ])
 
   output:
-    set val("strelka"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf") into strelkaOutput
+    set val("strelka"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz") into strelkaOutput
 
   when: 'strelka' in tools
 
@@ -899,23 +899,16 @@ process RunStrelka {
   tumorPath=`readlink $bamTumor`
   normalPath=`readlink $bamNormal`
   genomeFile=`readlink $genomeFile`
-  \$STRELKA_INSTALL_DIR/bin/configureStrelkaWorkflow.pl \
+  \$STRELKA_INSTALL_DIR/bin/configureStrelkaSomaticWorkflow.py \
   --tumor \$tumorPath \
   --normal \$normalPath \
-  --ref \$genomeFile \
-  --config \$STRELKA_INSTALL_DIR/etc/strelka_config_bwa_default.ini \
-  --output-dir strelka
+  --referenceFasta \$genomeFile \
+  --runDir strelka
 
-  cd strelka
+  strelka/runWorkflow.py -m local
 
-  make -j $task.cpus
-
-  cd ..
-
-  mv strelka/results/all.somatic.indels.vcf Strelka_${idSampleTumor}_vs_${idSampleNormal}_all_somatic_indels.vcf
-  mv strelka/results/all.somatic.snvs.vcf Strelka_${idSampleTumor}_vs_${idSampleNormal}_all_somatic_snvs.vcf
-  mv strelka/results/passed.somatic.indels.vcf Strelka_${idSampleTumor}_vs_${idSampleNormal}_passed_somatic_indels.vcf
-  mv strelka/results/passed.somatic.snvs.vcf Strelka_${idSampleTumor}_vs_${idSampleNormal}_passed_somatic_snvs.vcf
+  mv strelka/results/variants/somatic.indels.vcf.gz Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz
+  mv strelka/results/variants/somatic.snvs.vcf.gz Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz
   """
 }
 
@@ -1060,7 +1053,7 @@ if (step == 'annotate' && annotateVCF == []) {
     Channel.fromPath('VariantCalling/MuTect2/*.vcf.gz')
       .flatten().unique()
       .map{vcf -> ['mutect2',vcf]},
-    Channel.fromPath('VariantCalling/Strelka/*passed_somatic*.vcf.gz')
+    Channel.fromPath('VariantCalling/Strelka/*somatic*.vcf.gz')
       .flatten().unique()
       .map{vcf -> ['strelka',vcf]}
   ).choice(vcfToAnnotate, vcfNotToAnnotate) { annotateTools == [] || (annotateTools != [] && it[0] in annotateTools) ? 0 : 1 }
@@ -1077,20 +1070,20 @@ if (step == 'annotate' && annotateVCF == []) {
   vcfConcatenated
     .choice(vcfToAnnotate, vcfNotToAnnotate) { it[0] == 'gvcf-hc' || it[0] == 'freebayes' ? 1 : 0 }
 
-  (strelkaPAssedIndels, strelkaPAssedSNVS) = strelkaOutput.into(2)
+  (strelkaIndels, strelkaSNVS) = strelkaOutput.into(2)
   (mantaSomaticSV, mantaDiploidSV) = mantaOutput.into(2)
 
   vcfToAnnotate = vcfToAnnotate.map {
     variantcaller, idPatient, idSampleNormal, idSampleTumor, vcf ->
     [variantcaller, vcf]
   }.mix(
-    strelkaPAssedIndels.map {
+    strelkaIndels.map {
       variantcaller, idPatient, idSampleNormal, idSampleTumor, vcf ->
-      [variantcaller, vcf[2]]
+      [variantcaller, vcf[0]]
     },
-    strelkaPAssedSNVS.map {
+    strelkaSNVS.map {
       variantcaller, idPatient, idSampleNormal, idSampleTumor, vcf ->
-      [variantcaller, vcf[3]]
+      [variantcaller, vcf[1]]
     },
     mantaSomaticSV.map {
       variantcaller, idPatient, idSampleNormal, idSampleTumor, somaticSV, candidateSV, diploidSV, candidateSmallIndels ->
