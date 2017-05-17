@@ -879,7 +879,7 @@ if (verbose) vcfConcatenated = vcfConcatenated.view {"VCF concatenated: $it"}
 process RunStrelka {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir directoryMap.strelka, mode: 'copy'
+  publishDir '.', saveAs: { it =~ /.(tsv|xml)$/  ? "$directoryMap.strelkaStats/$it" : "$directoryMap.strelka/$it" }, mode: 'copy'
 
   input:
     set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForStrelka
@@ -891,24 +891,25 @@ process RunStrelka {
 
   output:
     set val("strelka"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz") into strelkaOutput
+    set file("*.tsv"), file("*.xml") into strelkaStats
 
   when: 'strelka' in tools
 
   script:
   """
-  tumorPath=`readlink $bamTumor`
-  normalPath=`readlink $bamNormal`
-  genomeFile=`readlink $genomeFile`
   \$STRELKA_INSTALL_DIR/bin/configureStrelkaSomaticWorkflow.py \
-  --tumor \$tumorPath \
-  --normal \$normalPath \
-  --referenceFasta \$genomeFile \
-  --runDir strelka
+  --tumor $bamTumor \
+  --normal $bamNormal \
+  --referenceFasta $genomeFile \
+  --runDir Strelka
 
-  strelka/runWorkflow.py -m local
+  python Strelka/runWorkflow.py -m local -j $task.cpus
 
-  mv strelka/results/variants/somatic.indels.vcf.gz Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz
-  mv strelka/results/variants/somatic.snvs.vcf.gz Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz
+  mv Strelka/results/variants/somatic.indels.vcf.gz Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz
+  mv Strelka/results/variants/somatic.snvs.vcf.gz Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz
+
+  mv Strelka/results/stats/runStats.tsv Strelka_${idSampleTumor}_vs_${idSampleNormal}_runStats.tsv
+  mv Strelka/results/stats/runStats.xml Strelka_${idSampleTumor}_vs_${idSampleNormal}_runStats.xml
   """
 }
 
@@ -1233,6 +1234,7 @@ reportsForMultiQC = Channel.fromPath( 'Reports/{FastQC,MarkDuplicates,SamToolsSt
     multiQCconfig,
     recalibratedBamReport,
     snpeffReport,
+    strelkaStats,
     vepReport)
   .flatten()
   .unique()
@@ -1389,6 +1391,7 @@ def defineDirectoryMap() {
     'markDuplicatesQC' : 'Reports/MarkDuplicates',
     'multiQC'          : 'Reports/MultiQC',
     'samtoolsStats'    : 'Reports/SamToolsStats',
+    'strelkaStats'     : 'Reports/Strelka',
     'ascat'            : 'VariantCalling/Ascat',
     'freebayes'        : 'VariantCalling/FreeBayes',
     'haplotypecaller'  : 'VariantCalling/HaplotypeCaller',
