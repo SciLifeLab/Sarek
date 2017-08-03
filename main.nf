@@ -29,9 +29,7 @@ kate: syntax groovy; space-indent on; indent-width 2;
 --------------------------------------------------------------------------------
  Processes overview
  - RunFastQC - Run FastQC for QC on fastq files
- - MapReads - Map reads
- - MergeBams - Merge BAMs if multilane samples
- - MarkDuplicates - Mark Duplicates
+ - MapReads - Map reads (also handles multi-lane samples)
  - RealignerTargetCreator - Create realignment target intervals
  - IndelRealigner - Realign BAMs as T/N pair
  - CreateRecalibrationTable - Create Recalibration Table
@@ -180,99 +178,48 @@ process RunFastQC {
 
 if (verbose) fastQCreport = fastQCreport.view {"FastQC report: $it"}
 
-process MapReads {
-  tag {idPatient + "-" + idRun}
+// group by sample
+groupedFastq = fastqFiles.groupTuple(by:[0, 1, 2])
 
-  input:
-    set idPatient, status, idSample, idRun, file(fastqFile1), file(fastqFile2) from fastqFiles
+process MapReads { // also merges libraries and marks duplicates
+  tag {idPatient + "-" + idSample}
+
+  publishDir '.', saveAs: { it == "${idSample}_${status}.samblaster" ? "$directoryMap.samblaster/$it" : "$directoryMap.nonRealigned/$it" }, mode: 'copy'
+
+  input:  // TODO idRun is unused
+    set idPatient, status, idSample, idRun, file(fastqFiles1), file(fastqFiles2) from groupedFastq
     set file(genomeFile), file(bwaIndex) from Channel.value([referenceMap.genomeFile, referenceMap.bwaIndex])
 
   output:
-    set idPatient, status, idSample, idRun, file("${idRun}.bam") into mappedBam
+    set idPatient, status, idSample, file("${idSample}_${status}.bam"), file("${idSample}_${status}.bai") into mappedBam
+    set idPatient, file("${idSample}_${status}.bam"), file("${idSample}_${status}.bai") into duplicates
+    file("${idSample}_${status}.samblaster") into samblasterReport
 
   when: step == 'preprocessing'
 
   script:
-  readGroup = "@RG\\tID:$idRun\\tPU:$idRun\\tSM:$idSample\\tLB:$idSample\\tPL:illumina"
   // adjust mismatch penalty for tumor samples
   extra = status == 1 ? "-B 3 " : ""
+  fastq = [fastqFiles1.collect{"$it"}, fastqFiles2.collect{"$it"}].transpose().flatten().join(' ')
+  samtools_threads = task.cpus > 8 ? 8 : task.cpus
   """
-  bwa mem -R \"$readGroup\" ${extra}-t $task.cpus -M \
-  $genomeFile $fastqFile1 $fastqFile2 | \
-  samtools sort --threads $task.cpus -m 4G - > ${idRun}.bam
-  """
-}
-
-if (verbose) mappedBam = mappedBam.view {"BAM file to sort into group or single: $it"}
-
-// Sort bam whether they are standalone or should be merged
-// Borrowed code from https://github.com/guigolab/chip-nf
-
-singleBam = Channel.create()
-groupedBam = Channel.create()
-mappedBam.groupTuple(by:[0,1,2])
-  .choice(singleBam, groupedBam) {it[3].size() > 1 ? 1 : 0}
-singleBam = singleBam.map {
-  idPatient, status, idSample, idRun, bam ->
-  [idPatient, status, idSample, bam]
-}
-
-if (verbose) groupedBam = groupedBam.view {"Grouped BAMs to merge: $it"}
-
-process MergeBams {
-  tag {idPatient + "-" + idSample}
-
-  input:
-    set idPatient, status, idSample, idRun, file(bam) from groupedBam
-
-  output:
-    set idPatient, status, idSample, file("${idSample}.bam") into mergedBam
-
-  when: step == 'preprocessing'
-
-  script:
-  """
-  samtools merge --threads $task.cpus ${idSample}.bam $bam
+  mkfifo fifo.bam
+  samtools index fifo.bam ${idSample}_${status}.bai &
+  idxpid=\$!
+  bwa_multifastq -M --sample $idSample ${extra}-t $task.cpus -r $genomeFile $fastq | \
+  samblaster -M 2> ${idSample}_${status}.samblaster | \
+  samtools sort --threads $samtools_threads -m 2G - | tee fifo.bam > ${idSample}_${status}.bam
+  wait \$idxpid
   """
 }
 
-if (verbose) singleBam = singleBam.view {"Single BAM: $it"}
-if (verbose) mergedBam = mergedBam.view {"Merged BAM: $it"}
-mergedBam = mergedBam.mix(singleBam)
-if (verbose) mergedBam = mergedBam.view {"BAM for MarkDuplicates: $it"}
+verbose ? mappedBam = mappedBam.view {"Mapped BAM files: $it"} : ''
 
-process MarkDuplicates {
-  tag {idPatient + "-" + idSample}
-
-  publishDir '.', saveAs: { it == "${bam}.metrics" ? "$directoryMap.markDuplicatesQC/$it" : "$directoryMap.nonRealigned/$it" }, mode: 'copy'
-
-  input:
-    set idPatient, status, idSample, file(bam) from mergedBam
-
-  output:
-    set idPatient, file("${idSample}_${status}.md.bam"), file("${idSample}_${status}.md.bai") into duplicates
-    set idPatient, status, idSample, val("${idSample}_${status}.md.bam"), val("${idSample}_${status}.md.bai") into markDuplicatesTSV
-    file ("${bam}.metrics") into markDuplicatesReport
-
-  when: step == 'preprocessing'
-
-  script:
-  """
-  java -Xmx${task.memory.toGiga()}g \
-  -jar \$PICARD_HOME/picard.jar MarkDuplicates \
-  INPUT=${bam} \
-  METRICS_FILE=${bam}.metrics \
-  TMP_DIR=. \
-  ASSUME_SORTED=true \
-  VALIDATION_STRINGENCY=LENIENT \
-  CREATE_INDEX=TRUE \
-  OUTPUT=${idSample}_${status}.md.bam
-  """
-}
-
-// Creating a TSV file to restart from this step
-markDuplicatesTSV.map { idPatient, status, idSample, bam, bai ->
+// Create a TSV file to restart from this step
+mappedBam.map { idPatient, status, idSample, bam, bai ->
   gender = patientGenders[idPatient]
+  bam = bam.getName()
+  bai = bai.getName()
   "$idPatient\t$gender\t$status\t$idSample\t$directoryMap.nonRealigned/$bam\t$directoryMap.nonRealigned/$bai\n"
 }.collectFile(
   name: 'nonRealigned.tsv', sort: true, storeDir: directoryMap.nonRealigned
@@ -299,7 +246,6 @@ if (step == 'preprocessing') {
 
 if (verbose) duplicatesInterval = duplicatesInterval.view {"BAMs for RealignerTargetCreator: $it"}
 if (verbose) duplicatesRealign = duplicatesRealign.view {"BAMs to phase: $it"}
-if (verbose) markDuplicatesReport = markDuplicatesReport.view {"MarkDuplicates report: $it"}
 
 // VCF indexes are added so they will be linked, and not re-created on the fly
 //  -L "1:131941-141339" \
@@ -416,7 +362,7 @@ process CreateRecalibrationTable {
 
   output:
     set idPatient, status, idSample, file(bam), file(bai), file("${idSample}.recal.table") into recalibrationTable
-    set idPatient, status, idSample, val("${idSample}_${status}.md.real.bam"), val("${idSample}_${status}.md.real.bai"), val("${idSample}.recal.table") into recalibrationTableTSV
+    set idPatient, status, idSample, val("${idSample}_${status}.real.bam"), val("${idSample}_${status}.real.bai"), val("${idSample}.recal.table") into recalibrationTableTSV
 
   when: step == 'preprocessing' || step == 'realign'
 
@@ -1271,6 +1217,7 @@ process GenerateMultiQCconfig {
   echo "- 'qualimap'" >> multiqc_config.yaml
   echo "- 'snpeff'" >> multiqc_config.yaml
   echo "- 'vep'" >> multiqc_config.yaml
+  echo "- 'samblaster'" >> multiqc_config.yaml
   """
 }
 
@@ -1278,14 +1225,14 @@ if (verbose) multiQCconfig = multiQCconfig.view {"MultiQC config file: $it"}
 
 reportsForMultiQC = Channel.empty()
   .mix(
-    Channel.fromPath('Reports/{BCFToolsStats,MarkDuplicates,SamToolsStats}/*'),
+    Channel.fromPath('Reports/{BCFToolsStats,SamToolsStats}/*'),
     Channel.fromPath('Reports/{bamQC,FastQC}/*/*'),
     bamQCreport,
     bcfReport,
     fastQCreport,
-    markDuplicatesReport,
     multiQCconfig,
     samtoolsStatsReport,
+    samblasterReport,
     snpeffReport,
     vepReport
   ).flatten().unique().toList()
@@ -1419,7 +1366,7 @@ def defineDirectoryMap() {
     'bamQC'            : 'Reports/bamQC',
     'bcftoolsStats'    : 'Reports/BCFToolsStats',
     'fastQC'           : 'Reports/FastQC',
-    'markDuplicatesQC' : 'Reports/MarkDuplicates',
+    'samblaster'       : 'Reports/samblaster',
     'multiQC'          : 'Reports/MultiQC',
     'samtoolsStats'    : 'Reports/SamToolsStats',
     'ascat'            : 'VariantCalling/Ascat',
