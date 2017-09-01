@@ -153,8 +153,6 @@ if (step == 'preprocessing') {
 
 startMessage()
 
-(fastqFiles, fastqFilesforFastQC) = fastqFiles.into(2)
-
 if (verbose) fastqFiles = fastqFiles.view {
   "FASTQs to preprocess:\n\
   ID    : ${it[0]}\tStatus: ${it[1]}\tSample: ${it[2]}\tRun   : ${it[3]}\n\
@@ -167,30 +165,6 @@ if (verbose) bamFiles = bamFiles.view {
   Files : [${it[3].fileName}, ${it[4].fileName}]"
 }
 
-process RunFastQC {
-  tag {idPatient + "-" + idRun}
-
-  publishDir "$directoryMap.fastQC/$idRun", mode: 'copy'
-
-  input:
-    set idPatient, status, idSample, idRun, file(fastqFile1), file(fastqFile2) from fastqFilesforFastQC
-
-  output:
-    file "*_fastqc.{zip,html}" into fastQCreport
-
-  when: step == 'preprocessing' && reports
-
-  script:
-  """
-  fastqc -q $fastqFile1 $fastqFile2
-  """
-}
-
-if (verbose) fastQCreport = fastQCreport.view {
-  "FastQC report:\n\
-  Files : [${it[0].fileName}, ${it[1].fileName}]"
-}
-
 process MapReads {
   tag {idPatient + "-" + idRun}
 
@@ -200,6 +174,7 @@ process MapReads {
 
   output:
     set idPatient, status, idSample, idRun, file("${idRun}.bam") into mappedBam
+    set idPatient, idRun, file(fastqFile1), file(fastqFile2) into fastqFilesforFastQC
 
   when: step == 'preprocessing'
 
@@ -218,6 +193,30 @@ if (verbose) mappedBam = mappedBam.view {
   "Mapped BAM (single or to be merged):\n\
   ID    : ${it[0]}\tStatus: ${it[1]}\tSample: ${it[2]}\tRun   : ${it[3]}\n\
   File  : [${it[4].fileName}]"
+}
+
+process RunFastQC {
+  tag {idPatient + "-" + idRun}
+
+  publishDir "$directoryMap.fastQC/$idRun", mode: 'copy'
+
+  input:
+    set idPatient, idRun, file(fastqFile1), file(fastqFile2) from fastqFilesforFastQC
+
+  output:
+    file "*_fastqc.{zip,html}" into fastQCreport
+
+  when: step == 'preprocessing' && reports
+
+  script:
+  """
+  fastqc -q $fastqFile1 $fastqFile2
+  """
+}
+
+if (verbose) fastQCreport = fastQCreport.view {
+  "FastQC report:\n\
+  Files : [${it[0].fileName}, ${it[1].fileName}]"
 }
 
 // Sort bam whether they are standalone or should be merged
