@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+# kate: space-indent off; indent-width 4; tab-width 4;
+"""
+A wrapper for BWA-MEM that can process multiple FASTQ pairs coming from a
+single library, allowing to stream the output into samblaster.
+
+The idea is to use it thus:
+
+    bwa_multifastq ... Lane01.1.fastq Lane01.2.fastq Lane02.1.fastq Lane02.2.fastq (etc.) |
+    samblaster | samtools sort - ...
+
+Except for the external files that samtools sort writes, all I/O is streamed,
+which means that it is possible to go from FASTQ to a sorted and
+duplicate-marked BAM in a single step.
+"""
+import subprocess
+from argparse import ArgumentParser
+import os
+import re
+from collections import namedtuple
+import sys
+from itertools import tee
+import gzip
+
+__author__ = "Marcel Martin"
+
+
+FastqInfo = namedtuple('FastqInfo', ['instrument', 'run', 'flowcell', 'lane', 'barcode'])
+
+
+def fastq_header(path):
+	"""
+	Inspect a FASTQ file and return a FastqInfo object. If a particular piece of
+	information is unknown, the corresponding attribute of FastqInfo is set to
+	None.
+
+	This will try to auto-detect different types of Illumina headers:
+	@HWI-ST552_0:4:1101:1179:1939#0/1
+	@HWI_ST139:8:1:1202:1874#GATCAG/1
+	@HWI-ST344:204:D14G8ACXX:8:1101:1638:2116 1:N:0:CGATGT
+	@MISEQ:56:000000000-A4YM7:1:1101:15071:2257 1:N:0:CTTGTA
+	@FCD20MKACXX:8:1101:1215:2155#TCGTAAGC/1
+
+	The format of a FASTQ header starting with CASAVA 1.8 is:
+
+	<instrument-name>:<run ID>:<flowcell ID>:<lane-number>:<tile-number>:<x-pos>:<y-pos>
+	<read number>:<is filtered>:<control number>:<barcode sequence>
+	"""
+	try:
+		line = path.readline()
+	except:
+		if path.endswith('.gz'):
+			openfunc = gzip.open
+		else:
+			openfunc = open
+		with openfunc(path, 'rt') as f:
+			line = f.readline()
+	line = line.rstrip()
+	assert line.startswith('@')
+	line = line[1:]
+	# ignore comment field for now
+	header = line.split(' ', maxsplit=1)
+	read_name = header[0]
+	comment = header[1] if len(header) == 2 else None
+	fields = read_name.split(':')
+	if len(fields) == 7:
+		# probably new CASAVA 1.8 format
+		instrument = fields[0]
+		run_id = int(fields[1])
+		flowcell = fields[2]
+		lane = int(fields[3])
+		barcode = None
+		if comment:
+			comment_fields = comment.split(':')
+			if len(comment_fields) == 4:
+				barcode = comment_fields[3]
+	elif len(fields) == 5:
+		if '#' in fields[4]:
+			f = fields[4].split('#', maxsplit=1)[1]
+			barcode = f.split('/', maxsplit=1)[0]
+		else:
+			barcode = None
+		run_id = None
+		lane = int(fields[1])
+		if 'XX' in fields[0]:
+			instrument, flowcell = None, fields[0]
+		else:
+			instrument, flowcell = fields[0], None
+	else:
+		raise ValueError("FASTQ header format not recognized")
+	if barcode and not re.match('[acgtnACGTN]+$', barcode):
+		barcode = None
+
+	return FastqInfo(instrument=instrument, run=run_id, flowcell=flowcell, lane=lane, barcode=barcode)
+
+
+def available_cpu_count():
+	"""
+	Number of available virtual or physical CPUs on this system.
+
+	Adapted from http://stackoverflow.com/a/1006301/715090
+	"""
+	# cpuset may restrict the number of available processors
+	cpus = 1
+	try:
+		m = re.search(r'(?m)^Cpus_allowed:\s*(.*)$', open('/proc/self/status').read())
+		if m:
+			res = bin(int(m.group(1).replace(',', ''), 16)).count('1')
+			if res > 0:
+				cpus = res
+	except IOError:
+		pass
+
+	try:
+		import multiprocessing
+		cpus = min(cpus, multiprocessing.cpu_count())
+	except (ImportError, NotImplementedError):
+		pass
+	return cpus
+
+
+def pairs(iterable):
+	"""
+	s = [0, 1, 2, 3, 4, 5]
+	>>> list(pairs(s))
+	[[0, 1], [2, 3], [4, 5]]
+	"""
+	it = iter(iterable)
+	for a in it:
+		yield a, next(it)
+
+
+def fake_pg_headers(existing, bwa_calls):
+	"""
+	Create fake @PG headers for the given bwa_calls using the existing
+	header as a template.
+	"""
+	# Extract version from existing record
+	for field in existing.split('\t')[1:]:
+		if field.startswith('VN'):
+			version = field
+	for i, bwa_call in enumerate(bwa_calls):
+		pgid = 'ID:bwa' if i == 0 else 'ID:bwa-{:04d}'.format(i)
+		cmd = ' '.join(bwa_call.command)
+		pg = '\t'.join(['@PG', pgid, 'PN:bwa', version, 'CL:' + cmd])
+		yield pg
+
+
+class BwaCall:
+	def __init__(self, command, rg_header):
+		self.command = command
+		self.rg_header = rg_header
+
+
+def main():
+	parser = ArgumentParser(description=__doc__)
+	arg = parser.add_argument
+	arg('-r', '--reference', metavar="REF", required=True,
+		help="Reference FASTA file to use. A bwa index must"
+			" exist.")
+	arg('--sample', help='Read group sample (SM)', required=True)
+	arg('--library', help='Read group library (LB)')
+	arg('--platform', help='read group platform (PL)', default='illumina')
+
+	group = parser.add_argument_group('Options passed through to "bwa mem"')
+	arg = group.add_argument
+	arg('--threads', '-t', metavar='N', type=int, default=available_cpu_count(),
+		help="Use at most N threads (default on this machine: %(default)s)")
+	arg('-M', dest='mark_secondary', help='mark shorter split hits as secondary', action='store_true')
+	arg('-B', dest='mismatch_penalty', type=int, default=None,
+		help='penalty for a mismatch')
+
+	arg('fastq', metavar='FASTQ', nargs='+', help='FASTQ input files, in pairs of two')
+	args = parser.parse_args()
+
+	if not os.path.exists(args.reference):
+		parser.error('reference file "{}" does not exist'.format(args.reference))
+
+	for ext in ('amb', 'ann', 'bwt', 'pac', 'sa'):
+		path1 = args.reference + '.' + ext
+		path2 = args.reference + '.64.' + ext
+		if not os.path.exists(path1) and not os.path.exists(path2):
+			print("File {}.{} does not exist -- it seems there's no index"
+				"usable by BWA at the given reference location.".format(
+					args.reference, ext), file=sys.stderr)
+			sys.exit(2)
+
+	bwa_cmd = ['bwa', 'mem', '-t', str(args.threads)]
+	if args.mark_secondary:
+		bwa_cmd += ['-M']
+	if args.mismatch_penalty:
+		bwa_cmd += ['-B', str(args.mismatch_penalty)]
+
+	# Check the FASTQ files before mapping anything so we can fail early
+	# in case of problems.
+	read_group_ids = set()
+	bwa_calls = []
+	if len(args.fastq) % 2 != 0:
+		parser.error("An even number of FASTQ files is expected (only paired-end data is supported)")
+	for fastq1, fastq2 in pairs(args.fastq):
+		header1 = fastq_header(fastq1)
+		header2 = fastq_header(fastq2)
+		if header1 != header2:
+			sys.exit('FASTQ {!r} does not seem to be partner of {!r}'.format(fastq1, fastq2))
+		flowcell = header1.flowcell
+		if flowcell is None:
+			flowcell = header1.instrument
+		if flowcell is None:
+			flowcell = 'FLOWCELLID'
+		lane = header1.lane
+		if lane is None:
+			lane = 'LANE'
+		read_group_id = '{}.{}.{}'.format(flowcell, args.sample, lane)
+		rg = read_group_id
+		i = 0
+		while rg in read_group_ids:
+			rg = '{}-{}'.format(read_group_id, i+1)
+			i += 1
+		read_group_ids.add(rg)
+		read_group_id = rg
+		platform_unit = read_group_id
+		rg_header = '@RG\tID:{id}\tPU:{pu}\tSM:{sample}'.format(
+			id=read_group_id,
+			pu=platform_unit,
+			sample=args.sample)
+		if args.library:
+			rg_header += '\tLB:{}'.format(args.library)
+		if args.platform:
+			rg_header += '\tPL:{}'.format(args.platform)
+
+		# Do not leave the literal tabs in the command-line. BWA is kind enough
+		# to recognize the \t escape sequence for us. This avoids having a
+		# malformed SAM header due to the embedded tab characters.
+		rg_param = rg_header.replace('\t', '\\t')
+		cmd = bwa_cmd + ['-R', rg_param, args.reference, fastq1, fastq2]
+
+		bwa_calls.append(BwaCall(command=cmd, rg_header=rg_header))
+
+	# Actually run BWA-MEM on all the FASTQ pairs
+	is_first_pair = True
+	write = sys.stdout.buffer.write  # avoid some dictionary lookups
+	for bwa_call in bwa_calls:
+		print('Running', bwa_call.command, file=sys.stderr)
+		with subprocess.Popen(bwa_call.command, stdout=subprocess.PIPE) as bwa:
+			for line in bwa.stdout:
+				if line.startswith(b'@'):
+					if is_first_pair:
+						if line.startswith(b'@RG'):
+							assert line == bwa_calls[0].rg_header.encode('ascii') + b'\n'
+							# write our own RG lines
+							for bc in bwa_calls:
+								write(bc.rg_header.encode('ascii') + b'\n')
+						elif line.startswith(b'@PG'):
+							for pg in fake_pg_headers(line.decode('ascii'), bwa_calls):
+								write(pg.encode('ascii') + b'\n')
+						else:
+							write(line)
+				else:
+					write(line)
+		if bwa.returncode != 0:
+			sys.exit('BWA exited with error code {}'.format(bwa.returncode))
+		is_first_pair = False
+
+
+if __name__ == '__main__':
+	main()
