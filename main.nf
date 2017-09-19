@@ -1089,9 +1089,6 @@ process RunManta {
   gunzip -c Manta/results/variants/candidateSV.vcf.gz > Manta_${idSampleTumor}_vs_${idSampleNormal}.candidateSV.vcf
   gunzip -c Manta/results/variants/diploidSV.vcf.gz > Manta_${idSampleTumor}_vs_${idSampleNormal}.diploidSV.vcf
   gunzip -c Manta/results/variants/candidateSmallIndels.vcf.gz > Manta_${idSampleTumor}_vs_${idSampleNormal}.candidateSmallIndels.vcf
-
-  mv Manta/results/stats/runStats.tsv Manta_${idSampleTumor}_vs_${idSampleNormal}_runStats.tsv
-  mv Manta/results/stats/runStats.xml Strelka_${idSampleTumor}_vs_${idSampleNormal}_runStats.xml
   """
 }
 
