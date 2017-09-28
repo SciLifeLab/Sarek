@@ -1120,6 +1120,7 @@ process RunManta {
 
   output:
     set val("manta"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz"), file("*.vcf.gz.tbi") into mantaOutput
+    set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor), file("*.candidateSmallIndels.vcf.gz"), file("*.candidateSmallIndels.vcf.gz.tbi") into mantaOutputForStrelka
 
   when: 'manta' in tools
 
@@ -1208,6 +1209,49 @@ if (verbose) singleMantaOutput = singleMantaOutput.view {
   Tool  : ${it[0]}\tID    : ${it[1]}\tSample: ${it[2]}\n\
   Files : ${it[3].fileName}\n\
   Index : ${it[4].fileName}"
+}
+
+process RunMantaIntoStrelka {
+  tag {idSampleTumor + "_vs_" + idSampleNormal}
+
+  publishDir directoryMap.strelka, mode: 'copy'
+
+  input:
+    set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor), file(vcfCandidateSmallIndels), file(tbiCandidateSmallIndels) from mantaOutputForStrelka
+    set file(genomeFile), file(genomeIndex), file(genomeDict) from Channel.value([
+      referenceMap.genomeFile,
+      referenceMap.genomeIndex,
+      referenceMap.genomeDict
+    ])
+
+  output:
+    set val("mantaintostrelka"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz"), file("*.vcf.gz.tbi") into mantaIntoStrelkaOutput
+
+  when: 'strelka' in tools
+
+  script:
+  """
+  \$STRELKA_INSTALL_PATH/bin/configureStrelkaSomaticWorkflow.py \
+  --tumor $bamTumor \
+  --normal $bamNormal \
+  --referenceFasta $genomeFile \
+  --indelCandidates $vcfCandidateSmallIndels \
+  --runDir Strelka
+
+  python Strelka/runWorkflow.py -m local -j $task.cpus
+
+  mv Strelka/results/variants/somatic.indels.vcf.gz MantaIntoStrelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz
+  mv Strelka/results/variants/somatic.indels.vcf.gz.tbi MantaIntoStrelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz.tbi
+  mv Strelka/results/variants/somatic.snvs.vcf.gz MantaIntoStrelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz
+  mv Strelka/results/variants/somatic.snvs.vcf.gz.tbi MantaIntoStrelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz.tbi
+  """
+}
+
+if (verbose) mantaIntoStrelkaOutput = mantaIntoStrelkaOutput.view {
+  "Variant Calling output:\n\
+  Tool  : ${it[0]}\tID    : ${it[1]}\tSample: [${it[3]}, ${it[2]}]\n\
+  Files : ${it[4].fileName}\n\
+  Index : ${it[5].fileName}"
 }
 
 // Run commands and code from Malin Larsson
@@ -1334,6 +1378,7 @@ if (step == 'annotate' && annotateVCF == []) {
     .choice(vcfToAnnotate, vcfNotToAnnotate) { it[0] == 'gvcf-hc' || it[0] == 'freebayes' ? 1 : 0 }
 
   (strelkaIndels, strelkaSNVS) = strelkaOutput.into(2)
+  (mantaIntoStrelkaIndels, mantaIntoStrelkaSNVS) = mantaIntoStrelkaOutput.into(2)
   (mantaSomaticSV, mantaDiploidSV) = mantaOutput.into(2)
   vcfToAnnotate = vcfToAnnotate.map {
     variantcaller, idPatient, idSampleNormal, idSampleTumor, vcf ->
@@ -1346,6 +1391,14 @@ if (step == 'annotate' && annotateVCF == []) {
     mantaSomaticSV.map {
       variantcaller, idPatient, idSampleNormal, idSampleTumor, vcf, tbi ->
       [variantcaller, vcf[3]]
+    },
+    mantaIntoStrelkaIndels.map {
+      variantcaller, idPatient, idSampleNormal, idSampleTumor, vcf, tbi ->
+      [variantcaller, vcf[0]]
+    },
+    mantaIntoStrelkaSNVS.map {
+      variantcaller, idPatient, idSampleNormal, idSampleTumor, vcf, tbi ->
+      [variantcaller, vcf[1]]
     },
     singleStrelkaOutput.map {
       variantcaller, idPatient, idSample, vcf, tbi ->
