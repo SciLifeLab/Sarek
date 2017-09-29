@@ -76,9 +76,9 @@ fi
 
 if [[ "$TEST" = "ANNOTATEVEP" ]] || [[ "$TEST" = "ALL" ]]
 then
-  nf_test . --step preprocessing --sample data/tsv/tiny-single-manta.tsv --tools Manta
-  nf_test . --step preprocessing --sample data/tsv/tiny-manta.tsv --tools Manta
-  nf_test . --step preprocessing --sample $SAMPLE --tools MuTect2,Strelka
+  nf_test . --step preprocessing --sample data/tsv/tiny-single-manta.tsv --tools Manta,Strelka
+  nf_test . --step preprocessing --sample data/tsv/tiny-manta.tsv --tools Manta,Strelka
+  nf_test . --step preprocessing --sample $SAMPLE --tools MuTect2
 
   # Remove images only on TRAVIS
   if [[ "$PROFILE" == "docker" ]] && [[ "$TRAVIS" == true ]]
@@ -95,9 +95,9 @@ fi
 
 if [[ "$TEST" = "ANNOTATESNPEFF" ]] || [[ "$TEST" = "ALL" ]]
 then
-  nf_test . --step preprocessing --sample data/tsv/tiny-single-manta.tsv --tools Manta
-  nf_test . --step preprocessing --sample data/tsv/tiny-manta.tsv --tools Manta
-  nf_test . --step preprocessing --sample $SAMPLE --tools MuTect2,Strelka
+  nf_test . --step preprocessing --sample data/tsv/tiny-single-manta.tsv --tools Manta,Strelka
+  nf_test . --step preprocessing --sample data/tsv/tiny-manta.tsv --tools Manta,Strelka
+  nf_test . --step preprocessing --sample $SAMPLE --tools MuTect2
 
   # Remove images only on TRAVIS
   if [[ "$PROFILE" == "docker" ]] && [[ "$TRAVIS" == true ]]
