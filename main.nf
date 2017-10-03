@@ -200,7 +200,7 @@ process MapReads {
   // TODO idRun is unused. It was previously used as the RG id, but that
   // is now deduced automatically by the bwa_multifastq script.
   input:
-    set idPatient, status, idSample, idRun, file(fastqFiles1), file(fastqFiles2) from groupedFastq
+    set idPatient, status, idSample, idRun, file(fastqFiles1: '???_R1_001.fastq.gz'), file(fastqFiles2: '???_R2_001.fastq.gz') from groupedFastq
     set file(genomeFile), file(bwaIndex) from Channel.value([referenceMap.genomeFile, referenceMap.bwaIndex])
 
   output:
