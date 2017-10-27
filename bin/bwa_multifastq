@@ -169,6 +169,8 @@ def main():
 	arg('-M', dest='mark_secondary', help='mark shorter split hits as secondary', action='store_true')
 	arg('-B', dest='mismatch_penalty', type=int, default=None,
 		help='penalty for a mismatch')
+	arg('-j', dest='not_alt_aware', action='store_true', default=False,
+		help='treat ALT contigs as part of the primary assembly (i.e. ignore <idxbase>.alt file)')
 
 	arg('fastq', metavar='FASTQ', nargs='+', help='FASTQ input files, in pairs of two')
 	args = parser.parse_args()
@@ -190,6 +192,8 @@ def main():
 		bwa_cmd += ['-M']
 	if args.mismatch_penalty:
 		bwa_cmd += ['-B', str(args.mismatch_penalty)]
+	if args.not_alt_aware:
+		bwa_cmd += ['-j']
 
 	# Check the FASTQ files before mapping anything so we can fail early
 	# in case of problems.
