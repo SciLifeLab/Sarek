@@ -29,8 +29,7 @@ kate: syntax groovy; space-indent on; indent-width 2;
 --------------------------------------------------------------------------------
  Processes overview
  - RunFastQC - Run FastQC for QC on fastq files
- - MapReads - Map reads with BWA
- - MergeBams - Merge BAMs if multilane samples
+ - MapReads - Map reads with BWA (handles also multi-lane samples)
  - MarkDuplicates - Mark Duplicates with Picard
  - RealignerTargetCreator - Create realignment target intervals
  - IndelRealigner - Realign BAMs as T/N pair
@@ -237,80 +236,37 @@ if (verbose) fastQCreport = fastQCreport.view {
   Files : [${it[0].fileName}, ${it[1].fileName}]"
 }
 
-process MapReads {
-  tag {idPatient + "-" + idRun}
+// group by sample
+groupedFastq = fastqFiles.groupTuple(by:[0, 1, 2])
 
+process MapReads {
+  tag {idPatient + "-" + idSample}
+
+  // TODO idRun is unused. It was previously used as the RG id, but that
+  // is now deduced automatically by the bwa_multifastq script.
   input:
-    set idPatient, status, idSample, idRun, file(fastqFile1), file(fastqFile2) from fastqFiles
+    set idPatient, status, idSample, idRun, file(fastqFiles1: '???_R1_001.fastq.gz'), file(fastqFiles2: '???_R2_001.fastq.gz') from groupedFastq
     set file(genomeFile), file(bwaIndex) from Channel.value([referenceMap.genomeFile, referenceMap.bwaIndex])
 
   output:
-    set idPatient, status, idSample, idRun, file("${idRun}.bam") into mappedBam
+    set idPatient, status, idSample, file("${idSample}_${status}.bam") into mappedBam
 
   when: step == 'mapping'
 
   script:
-  readGroup = "@RG\\tID:$idRun\\tPU:$idRun\\tSM:$idSample\\tLB:$idSample\\tPL:illumina"
   // adjust mismatch penalty for tumor samples
   extra = status == 1 ? "-B 3 " : ""
+  fastq = [fastqFiles1.collect{"$it"}, fastqFiles2.collect{"$it"}].transpose().flatten().join(' ')
+  samtools_threads = task.cpus > 8 ? 8 : task.cpus
+
   """
-  bwa mem -R \"$readGroup\" ${extra}-t $task.cpus -M \
-  $genomeFile $fastqFile1 $fastqFile2 | \
-  samtools sort --threads $task.cpus -m 4G - > ${idRun}.bam
+  bwa_multifastq -M --sample $idSample ${extra}-t $task.cpus -r $genomeFile $fastq | \
+    samtools sort --threads $samtools_threads -m 2G - > ${idSample}_${status}.bam
   """
 }
 
 if (verbose) mappedBam = mappedBam.view {
-  "Mapped BAM (single or to be merged):\n\
-  ID    : ${it[0]}\tStatus: ${it[1]}\tSample: ${it[2]}\tRun   : ${it[3]}\n\
-  File  : [${it[4].fileName}]"
-}
-
-// Sort bam whether they are standalone or should be merged
-// Borrowed code from https://github.com/guigolab/chip-nf
-
-singleBam = Channel.create()
-groupedBam = Channel.create()
-mappedBam.groupTuple(by:[0,1,2])
-  .choice(singleBam, groupedBam) {it[3].size() > 1 ? 1 : 0}
-singleBam = singleBam.map {
-  idPatient, status, idSample, idRun, bam ->
-  [idPatient, status, idSample, bam]
-}
-
-process MergeBams {
-  tag {idPatient + "-" + idSample}
-
-  input:
-    set idPatient, status, idSample, idRun, file(bam) from groupedBam
-
-  output:
-    set idPatient, status, idSample, file("${idSample}.bam") into mergedBam
-
-  when: step == 'mapping'
-
-  script:
-  """
-  samtools merge --threads $task.cpus ${idSample}.bam $bam
-  """
-}
-
-if (verbose) singleBam = singleBam.view {
-  "Single BAM:\n\
-  ID    : ${it[0]}\tStatus: ${it[1]}\tSample: ${it[2]}\n\
-  File  : [${it[3].fileName}]"
-}
-
-if (verbose) mergedBam = mergedBam.view {
-  "Merged BAM:\n\
-  ID    : ${it[0]}\tStatus: ${it[1]}\tSample: ${it[2]}\n\
-  File  : [${it[3].fileName}]"
-}
-
-mergedBam = mergedBam.mix(singleBam)
-
-if (verbose) mergedBam = mergedBam.view {
-  "BAM for MarkDuplicates:\n\
+  "Mapped BAM:\n\
   ID    : ${it[0]}\tStatus: ${it[1]}\tSample: ${it[2]}\n\
   File  : [${it[3].fileName}]"
 }
@@ -321,7 +277,7 @@ process MarkDuplicates {
   publishDir '.', saveAs: { it == "${bam}.metrics" ? "$directoryMap.markDuplicatesQC/$it" : "$directoryMap.nonRealigned/$it" }, mode: 'copy'
 
   input:
-    set idPatient, status, idSample, file(bam) from mergedBam
+    set idPatient, status, idSample, file(bam) from mappedBam
 
   output:
     set idPatient, file("${idSample}_${status}.md.bam"), file("${idSample}_${status}.md.bai") into duplicates
