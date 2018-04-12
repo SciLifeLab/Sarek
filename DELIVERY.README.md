@@ -9,8 +9,7 @@ All the four sections can have sub-directories containing results from different
 
 This directory contains results from the final annotation steps: two software are used for annotation, [VEP][vep-link] and [snpEff][snpeff-link].
 Only a subset of the VCF files are annotated, and only variants that have a PASS filter.
-FreeBayes results are not annotated in the moment yet as
-we are lacking a decent somatic filter.
+FreeBayes results are not annotated in the moment yet as we are lacking a decent somatic filter.
 For HaplotypeCaller the germline variations are annotated for both the tumour and the normal sample.
 
 All the VCFs annotated have an `ann.vcf` extension, and a summary HTML file associated.
