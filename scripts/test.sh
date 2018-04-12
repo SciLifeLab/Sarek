@@ -57,7 +57,7 @@ function run_wrapper() {
 }
 
 function clean_repo() {
-  if [[ $TRAVIS == false ]] && [[ $KEEP == true ]]
+  if [[ $TRAVIS == false ]] && [[ $KEEP == false ]]
   then
     rm -rf work .nextflow* Preprocessing Reports Annotation VariantCalling Results
   fi
@@ -93,13 +93,13 @@ fi
 
 if [[ ALL,GERMLINE =~ $TEST ]]
 then
-  run_wrapper --germline --sampleDir data/tiny/tiny/normal --variantCalling --tools HaplotypeCaller
+  run_wrapper --germline --sampleDir data/tiny/tiny/normal --variantCalling --tools HaplotypeCaller,Manta,Strelka
   clean_repo
 fi
 
 if [[ ALL,TOOLS =~ $TEST ]]
 then
-  run_wrapper --somatic --sample $SAMPLE --variantCalling  --tools FreeBayes,HaplotypeCaller,MuTect1,MuTect2
+  run_wrapper --somatic --sample $SAMPLE --variantCalling  --tools FreeBayes,HaplotypeCaller,MuTect2
 fi
 
 if [[ ALL,MANTA =~ $TEST ]]
@@ -138,6 +138,6 @@ fi
 
 if [[ ALL,BUILDCONTAINERS =~ $TEST ]] && [[ $PROFILE == docker ]]
 then
-  nf_test buildContainers.nf --docker --containers fastqc,gatk,igvtools,multiqc,mutect1,picard,qualimap,runallelecount,r-base,snpeff,sarek
+  nf_test buildContainers.nf --docker --containers fastqc,gatk,igvtools,multiqc,picard,qualimap,runallelecount,r-base,snpeff,sarek
   clean_repo
 fi

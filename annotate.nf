@@ -79,8 +79,6 @@ if (annotateVCF == []) {
       .flatten().map{vcf -> ['haplotypecaller',vcf]},
     Channel.fromPath("${directoryMap.manta}/*SV.vcf.gz")
       .flatten().map{vcf -> ['manta',vcf]},
-    Channel.fromPath("${directoryMap.mutect1}/*.vcf.gz")
-      .flatten().map{vcf -> ['mutect1',vcf]},
     Channel.fromPath("${directoryMap.mutect2}/*.vcf.gz")
       .flatten().map{vcf -> ['mutect2',vcf]},
     Channel.fromPath("${directoryMap.strelka}/*{somatic,variants}*.vcf.gz")
@@ -223,7 +221,6 @@ def defineDirectoryMap() {
   return [
     'haplotypecaller'  : "${params.outDir}/VariantCalling/HaplotypeCaller",
     'manta'            : "${params.outDir}/VariantCalling/Manta",
-    'mutect1'          : "${params.outDir}/VariantCalling/MuTect1",
     'mutect2'          : "${params.outDir}/VariantCalling/MuTect2",
     'strelka'          : "${params.outDir}/VariantCalling/Strelka",
     'strelkabp'        : "${params.outDir}/VariantCalling/StrelkaBP",
@@ -267,7 +264,6 @@ def helpMessage() {
   log.info "       Possible values are:"
   log.info "         haplotypecaller (Annotate HaplotypeCaller output)"
   log.info "         manta (Annotate Manta output)"
-  log.info "         mutect1 (Annotate MuTect1 output)"
   log.info "         mutect2 (Annotate MuTect2 output)"
   log.info "         strelka (Annotate Strelka output)"
   log.info "    --annotateVCF"

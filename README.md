@@ -40,7 +40,6 @@ The worflow steps and tools used are as follows:
         * [Manta](https://github.com/Illumina/manta)
 3. **Somatic variant calling** - `somaticVC.nf` _(optional)_
     * SNVs and small indels
-        * [MuTect1](https://github.com/broadinstitute/mutect)
         * [MuTect2](https://github.com/broadgsa/gatk-protected)
         * [Freebayes](https://github.com/ekg/freebayes)
         * [Strelka](https://github.com/Illumina/strelka)

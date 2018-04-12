@@ -183,7 +183,6 @@ def defineContainersList(){
     'gatk',
     'igvtools',
     'multiqc',
-    'mutect1',
     'picard',
     'qualimap',
     'r-base',
@@ -210,7 +209,7 @@ def helpMessage() {
   log.info "    --containers: Choose which containers to build"
   log.info "       Default: all"
   log.info "       Possible values:"
-  log.info "         all, fastqc, freebayes, gatk, igvtools, multiqc, mutect1"
+  log.info "         all, fastqc, freebayes, gatk, igvtools, multiqc"
   log.info "         picard, qualimap, r-base, runallelecount, sarek"
   log.info "         snpeff, snpeffgrch37, snpeffgrch38, vepgrch37, vepgrch38"
   log.info "    --docker: Build containers using Docker"

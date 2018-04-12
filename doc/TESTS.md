@@ -15,8 +15,8 @@ Four optional arguments are supported:
 - `-t` || `--test`:
  - `DIR`: test `mapping` with an input directory, all other tests use a TSV file
  - `STEP`: test `mapping`, `realign` and `recalibrate`
- - `GERMLINE`: test `mapping` and Variant Calling with `HaplotypeCaller`
- - `TOOLS`: test `mapping` and Variant Calling with `FreeBayes`, `HaplotypeCaller`, `MuTect1`, `MuTect2`, `Strelka`
+ - `GERMLINE`: test `mapping` and Variant Calling with `HaplotypeCaller`, `Manta` and `Strelka`
+ - `TOOLS`: test `mapping` and Variant Calling with `FreeBayes`, `HaplotypeCaller`, `MuTect2`, `Strelka`
  - `MANTA`: test `mapping` and Variant Calling with `Manta`
  - `ANNOTATESNPEFF`: test annotation using `snpEFF`
  - `ANNOTATEVEP`: test annotation using `VEP`

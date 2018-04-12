@@ -15,7 +15,6 @@ For processing + somatic variant calling + Reports:
  - [freebayes](#freebayes-)
  - [gatk](#gatk-)
  - [multiqc](#multiqc-)
- - [mutect1](#mutect1-)
  - [picard](#picard-)
  - [qualimap](#qualimap-)
  - [r-base](#r-base-)
@@ -56,11 +55,6 @@ A container named after the process is made for each process. If a container can
 
 - Based on `ewels/multiqc:v1.4`
 - Contain **[MultiQC][multiqc-link]** 143
-
-## mutect1 [![mutect1-docker status][mutect1-docker-badge]][mutect1-docker-link]
-
-- Based on `openjdk:7-slim`
-- Contain **[MuTect1][mutect1-link]** 1.5
 
 ## picard [![picard-docker status][picard-docker-badge]][picard-docker-link]
 
@@ -141,9 +135,6 @@ A container named after the process is made for each process. If a container can
 [multiqc-docker-badge]: https://img.shields.io/docker/automated/maxulysse/multiqc.svg
 [multiqc-docker-link]: https://hub.docker.com/r/maxulysse/multiqc
 [multiqc-link]: https://github.com/ewels/MultiQC/
-[mutect1-docker-badge]: https://img.shields.io/docker/automated/maxulysse/mutect1.svg
-[mutect1-docker-link]: https://hub.docker.com/r/maxulysse/mutect1
-[mutect1-link]: https://github.com/broadinstitute/mutect
 [nbis-link]: https://www.nbis.se/
 [ngi-link]: https://ngisweden.scilifelab.se/
 [picard-docker-badge]: https://img.shields.io/docker/automated/maxulysse/picard.svg

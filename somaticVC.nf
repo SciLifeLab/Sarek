@@ -30,10 +30,9 @@ kate: syntax groovy; space-indent on; indent-width 2;
  - RunSamtoolsStats - Run Samtools stats on recalibrated BAM files
  - RunBamQC - Run qualimap BamQC on recalibrated BAM files
  - CreateIntervalBeds - Create and sort intervals into bed files
- - RunMutect1 - Run MuTect1 for Variant Calling (Parallelized processes)
  - RunMutect2 - Run MuTect2 for Variant Calling (Parallelized processes)
  - RunFreeBayes - Run FreeBayes for Variant Calling (Parallelized processes)
- - ConcatVCF - Merge results from MuTect1 and MuTect2
+ - ConcatVCF - Merge results from FreeBayes and MuTect2
  - RunStrelka - Run Strelka for Variant Calling
  - RunManta - Run Manta for Structural Variant Calling
  - RunSingleManta - Run Manta for Single Structural Variant Calling
@@ -296,47 +295,8 @@ bamsAll = bamsAll.map {
 
 bamsTumorNormalIntervals = bamsAll.spread(bedIntervals)
 
-// MuTect1, MuTect2, FreeBayes
-(bamsFMT1, bamsFMT2, bamsFFB) = bamsTumorNormalIntervals.into(3)
-
-process RunMutect1 {
-  tag {idSampleTumor + "_vs_" + idSampleNormal + "-" + intervalBed.baseName}
-
-  input:
-    set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor), file(intervalBed) from bamsFMT1
-    set file(genomeFile), file(genomeIndex), file(genomeDict), file(dbsnp), file(dbsnpIndex), file(cosmic), file(cosmicIndex) from Channel.value([
-      referenceMap.genomeFile,
-      referenceMap.genomeIndex,
-      referenceMap.genomeDict,
-      referenceMap.dbsnp,
-      referenceMap.dbsnpIndex,
-      referenceMap.cosmic,
-      referenceMap.cosmicIndex
-    ])
-
-  output:
-    set val("mutect1"), idPatient, idSampleNormal, idSampleTumor, file("${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf") into mutect1Output
-
-  when: 'mutect1' in tools && !params.onlyQC
-
-  script:
-  """
-  java -Xmx${task.memory.toGiga()}g \
-  -jar \$MUTECT_HOME/muTect.jar \
-  -T MuTect \
-  -R ${genomeFile} \
-  --cosmic ${cosmic} \
-  --dbsnp ${dbsnp} \
-  -I:normal ${bamNormal} \
-  -I:tumor ${bamTumor} \
-  -L ${intervalBed} \
-  --disable_auto_index_creation_and_locking_when_reading_rods \
-  --out ${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.call_stats.out \
-  --vcf ${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf
-  """
-}
-
-mutect1Output = mutect1Output.groupTuple(by:[0,1,2,3])
+// MuTect2, FreeBayes
+(bamsFMT2, bamsFFB) = bamsTumorNormalIntervals.into(2)
 
 process RunMutect2 {
   tag {idSampleTumor + "_vs_" + idSampleNormal + "-" + intervalBed.baseName}
@@ -411,7 +371,7 @@ freebayesOutput = freebayesOutput.groupTuple(by:[0,1,2,3])
 // we are merging the VCFs that are called separatelly for different intervals
 // so we can have a single sorted VCF containing all the calls for a given caller
 
-vcfsToMerge = mutect1Output.mix(mutect2Output, freebayesOutput)
+vcfsToMerge = mutect2Output.mix(freebayesOutput)
 if (params.verbose) vcfsToMerge = vcfsToMerge.view {
   "VCFs To be merged:\n\
   Tool  : ${it[0]}\tID    : ${it[1]}\tSample: [${it[3]}, ${it[2]}]\n\
@@ -431,7 +391,7 @@ process ConcatVCF {
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz") into vcfConcatenated
     file("*.vcf.gz.tbi") into vcfConcatenatedTbi
 
-  when: ('mutect1' in tools || 'mutect2' in tools || 'freebayes' in tools ) && !params.onlyQC
+  when: ('mutect2' in tools || 'freebayes' in tools) && !params.onlyQC
 
   script:
   outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
@@ -889,7 +849,6 @@ def defineDirectoryMap() {
     'ascat'            : "${params.outDir}/VariantCalling/Ascat",
     'freebayes'        : "${params.outDir}/VariantCalling/FreeBayes",
     'manta'            : "${params.outDir}/VariantCalling/Manta",
-    'mutect1'          : "${params.outDir}/VariantCalling/MuTect1",
     'mutect2'          : "${params.outDir}/VariantCalling/MuTect2",
     'strelka'          : "${params.outDir}/VariantCalling/Strelka",
     'strelkabp'        : "${params.outDir}/VariantCalling/StrelkaBP"
@@ -923,7 +882,6 @@ def defineToolList() {
     'freebayes',
     'haplotypecaller',
     'manta',
-    'mutect1',
     'mutect2',
     'strelka'
   ]
@@ -990,7 +948,6 @@ def helpMessage() {
   log.info "       Option to configure which tools to use in the workflow."
   log.info "         Different tools to be separated by commas."
   log.info "       Possible values are:"
-  log.info "         mutect1 (use MuTect1 for VC)"
   log.info "         mutect2 (use MuTect2 for VC)"
   log.info "         freebayes (use FreeBayes for VC)"
   log.info "         strelka (use Strelka for VC)"
