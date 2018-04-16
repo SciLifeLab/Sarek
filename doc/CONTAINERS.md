@@ -12,6 +12,7 @@ For processing + germline variant calling + Reports:
  - [vcftools](#vcftools-)
 
 For processing + somatic variant calling + Reports:
+ - [controlfreec](#controlfreec-)
  - [fastqc](#fastqc-)
  - [freebayes](#freebayes-)
  - [gatk](#gatk-)
@@ -33,6 +34,11 @@ For annotation for GRCh38, you will need:
  - [vepgrch38](#vepgrch38-)
 
 A container named after the process is made for each process. If a container can be reused, it will be named after the tool used.
+
+## controlfreec [![controlfreec-docker status][controlfreec-docker-badge]][controlfreec-docker-link]
+
+- Based on `nfcore/base:latest`
+- Contain **[Control-FREEC][controlfreec-link]** 10.6
 
 ## fastqc [![fastqc-docker status][fastqc-docker-badge]][fastqc-docker-link]
 
@@ -132,6 +138,9 @@ A container named after the process is made for each process. If a container can
 [allelecount-link]: https://github.com/cancerit/alleleCount
 [bcftools-link]: https://github.com/samtools/bcftools
 [bwa-link]: https://github.com/lh3/bwa
+[controlfreec-docker-badge]: https://img.shields.io/docker/automated/maxulysse/controlfreec.svg
+[controlfreec-docker-link]: https://hub.docker.com/r/maxulysse/controlfreec
+[controlfreec-link]: http://boevalab.com/FREEC/
 [fastqc-docker-badge]: https://img.shields.io/docker/automated/maxulysse/fastqc.svg
 [fastqc-docker-link]: https://hub.docker.com/r/maxulysse/fastqc
 [fastqc-link]: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
