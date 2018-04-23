@@ -138,6 +138,6 @@ fi
 
 if [[ ALL,BUILDCONTAINERS =~ $TEST ]] && [[ $PROFILE == docker ]]
 then
-  nf_test buildContainers.nf --docker --containers fastqc,gatk,igvtools,multiqc,picard,qualimap,runallelecount,r-base,snpeff,sarek
+  nf_test buildContainers.nf --docker --containers gatk,igvtools,picard,qctools,runallelecount,r-base,snpeff,sarek
   clean_repo
 fi
