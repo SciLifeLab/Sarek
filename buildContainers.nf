@@ -179,21 +179,18 @@ def defineContainersList(){
   // Return list of authorized containers
   return [
     'controlfreec',
-    'fastqc',
     'freebayes',
     'gatk',
     'igvtools',
-    'multiqc',
     'mutect1',
     'picard',
-    'qualimap',
+    'qctools',
     'r-base',
     'runallelecount',
     'sarek',
     'snpeff',
     'snpeffgrch37',
     'snpeffgrch38',
-    'vcftools',
     'vepgrch37',
     'vepgrch38'
     ]
@@ -212,9 +209,9 @@ def helpMessage() {
   log.info "    --containers: Choose which containers to build"
   log.info "       Default: all"
   log.info "       Possible values:"
-  log.info "         all, controlfreec, fastqc, freebayes, gatk, igvtools"
-  log.info "         multiqc, mutect1, picard, qualimap, r-base, runallelecount"
-  log.info "         sarek, snpeff, snpeffgrch37, snpeffgrch38, vcftools"
+  log.info "         all, controlfreec, freebayes, gatk, igvtools"
+  log.info "         mutect1, picard, qctools, r-base, runallelecount"
+  log.info "         sarek, snpeff, snpeffgrch37, snpeffgrch38"
   log.ingo "         vepgrch37, vepgrch38"
   log.info "    --docker: Build containers using Docker"
   log.info "    --help"
