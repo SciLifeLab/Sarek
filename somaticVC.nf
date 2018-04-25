@@ -196,13 +196,14 @@ recalibratedBam
 bamsNormal = bamsNormal.ifEmpty{exit 1, "No normal sample defined, check TSV file: ${tsvFile}"}
 bamsTumor = bamsTumor.ifEmpty{exit 1, "No tumor sample defined, check TSV file: ${tsvFile}"}
 
-// Ascat, Strelka Germline & Manta Germline SV
+// Ascat, Control-FREEC, Manta Tumor-only SV
 bamsForAscat = Channel.create()
+bamsForMpileup = Channel.create()
 bamsForSingleManta = Channel.create()
 
 (bamsTumorTemp, bamsTumor) = bamsTumor.into(2)
 (bamsNormalTemp, bamsNormal) = bamsNormal.into(2)
-(bamsForAscat, bamsForSingleManta) = bamsNormalTemp.mix(bamsTumorTemp).into(2)
+(bamsForAscat, bamsForMpileup, bamsForSingleManta) = bamsNormalTemp.mix(bamsTumorTemp).into(3)
 
 // Removing status because not relevant anymore
 bamsNormal = bamsNormal.map { idPatient, status, idSample, bam, bai -> [idPatient, idSample, bam, bai] }
@@ -773,6 +774,65 @@ if (params.verbose) ascatOutput = ascatOutput.view {
   Files : [${it[4].fileName}]"
 }
 
+process RunMpileup {
+  tag {idSample}
+
+  input:
+    set idPatient, status, idSample, file(bam), file(bai) from bamsForMpileup
+    set file(genomeFile), file(genomeIndex) from Channel.value([
+      referenceMap.genomeFile,
+      referenceMap.genomeIndex
+    ])
+
+  output:
+    set idPatient, status, idSample, file("${idSample}.pileup.gz") into mpileupOutput
+
+  when: 'controlfreec' in tools && !params.onlyQC
+
+  script:
+  """
+  samtools mpileup \
+  -f ${genomeFile} \
+  ${bam} \
+  | gzip -c ${idSample}.pileup.gz
+  """
+}
+
+mpileupNormal = Channel.create()
+mpileupTumor = Channel.create()
+
+mpileupOutput
+  .choice(mpileupTumor, mpileupNormal) {it[1] == 0 ? 1 : 0}
+
+mpileupOutput = mpileupNormal.combine(mpileupTumor)
+
+mpileupOutput = mpileupOutput.map {
+  idPatientNormal, statusNormal, idSampleNormal, mpileupNormal,
+  idPatientTumor,  statusTumor,  idSampleTumor,  mpileupTumor ->
+  [idPatientNormal, idSampleNormal, idSampleTumor, mpileupNormal, mpileupTumor]
+}
+
+process GenerateControlFreecConfig {
+  tag {idSampleTumor + "_vs_" + idSampleNormal}
+
+  input:
+    set idPatientNormal, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor) from mpileupOutput
+    set file(genomeFile), file(genomeIndex) from Channel.value([
+      referenceMap.genomeFile,
+      referenceMap.genomeIndex
+    ])
+
+  output:
+  set idPatientNormal, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file("*.config.txt") from mpileupOutput
+
+  when: 'controlfreec' in tools && !params.onlyQC
+
+  script:
+  """
+
+  """
+}
+
 (strelkaIndels, strelkaSNVS) = strelkaOutput.into(2)
 (mantaSomaticSV, mantaDiploidSV) = mantaOutput.into(2)
 
@@ -1043,9 +1103,9 @@ def helpMessage() {
   log.info "         mutect2 (use MuTect2 for VC)"
   log.info "         freebayes (use FreeBayes for VC)"
   log.info "         strelka (use Strelka for VC)"
-  log.info "         haplotypecaller (use HaplotypeCaller for normal bams VC)"
   log.info "         manta (use Manta for SV)"
   log.info "         ascat (use Ascat for CNV)"
+  log.info "         controlfreec (use Control-FREEC for CNV)"
   log.info "    --genome <Genome>"
   log.info "       Use a specific genome version."
   log.info "       Possible values are:"
