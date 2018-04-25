@@ -289,7 +289,7 @@ bamsAll = bamsNormal.combine(bamsTumor)
 // /!\ It is assumed that every sample are from the same patient
 bamsAll = bamsAll.map {
   idPatientNormal, idSampleNormal, bamNormal, baiNormal, idPatientTumor, idSampleTumor, bamTumor, baiTumor ->
-  [idPatientNormal, idSampleNormal, bamNormal, baiNormal, idSampleTumor, bamTumor, baiTumor]
+  [idPatient, idSampleNormal, bamNormal, baiNormal, idSampleTumor, bamTumor, baiTumor]
 }
 
 // Manta and Strelka
@@ -720,7 +720,7 @@ alleleCountOutput = alleleCountNormal.combine(alleleCountTumor)
 alleleCountOutput = alleleCountOutput.map {
   idPatientNormal, statusNormal, idSampleNormal, alleleCountNormal,
   idPatientTumor,  statusTumor,  idSampleTumor,  alleleCountTumor ->
-  [idPatientNormal, idSampleNormal, idSampleTumor, alleleCountNormal, alleleCountTumor]
+  [idPatient, idSampleNormal, idSampleTumor, alleleCountNormal, alleleCountTumor]
 }
 
 // R script from Malin Larssons bitbucket repo:
@@ -809,27 +809,55 @@ mpileupOutput = mpileupNormal.combine(mpileupTumor)
 mpileupOutput = mpileupOutput.map {
   idPatientNormal, statusNormal, idSampleNormal, mpileupNormal,
   idPatientTumor,  statusTumor,  idSampleTumor,  mpileupTumor ->
-  [idPatientNormal, idSampleNormal, idSampleTumor, mpileupNormal, mpileupTumor]
+  [idPatient, idSampleNormal, idSampleTumor, mpileupNormal, mpileupTumor]
 }
 
 process GenerateControlFreecConfig {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
+  publishDir directoryMap.controlfreec, saveAs: { it == "${idSampleTumor}_vs_${idSampleNormal}.config.txt" ? it : '' }, mode: 'link'
+
   input:
-    set idPatientNormal, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor) from mpileupOutput
-    set file(genomeFile), file(genomeIndex) from Channel.value([
-      referenceMap.genomeFile,
-      referenceMap.genomeIndex
-    ])
+    set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor) from mpileupOutput
 
   output:
-  set idPatientNormal, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file("*.config.txt") from mpileupOutput
+  set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file("${idSampleTumor}_vs_${idSampleNormal}.config.txt") from mpileupOutput
 
   when: 'controlfreec' in tools && !params.onlyQC
 
   script:
+  gender = patientGenders[idPatient]
   """
+  touch config.txt
+  echo "[general]" >> config.txt
+  echo "BedGraphOutput=TRUE" >> config.txt
+  echo "chrFiles = ${referenceMap.genomeFile}.baseName" >> config.txt
+  echo "chrLenFile = r${eferenceMap.genomeIndex}.baseName" >> config.txt
+  echo "coefficientOfVariation = 0.015" >> config.txt
+  echo "contaminationAdjustment = TRUE" >> config.txt
+  echo "forceGCcontentNormalization = 0" >> config.txt
+  echo "gemMappabilityFile = out100m2_hg38.gem" >> config.txt
+  echo "maxThreads=8" >> config.txt
+  echo "noisyData=FALSE" >> config.txt
+  echo "ploidy = 2" >> config.txt
+  echo "printNA=FALSE" >> config.txt
+  echo "sex=${gender}" >> config.txt
+  echo "window = 20000" >> config.txt
 
+  echo "[sample]" >> config.txt
+  echo "inputFormat = pileup" >> config.txt
+  echo "mateFile = ${mpileupTumor}.baseName" >> config.txt
+  echo "mateOrientation = FR" >> config.txt
+
+  echo "[control]" >> config.txt
+  echo "inputFormat = pileup" >> config.txt
+  echo "mateFile = ${mpileupNormal}.baseName" >> config.txt
+  echo "mateOrientation = FR" >> config.txt
+
+  echo "[BAF]" >> config.txt
+  echo "SNPfile = snp147_chr1-M_GRCh38.final.txt" >> config.txt
+
+  mv config.txt ${idSampleTumor}_vs_${idSampleNormal}.config.txt
   """
 }
 
@@ -990,18 +1018,19 @@ def checkUppmaxProject() {
 
 def defineDirectoryMap() {
   return [
-    'recalibrated'     : "${params.outDir}/Preprocessing/Recalibrated",
-    'bamQC'            : "${params.outDir}/Reports/bamQC",
-    'bcftoolsStats'    : "${params.outDir}/Reports/BCFToolsStats",
-    'samtoolsStats'    : "${params.outDir}/Reports/SamToolsStats",
-    'vcftools'         : "${params.outDir}/Reports/VCFTools",
-    'ascat'            : "${params.outDir}/VariantCalling/Ascat",
-    'freebayes'        : "${params.outDir}/VariantCalling/FreeBayes",
-    'manta'            : "${params.outDir}/VariantCalling/Manta",
-    'mutect1'          : "${params.outDir}/VariantCalling/MuTect1",
-    'mutect2'          : "${params.outDir}/VariantCalling/MuTect2",
-    'strelka'          : "${params.outDir}/VariantCalling/Strelka",
-    'strelkabp'        : "${params.outDir}/VariantCalling/StrelkaBP"
+    'recalibrated'  : "${params.outDir}/Preprocessing/Recalibrated",
+    'bamQC'         : "${params.outDir}/Reports/bamQC",
+    'bcftoolsStats' : "${params.outDir}/Reports/BCFToolsStats",
+    'samtoolsStats' : "${params.outDir}/Reports/SamToolsStats",
+    'vcftools'      : "${params.outDir}/Reports/VCFTools",
+    'ascat'         : "${params.outDir}/VariantCalling/Ascat",
+    'controlfreec'  : "${params.outDir}/VariantCalling/Control-FREEC",
+    'freebayes'     : "${params.outDir}/VariantCalling/FreeBayes",
+    'manta'         : "${params.outDir}/VariantCalling/Manta",
+    'mutect1'       : "${params.outDir}/VariantCalling/MuTect1",
+    'mutect2'       : "${params.outDir}/VariantCalling/MuTect2",
+    'strelka'       : "${params.outDir}/VariantCalling/Strelka",
+    'strelkabp'     : "${params.outDir}/VariantCalling/StrelkaBP"
   ]
 }
 
