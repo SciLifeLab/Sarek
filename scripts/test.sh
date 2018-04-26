@@ -103,11 +103,9 @@ then
   clean_repo
 fi
 
-if [[ ALL,MANTA =~ $TEST ]]
+if [[ ALL,CONTROLFREEC =~ $TEST ]]
 then
-  run_wrapper --somatic --sample data/tsv/tiny-manta.tsv --variantCalling --tools Manta --noReports
-  run_wrapper --somatic --sample data/tsv/tiny-manta.tsv --variantCalling --tools Manta,Strelka --noReports --strelkaBP
-  clean_repo
+  run_wrapper --somatic --sample $SAMPLE --variantCalling --tools ControlFREEC --noReports
 fi
 
 
