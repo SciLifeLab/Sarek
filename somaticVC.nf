@@ -775,6 +775,8 @@ if (params.verbose) ascatOutput = ascatOutput.view {
 }
 
 process RunMpileup {
+  publishDir directoryMap.controlfreec, saveAs: { it == "${idSample}.pileup.gz" ? it : '' }, mode: 'link'
+
   tag {idSample}
 
   input:
@@ -792,9 +794,7 @@ process RunMpileup {
   script:
   """
   samtools mpileup \
-  -f ${genomeFile} \
-  ${bam} \
-  | gzip -c ${idSample}.pileup.gz
+  -f ${genomeFile} ${bam} | gzip -c > ${idSample}.pileup.gz
   """
 }
 
@@ -809,7 +809,7 @@ mpileupOutput = mpileupNormal.combine(mpileupTumor)
 mpileupOutput = mpileupOutput.map {
   idPatientNormal, statusNormal, idSampleNormal, mpileupNormal,
   idPatientTumor,  statusTumor,  idSampleTumor,  mpileupTumor ->
-  [idPatient, idSampleNormal, idSampleTumor, mpileupNormal, mpileupTumor]
+  [idPatientNormal, idSampleNormal, idSampleTumor, mpileupNormal, mpileupTumor]
 }
 
 process GenerateControlFreecConfig {
@@ -821,7 +821,7 @@ process GenerateControlFreecConfig {
     set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor) from mpileupOutput
 
   output:
-  set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file("${idSampleTumor}_vs_${idSampleNormal}.config.txt") from mpileupOutput
+    set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file("${idSampleTumor}_vs_${idSampleNormal}.config.txt") into controlFreecConfig
 
   when: 'controlfreec' in tools && !params.onlyQC
 
@@ -830,36 +830,61 @@ process GenerateControlFreecConfig {
   """
   touch config.txt
   echo "[general]" >> config.txt
-  echo "BedGraphOutput=TRUE" >> config.txt
-  echo "chrFiles = ${referenceMap.genomeFile}.baseName" >> config.txt
-  echo "chrLenFile = r${eferenceMap.genomeIndex}.baseName" >> config.txt
-  echo "coefficientOfVariation = 0.015" >> config.txt
+  echo "BedGraphOutput = TRUE" >> config.txt
+  echo "chrLenFile = ${referenceMap.genomeIndex.fileName}" >> config.txt
+  echo "coefficientOfVariation = 0.05" >> config.txt
   echo "contaminationAdjustment = TRUE" >> config.txt
   echo "forceGCcontentNormalization = 0" >> config.txt
-  echo "gemMappabilityFile = out100m2_hg38.gem" >> config.txt
-  echo "maxThreads=8" >> config.txt
-  echo "noisyData=FALSE" >> config.txt
-  echo "ploidy = 2" >> config.txt
-  echo "printNA=FALSE" >> config.txt
-  echo "sex=${gender}" >> config.txt
-  echo "window = 20000" >> config.txt
-
-  echo "[sample]" >> config.txt
-  echo "inputFormat = pileup" >> config.txt
-  echo "mateFile = ${mpileupTumor}.baseName" >> config.txt
-  echo "mateOrientation = FR" >> config.txt
+  echo "maxThreads = 8" >> config.txt
+  echo "minimalSubclonePresence = 20" >> config.txt
+  echo "ploidy = 2,3,4" >> config.txt
+  echo "sex = ${gender}" >> config.txt
+  echo "window = 50000" >> config.txt
+  echo "" >> config.txt
 
   echo "[control]" >> config.txt
   echo "inputFormat = pileup" >> config.txt
-  echo "mateFile = ${mpileupNormal}.baseName" >> config.txt
+  echo "mateFile = ${mpileupNormal}" >> config.txt
   echo "mateOrientation = FR" >> config.txt
+  echo "" >> config.txt
+
+  echo "[sample]" >> config.txt
+  echo "inputFormat = pileup" >> config.txt
+  echo "mateFile = ${mpileupTumor}" >> config.txt
+  echo "mateOrientation = FR" >> config.txt
+  echo "" >> config.txt
 
   echo "[BAF]" >> config.txt
-  echo "SNPfile = snp147_chr1-M_GRCh38.final.txt" >> config.txt
+  echo "SNPfile = ${referenceMap.dbsnp.fileName}" >> config.txt
 
   mv config.txt ${idSampleTumor}_vs_${idSampleNormal}.config.txt
   """
 }
+
+process RunControlFreec {
+  tag {idSampleTumor + "_vs_" + idSampleNormal}
+
+  publishDir directoryMap.controlfreec, saveAs: { it == "${idSampleTumor}_vs_${idSampleNormal}.config.txt" ? it : '' }, mode: 'link'
+
+  input:
+    set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file(cfConfig) from controlFreecConfig
+    set file(genomeFile), file(genomeIndex), file(dbsnp), file(dbsnpIndex) from Channel.value([
+      referenceMap.genomeFile,
+      referenceMap.genomeIndex,
+      referenceMap.dbsnp,
+      referenceMap.dbsnpIndex
+    ])
+
+  output:
+
+  when: 'controlfreec' in tools && !params.onlyQC
+
+  script:
+  """
+  freec -conf ${cfConfig}
+  """
+}
+
 
 (strelkaIndels, strelkaSNVS) = strelkaOutput.into(2)
 (mantaSomaticSV, mantaDiploidSV) = mantaOutput.into(2)
@@ -1058,6 +1083,7 @@ def defineReferenceMap() {
 def defineToolList() {
   return [
     'ascat',
+    'controlfreec',
     'freebayes',
     'haplotypecaller',
     'manta',
