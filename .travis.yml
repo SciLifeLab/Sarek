@@ -19,11 +19,9 @@ env:
     - PROFILE=singularity TEST=ANNOTATESNPEFF TOOL_INSTALL=all
     - PROFILE=singularity TEST=STEP           TOOL_INSTALL=all
     - PROFILE=singularity TEST=GERMLINE       TOOL_INSTALL=all
-    - PROFILE=singularity TEST=DIR            TOOL_INSTALL=all
     - PROFILE=docker      TEST=ANNOTATESNPEFF TOOL_INSTALL=nextflow
     - PROFILE=docker      TEST=STEP           TOOL_INSTALL=nextflow
     - PROFILE=docker      TEST=GERMLINE       TOOL_INSTALL=nextflow
-    - PROFILE=docker      TEST=DIR            TOOL_INSTALL=nextflow
 
 install: # Install Nextflow (and Singularity if needed)
   - "./scripts/install.sh --tool $TOOL_INSTALL"
