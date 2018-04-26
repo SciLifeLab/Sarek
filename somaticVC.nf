@@ -285,11 +285,11 @@ if (params.verbose) bedIntervals = bedIntervals.view {
 bamsAll = bamsNormal.combine(bamsTumor)
 
 // Since idPatientNormal and idPatientTumor are the same
-// It's removed from bamsAll Channel (same for genderNormal)
+// It's removed from bamsAll Channel
 // /!\ It is assumed that every sample are from the same patient
 bamsAll = bamsAll.map {
   idPatientNormal, idSampleNormal, bamNormal, baiNormal, idPatientTumor, idSampleTumor, bamTumor, baiTumor ->
-  [idPatient, idSampleNormal, bamNormal, baiNormal, idSampleTumor, bamTumor, baiTumor]
+  [idPatientNormal, idSampleNormal, bamNormal, baiNormal, idSampleTumor, bamTumor, baiTumor]
 }
 
 // Manta and Strelka
