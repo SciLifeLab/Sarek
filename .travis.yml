@@ -13,9 +13,11 @@ env:
   matrix:
     - PROFILE=singularity TEST=TOOLS          TOOL_INSTALL=all
     - PROFILE=singularity TEST=MANTA          TOOL_INSTALL=all
+    - PROFILE=singularity TEST=CONTROLFREEC   TOOL_INSTALL=all
     - PROFILE=docker      TEST=MANTA          TOOL_INSTALL=nextflow
     - PROFILE=docker      TEST=TOOLS          TOOL_INSTALL=nextflow
     - PROFILE=docker      TEST=ANNOTATEVEP    TOOL_INSTALL=nextflow
+    - PROFILE=docker      TEST=CONTROLFREEC   TOOL_INSTALL=nextflow
     - PROFILE=singularity TEST=ANNOTATESNPEFF TOOL_INSTALL=all
     - PROFILE=singularity TEST=STEP           TOOL_INSTALL=all
     - PROFILE=singularity TEST=GERMLINE       TOOL_INSTALL=all
