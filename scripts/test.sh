@@ -98,7 +98,7 @@ fi
 
 if [[ ALL,GERMLINE =~ $TEST ]]
 then
-  run_wrapper --germline --sampleDir data/tiny/tiny/normal --variantCalling --tools HaplotypeCaller,Manta,Strelka
+  run_wrapper --germline --sampleDir Sarek-data/testdata/tiny/normal --variantCalling --tools HaplotypeCaller,Manta,Strelka
   clean_repo
 fi
 
