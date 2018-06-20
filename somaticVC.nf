@@ -771,7 +771,7 @@ process RunBcftoolsStats {
     set variantCaller, file(vcf) from vcfForBCFtools
 
   output:
-    file ("${vcf.baseName}.bcf.tools.stats.out") into bcfReport
+    file ("${vcf.simpleName}.bcf.tools.stats.out") into bcfReport
 
   when: !params.noReports
 
@@ -794,7 +794,7 @@ process RunVcftools {
     set variantCaller, file(vcf) from vcfForVCFtools
 
   output:
-    file ("${vcf.baseName}.*") into vcfReport
+    file ("${vcf.simpleName}.*") into vcfReport
 
   when: !params.noReports
 
