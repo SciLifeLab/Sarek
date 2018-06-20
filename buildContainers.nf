@@ -180,6 +180,7 @@ def defineContainersList(){
     'controlfreec',
     'freebayes',
     'gatk',
+    'gatk4',
     'igvtools',
     'mutect1',
     'picard',
