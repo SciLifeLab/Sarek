@@ -98,13 +98,13 @@ fi
 
 if [[ ALL,GERMLINE =~ $TEST ]]
 then
-  run_wrapper --germline --sampleDir Sarek-data/testdata/tiny/normal --variantCalling --tools HaplotypeCaller
+  run_wrapper --germline --sampleDir Sarek-data/testdata/tiny/normal --variantCalling --tools HaplotypeCaller,Manta,Strelka
   clean_repo
 fi
 
 if [[ ALL,TOOLS =~ $TEST ]]
 then
-  run_wrapper --somatic --sample $SAMPLE --variantCalling  --tools FreeBayes,HaplotypeCaller,MuTect1,MuTect2
+  run_wrapper --somatic --sample $SAMPLE --variantCalling  --tools FreeBayes,HaplotypeCaller,MuTect2
 fi
 
 if [[ ALL,MANTA =~ $TEST ]]

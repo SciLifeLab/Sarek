@@ -70,7 +70,6 @@ Choose which tools will be used in the workflow. Different tools to be separated
 - manta (use `Manta` for SV) (germlineVC,somaticVC)
 - strelka (use `Strelka` for VC) (germlineVC,somaticVC)
 - ascat (use `ASCAT` for CNV) (somaticVC)
-- mutect1 (use `MuTect1` for VC) (somaticVC)
 - mutect2 (use `MuTect2` for VC) (somaticVC)
 - snpeff (use `snpEff` for Annotation) (annotate)
 - vep (use `VEP` for Annotation) (annotate)
@@ -82,7 +81,6 @@ Choose which tools will be used in the workflow. Different tools to be separated
 Choose which tools to annotate. Different tools to be separated by commas. Possible values are:
 - haplotypecaller (Annotate `HaplotypeCaller` output)
 - manta (Annotate `Manta` output)
-- mutect1 (Annotate `MuTect1` output)
 - mutect2 (Annotate `MuTect2` output)
 - strelka (Annotate `Strelka` output)
 

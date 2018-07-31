@@ -25,10 +25,9 @@ We divide them for the moment into 5 main steps:
 ## Somatic Variant Calling:
 
 - CreateIntervalBeds - Create and sort intervals into bed files
-- RunMutect1 - Run MuTect1 for Variant Calling (Parallelized processes)
 - RunMutect2 - Run MuTect2 for Variant Calling (Parallelized processes)
 - RunFreeBayes - Run FreeBayes for Variant Calling (Parallelized processes)
-- ConcatVCF - Merge results from Freebayes, MuTect1 and MuTect2
+- ConcatVCF - Merge results from Freebayes and MuTect2
 - RunStrelka - Run Strelka for Variant Calling
 - RunManta - Run Manta for Structural Variant Calling
 - RunSingleManta - Run Manta for Single Structural Variant Calling

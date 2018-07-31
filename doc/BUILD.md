@@ -18,7 +18,6 @@ nextflow run . [--docker] [--singularity] [--containerPath <path>] [--push] [--c
   - `gatk`
   - `igvtools`
   - `multiqc`
-  - `mutect1`
   - `picard`
   - `qualimap`
   - `r-base`

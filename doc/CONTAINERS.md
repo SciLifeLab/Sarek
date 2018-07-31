@@ -10,7 +10,6 @@ For processing + germline variant calling + Reports:
 For processing + somatic variant calling + Reports:
  - [freebayes](#freebayes-)
  - [gatk](#gatk-)
- - [mutect1](#mutect1-)
  - [picard](#picard-)
  - [r-base](#r-base-)
  - [runallelecount](#runallelecount-)
@@ -40,11 +39,6 @@ A container named after the process is made for each process. If a container can
 
 - Based on `openjdk:8-slim`
 - Contain **[IGVTools][igvtools-link]** 2.3.98
-
-## mutect1 [![mutect1-docker status][mutect1-docker-badge]][mutect1-docker-link]
-
-- Based on `openjdk:7-slim`
-- Contain **[MuTect1][mutect1-link]** 1.5
 
 ## picard [![picard-docker status][picard-docker-badge]][picard-docker-link]
 
@@ -111,8 +105,6 @@ A container named after the process is made for each process. If a container can
 [allelecount-link]: https://github.com/cancerit/alleleCount
 [bcftools-link]: https://github.com/samtools/bcftools
 [bwa-link]: https://github.com/lh3/bwa
-[fastqc-docker-badge]: https://img.shields.io/docker/automated/maxulysse/fastqc.svg
-[fastqc-docker-link]: https://hub.docker.com/r/maxulysse/fastqc
 [fastqc-link]: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
 [freebayes-docker-badge]: https://img.shields.io/docker/automated/maxulysse/freebayes.svg
 [freebayes-docker-link]: https://hub.docker.com/r/maxulysse/freebayes
@@ -125,12 +117,7 @@ A container named after the process is made for each process. If a container can
 [igvtools-docker-link]: https://hub.docker.com/r/maxulysse/igvtools
 [igvtools-link]: http://software.broadinstitute.org/software/igv/
 [manta-link]: https://github.com/Illumina/manta
-[multiqc-docker-badge]: https://img.shields.io/docker/automated/maxulysse/multiqc.svg
-[multiqc-docker-link]: https://hub.docker.com/r/maxulysse/multiqc
 [multiqc-link]: https://github.com/ewels/MultiQC/
-[mutect1-docker-badge]: https://img.shields.io/docker/automated/maxulysse/mutect1.svg
-[mutect1-docker-link]: https://hub.docker.com/r/maxulysse/mutect1
-[mutect1-link]: https://github.com/broadinstitute/mutect
 [nbis-link]: https://www.nbis.se/
 [ngi-link]: https://ngisweden.scilifelab.se/
 [picard-docker-badge]: https://img.shields.io/docker/automated/maxulysse/picard.svg
@@ -156,8 +143,6 @@ A container named after the process is made for each process. If a container can
 [snpeffgrch38-docker-badge]: https://img.shields.io/docker/automated/maxulysse/snpeffgrch38.svg
 [snpeffgrch38-docker-link]: https://hub.docker.com/r/maxulysse/snpeffgrch38
 [strelka-link]: https://github.com/Illumina/strelka
-[vcftools-docker-badge]: https://img.shields.io/docker/automated/maxulysse/vcftools.svg
-[vcftools-docker-link]: https://hub.docker.com/r/maxulysse/vcftools
 [vcftools-link]: https://vcftools.github.io/index.html
 [vep-docker-badge]: https://img.shields.io/docker/automated/maxulysse/vep.svg
 [vep-docker-link]: https://hub.docker.com/r/maxulysse/vep

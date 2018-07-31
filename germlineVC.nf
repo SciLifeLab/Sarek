@@ -31,7 +31,7 @@ kate: syntax groovy; space-indent on; indent-width 2;
  - CreateIntervalBeds - Create and sort intervals into bed files
  - RunHaplotypecaller - Run HaplotypeCaller for Germline Variant Calling (Parallelized processes)
  - RunGenotypeGVCFs - Run HaplotypeCaller for Germline Variant Calling (Parallelized processes)
- - ConcatVCF - Merge results from HaplotypeCaller, MuTect1 and MuTect2
+ - ConcatVCF - Merge results from HaplotypeCaller
  - RunSingleStrelka - Run Strelka for Germline Variant Calling
  - RunSingleManta - Run Manta for Single Structural Variant Calling
  - RunBcftoolsStats - Run BCFTools stats on vcf files
@@ -272,24 +272,6 @@ recalTables = recalTables
 // re-associate the BAMs and samples with the recalibration table
 bamsForHC = bamsForHC.join(recalTables, by:[0,1,2,3,4])
 
-bamsAll = bamsNormal.combine(bamsTumor)
-
-// Since idPatientNormal and idPatientTumor are the same
-// It's removed from bamsAll Channel (same for genderNormal)
-// /!\ It is assumed that every sample are from the same patient
-bamsAll = bamsAll.map {
-  idPatientNormal, idSampleNormal, bamNormal, baiNormal, idPatientTumor, idSampleTumor, bamTumor, baiTumor ->
-  [idPatientNormal, idSampleNormal, bamNormal, baiNormal, idSampleTumor, bamTumor, baiTumor]
-}
-
-// Manta and Strelka
-(bamsForManta, bamsForStrelka, bamsAll) = bamsAll.into(3)
-
-bamsTumorNormalIntervals = bamsAll.spread(bedIntervals)
-
-// MuTect1, MuTect2, FreeBayes
-(bamsFMT1, bamsFMT2, bamsFFB) = bamsTumorNormalIntervals.into(3)
-
 process RunHaplotypecaller {
   tag {idSample + "-" + intervalBed.baseName}
 
@@ -387,12 +369,11 @@ process ConcatVCF {
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz"), file("*.vcf.gz.tbi") into vcfConcatenated
 
 
-  when: ( 'haplotypecaller' in tools || 'mutect1' in tools || 'mutect2' in tools || 'freebayes' in tools ) && !params.onlyQC
+  when: 'haplotypecaller' in tools && !params.onlyQC
 
   script:
-  if (variantCaller == 'haplotypecaller') outputFile = "${variantCaller}_${idSampleNormal}.vcf"
-  else if (variantCaller == 'gvcf-hc') outputFile = "haplotypecaller_${idSampleNormal}.g.vcf"
-  else outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
+  if (variantCaller == 'gvcf-hc') outputFile = "haplotypecaller_${idSampleNormal}.g.vcf"
+  else outputFile = "haplotypecaller_${idSampleNormal}.vcf"
 
   """
   # first make a header from one of the VCF intervals
@@ -670,7 +651,6 @@ def defineToolList() {
     'freebayes',
     'haplotypecaller',
     'manta',
-    'mutect1',
     'mutect2',
     'strelka'
   ]

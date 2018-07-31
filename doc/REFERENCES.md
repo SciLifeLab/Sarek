@@ -27,7 +27,7 @@ You can create your own cosmic reference for any human reference as specified be
 
 ### COSMIC files
 
-To annotate with COSMIC variants during MuTect1/2 Variant Calling you need to create a compatible VCF file.
+To annotate with COSMIC variants during MuTect2 Variant Calling you need to create a compatible VCF file.
 Download the coding and non-coding VCF files from [COSMIC](http://cancer.sanger.ac.uk/cosmic/download) and
 process them with the [Create\_Cosmic.sh](https://github.com/SciLifeLab/Sarek/tree/master/scripts/Create_Cosmic.sh)
 script. The script requires a fasta index `.fai`, of the reference file you are using.
