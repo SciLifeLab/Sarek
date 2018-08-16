@@ -6,6 +6,7 @@ KEEP=false
 GENOME=smallGRCh37
 PROFILE=singularity
 SAMPLE=Sarek-data/testdata/tsv/tiny.tsv
+TAG=latest
 TEST=ALL
 TRAVIS=${TRAVIS:-false}
 
@@ -25,6 +26,11 @@ while [[ $# -gt 0 ]]
 do
   key=$1
   case $key in
+    -a|--tag)
+    TAG=$2
+    shift # past argument
+    shift # past value
+    ;;
     -g|--genome)
     GENOME=$2
     shift # past argument
@@ -60,7 +66,7 @@ do
 done
 
 function run_wrapper() {
-  ./scripts/wrapper.sh $@ --profile $PROFILE --genome $GENOME --genomeBase $PWD/References/$GENOME --verbose
+  ./scripts/wrapper.sh $@ --profile $PROFILE --genome $GENOME --genomeBase $PWD/References/$GENOME --verbose --TAG $TAG
 }
 
 function clean_repo() {
