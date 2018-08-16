@@ -8,6 +8,12 @@ class SarekUtils {
     if (!it.toString().toLowerCase().endsWith(extension.toLowerCase())) exit 1, "File: ${it} has the wrong extension: ${extension} see --help for more information"
   }
 
+  // Check if a row has the expected number of item
+  static def checkNumberOfItem(row, number) {
+    if (row.size() != number) exit 1, "Malformed row in TSV file: ${row}, see --help for more information"
+    return true
+  }
+
   // Check parameter existence
   static def checkParameterExistence(it, list) {
     if (!list.contains(it)) {
@@ -100,13 +106,14 @@ class SarekUtils {
   }
 
   // Loop through all the references files to check their existence
+
   static def checkRefExistence(referenceFile, fileToCheck) {
     if (fileToCheck instanceof List) return fileToCheck.every{ SarekUtils.checkRefExistence(referenceFile, it) }
     def f = file(fileToCheck)
     // this is an expanded wildcard: we can assume all files exist
     if (f instanceof List && f.size() > 0) return true
-    else if (!f.exists()) {
-      this.log.info  "Missing references: ${referenceFile} ${fileToCheck}"
+    else if (!f.exists()) { 
+			println  "Missing references: ${referenceFile} ${fileToCheck}"
       return false
     }
     return true
@@ -115,15 +122,13 @@ class SarekUtils {
   // Define map of directories
   static def defineDirectoryMap(outDir) {
     return [
-    'nonRealigned'     : "${outDir}/Preprocessing/NonRealigned",
-    'nonRecalibrated'  : "${outDir}/Preprocessing/NonRecalibrated",
+    'duplicateMarked'  : "${outDir}/Preprocessing/DuplicateMarked",
     'recalibrated'     : "${outDir}/Preprocessing/Recalibrated",
     'ascat'            : "${outDir}/VariantCalling/Ascat",
     'freebayes'        : "${outDir}/VariantCalling/FreeBayes",
     'gvcf-hc'          : "${outDir}/VariantCalling/HaplotypeCallerGVCF",
     'haplotypecaller'  : "${outDir}/VariantCalling/HaplotypeCaller",
     'manta'            : "${outDir}/VariantCalling/Manta",
-    'mutect1'          : "${outDir}/VariantCalling/MuTect1",
     'mutect2'          : "${outDir}/VariantCalling/MuTect2",
     'strelka'          : "${outDir}/VariantCalling/Strelka",
     'strelkabp'        : "${outDir}/VariantCalling/StrelkaBP",
@@ -144,16 +149,16 @@ class SarekUtils {
   // Channeling the TSV file containing BAM.
   // Format is: "subject gender status sample bam bai"
   static def extractBams(tsvFile, mode) {
-    Channel
-      .from(tsvFile.readLines())
-      .map{line ->
-        def list      = SarekUtils.returnTSV(line.split(),6)
-        def idPatient = list[0]
-        def gender    = list[1]
-        def status    = SarekUtils.returnStatus(list[2].toInteger())
-        def idSample  = list[3]
-        def bamFile   = SarekUtils.returnFile(list[4])
-        def baiFile   = SarekUtils.returnFile(list[5])
+    Channel.from(tsvFile)
+      .splitCsv(sep: '\t')
+      .map { row ->
+        SarekUtils.checkNumberOfItem(row, 6)
+        def idPatient = row[0]
+        def gender    = row[1]
+        def status    = SarekUtils.returnStatus(row[2].toInteger())
+        def idSample  = row[3]
+        def bamFile   = SarekUtils.returnFile(row[4])
+        def baiFile   = SarekUtils.returnFile(row[5])
 
         SarekUtils.checkFileExtension(bamFile,".bam")
         SarekUtils.checkFileExtension(baiFile,".bai")
@@ -200,20 +205,14 @@ class SarekUtils {
     return it
   }
 
-  // Return TSV if it has the correct number of items in row
-  static def returnTSV(it, number) {
-    if (it.size() != number) exit 1, "Malformed row in TSV file: ${it}, see --help for more information"
-    return it
-  }
-
   // Sarek ascii art
   static def sarek_ascii() {
-    println "    ____        _____                _     "
-    println "  .' _  `.     / ____|              | |    "
-    println " /  |\\`-_ \\   | (___   __ _ _ __ ___| | __ "
-    println "|   | \\  `-|   \\___ \\ / _` | '__/ __| |/ / "
-    println " \\ |   \\  /    ____) | (_| | | |  __|   <  "
-    println "  `|____\\'    |_____/ \\__,_|_|  \\___|_|\\_\\ "
+    println "    ____        _____               _    "
+    println "  .' _  `.     / ____|             | |   "
+    println " /  |\\`-_ \\   | (___  ___  _ __ __ | | __"
+    println "|   | \\  `-|   \\___ \\/__ \\| ´__/ _\\| |/ /"
+    println " \\ |   \\  /    ____) | __ | | |  __|   < "
+    println "  `|____\\'    |_____/\\____|_|  \\__/|_|\\_\\"
   }
 
 }
