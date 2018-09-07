@@ -112,7 +112,7 @@ class SarekUtils {
     def f = file(fileToCheck)
     // this is an expanded wildcard: we can assume all files exist
     if (f instanceof List && f.size() > 0) return true
-    else if (!f.exists()) { 
+    else if (!f.exists()) {
 			println  "Missing references: ${referenceFile} ${fileToCheck}"
       return false
     }
@@ -126,6 +126,7 @@ class SarekUtils {
     'recalibrated'     : "${outDir}/Preprocessing/Recalibrated",
     'ascat'            : "${outDir}/VariantCalling/Ascat",
     'freebayes'        : "${outDir}/VariantCalling/FreeBayes",
+    'controlfreec'     : "${outDir}/VariantCalling/ControlFREEC",
     'gvcf-hc'          : "${outDir}/VariantCalling/HaplotypeCallerGVCF",
     'haplotypecaller'  : "${outDir}/VariantCalling/HaplotypeCaller",
     'manta'            : "${outDir}/VariantCalling/Manta",

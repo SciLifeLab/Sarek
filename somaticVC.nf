@@ -741,6 +741,12 @@ process RunMpileup {
   """
 }
 
+if (params.verbose) mpileupOutput = mpileupOutput.view {
+  "mpileup output:\n\
+  ID    : ${it[0]}\tStatus: ${it[1]}\tSample${it[2]}]\n\
+  File  : ${it[3].fileName}"
+}
+
 mpileupNormal = Channel.create()
 mpileupTumor = Channel.create()
 
