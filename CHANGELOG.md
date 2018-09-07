@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - [#615](https://github.com/SciLifeLab/Sarek/pull/615) - Add presentation
 - [#615](https://github.com/SciLifeLab/Sarek/pull/615) - Update documentation
 - [#620](https://github.com/SciLifeLab/Sarek/pull/620) - Add `tmp/` to `.gitignore`
+- [#625](https://github.com/SciLifeLab/Sarek/pull/625) - Add [`pathfindr`](https://github.com/NBISweden/pathfindr) as a submodule
 
 ### `Changed`
 - [#608](https://github.com/SciLifeLab/Sarek/pull/608) - Update Nextflow required version
@@ -18,9 +19,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - [#615](https://github.com/SciLifeLab/Sarek/pull/615) - Use `splitCsv` instead of `readlines`
 - [#621](https://github.com/SciLifeLab/Sarek/pull/621) - Improve install script
 - [#621](https://github.com/SciLifeLab/Sarek/pull/621) - Simplify tests
+- [#627](https://github.com/SciLifeLab/Sarek/pull/627), [#629](https://github.com/SciLifeLab/Sarek/pull/629) - Refactor docs
+- [#629](https://github.com/SciLifeLab/Sarek/pull/629) - Refactor config
+- [#632](https://github.com/SciLifeLab/Sarek/pull/632) - Use 2 threads and 2 cpus FastQC processes
 
 ### `Removed`
 - [#616](https://github.com/SciLifeLab/Sarek/pull/616) - Remove old Issue Template
+- [#629](https://github.com/SciLifeLab/Sarek/pull/629) - Remove old Dockerfiles
 
 ### `Fixed`
 - [#621](https://github.com/SciLifeLab/Sarek/pull/621) - Fix VEP tests
