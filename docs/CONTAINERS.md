@@ -82,6 +82,7 @@ We provide script to build/push or pull all containers
 - Based on `debian:8.9`
 - Contain **[BCFTools][bcftools-link]** 1.8
 - Contain **[BWA][bwa-link]** 0.7.17
+- Contain **[ControlFREEC][controlfreec-link]** 10.6
 - Contain **[FastQC][fastqc-link]** 0.11.7
 - Contain **[FreeBayes][freebayes-link]** 1.2.0
 - Contain **[GATK4][gatk4-link]** 4.0.6.0
@@ -127,6 +128,7 @@ We provide script to build/push or pull all containers
 [allelecount-link]: https://github.com/cancerit/alleleCount
 [bcftools-link]: https://github.com/samtools/bcftools
 [bwa-link]: https://github.com/lh3/bwa
+[controlfreec-link]: https://github.com/BoevaLab/FREEC/
 [fastqc-link]: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
 [freebayes-link]: https://github.com/ekg/freebayes
 [gatk4-link]: https://github.com/broadinstitute/gatk
