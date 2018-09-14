@@ -612,6 +612,7 @@ def defineReferenceMap() {
 def defineToolList() {
   return [
     'ascat',
+    'controlfreec',
     'freebayes',
     'haplotypecaller',
     'manta',
