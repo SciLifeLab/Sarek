@@ -82,7 +82,7 @@ We provide script to build/push or pull all containers
 - Based on `nfcore/base:latest`
 - Contain **[BCFTools][bcftools-link]** 1.8
 - Contain **[BWA][bwa-link]** 0.7.17
-- Contain **[ControlFREEC][controlfreec-link]** 10.6
+- Contain **[ControlFREEC][controlfreec-link]** 11.4
 - Contain **[FastQC][fastqc-link]** 0.11.7
 - Contain **[FreeBayes][freebayes-link]** 1.2.0
 - Contain **[GATK4][gatk4-link]** 4.0.6.0
