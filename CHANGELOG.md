@@ -7,15 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.2.0] - Skårki - 2018-09-21
+
 ### `Added`
 
 -   [#613](https://github.com/SciLifeLab/Sarek/pull/613) - Add Issue Templates (bug report and feature request)
 -   [#614](https://github.com/SciLifeLab/Sarek/pull/614) - Add PR Template
 -   [#615](https://github.com/SciLifeLab/Sarek/pull/615) - Add presentation
--   [#615](https://github.com/SciLifeLab/Sarek/pull/615) - Update documentation
+-   [#616](https://github.com/SciLifeLab/Sarek/pull/616) - Update documentation
 -   [#620](https://github.com/SciLifeLab/Sarek/pull/620) - Add `tmp/` to `.gitignore`
 -   [#625](https://github.com/SciLifeLab/Sarek/pull/625) - Add [`pathfindr`](https://github.com/NBISweden/pathfindr) as a submodule
 -   [#639](https://github.com/SciLifeLab/Sarek/pull/639) - Add a complete example analysis to docs
+-   [#635](https://github.com/SciLifeLab/Sarek/pull/635) - To process targeted sequencing with a target BED
 -   [#640](https://github.com/SciLifeLab/Sarek/pull/640), [#642](https://github.com/SciLifeLab/Sarek/pull/642) - Add helper script for changing version number
 
 ### `Changed`
