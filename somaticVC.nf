@@ -234,7 +234,7 @@ process CreateIntervalBeds {
 
 bedIntervals = bedIntervals
   .map { intervalFile ->
-    final duration = 0.0
+    def duration = 0.0
     for (line in intervalFile.readLines()) {
       final fields = line.split('\t')
       if (fields.size() >= 5) duration += fields[4].toFloat()
@@ -1075,7 +1075,7 @@ def returnStatus(it) {
 
 def sarekMessage() {
   // Display Sarek message
-  log.info "Sarek - Workflow For Somatic And Germline Variations ~ ${params.version} - " + this.grabRevision() + (workflow.commitId ? " [${workflow.commitId}]" : "")
+  log.info "Sarek - Workflow For Somatic And Germline Variations ~ ${workflow.manifest.version} - " + this.grabRevision() + (workflow.commitId ? " [${workflow.commitId}]" : "")
 }
 
 def startMessage() {

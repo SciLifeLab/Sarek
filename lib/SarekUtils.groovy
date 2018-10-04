@@ -185,7 +185,7 @@ class SarekUtils {
 
   // Compare params to list of verified params
   static def isAllowedParams(params) {
-    final test = true
+    def test = true
     params.each{
       if (!checkParams(it.toString().split('=')[0])) {
         println "params ${it.toString().split('=')[0]} is unknown"
