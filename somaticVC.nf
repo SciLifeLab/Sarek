@@ -765,6 +765,7 @@ process GenerateControlFreecConfig {
   echo "[general]" >> config.txt
   echo "BedGraphOutput = TRUE" >> config.txt
   echo "chrLenFile = ${referenceMap.genomeIndex.fileName}" >> config.txt
+  echo "chrFiles = ${referenceMap.chrDir.fileName}" >> config.txt
   echo "coefficientOfVariation = 0.05" >> config.txt
   echo "contaminationAdjustment = TRUE" >> config.txt
   echo "forceGCcontentNormalization = 0" >> config.txt
@@ -801,11 +802,12 @@ process RunControlFreec {
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file(cfConfig) from controlFreecConfig
-    set file(genomeFile), file(genomeIndex), file(dbsnp), file(dbsnpIndex) from Channel.value([
+    set file(genomeFile), file(genomeIndex), file(dbsnp), file(dbsnpIndex), file(chrDir) from Channel.value([
       referenceMap.genomeFile,
       referenceMap.genomeIndex,
       referenceMap.dbsnp,
-      referenceMap.dbsnpIndex
+      referenceMap.dbsnpIndex,
+      referenceMap.chrDir
     ])
 
   output:
@@ -947,8 +949,10 @@ def checkUppmaxProject() {
 def defineReferenceMap() {
   if (!(params.genome in params.genomes)) exit 1, "Genome ${params.genome} not found in configuration"
   return [
-    // loci file for ascat
+    // loci file for ASCAT
     'acLoci'           : checkParamReturnFile("acLoci"),
+    // chrfiles for ControlFREEC
+    'chrDir'           : checkParamReturnFile("chrDir"),
     'dbsnp'            : checkParamReturnFile("dbsnp"),
     'dbsnpIndex'       : checkParamReturnFile("dbsnpIndex"),
     // cosmic VCF with VCF4.1 header

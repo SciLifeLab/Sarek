@@ -81,6 +81,7 @@ if (params.verbose) ch_decompressedFiles = ch_decompressedFiles.view {
   "Files decomprecessed: ${it.fileName}"
 }
 
+ch_chrFile = Channel.create()
 ch_fastaFile = Channel.create()
 ch_fastaForBWA = Channel.create()
 ch_fastaReference = Channel.create()
@@ -89,9 +90,10 @@ ch_otherFile = Channel.create()
 ch_vcfFile = Channel.create()
 
 ch_decompressedFiles
-  .choice(ch_fastaFile, ch_vcfFile, ch_otherFile) {
-    it =~ ".fasta" ? 0 :
-    it =~ ".vcf" ? 1 : 2}
+  .choice(ch_chrFile, ch_fastaFile, ch_vcfFile, ch_otherFile) {
+    it =~ "[123811X].fasta" ? 0 :
+    it =~ ".fasta" ? 1 :
+    it =~ ".vcf" ? 2 : 3}
 
 (ch_fastaForBWA, ch_fastaReference, ch_fastaForSAMTools, ch_fastaFileToKeep) = ch_fastaFile.into(4)
 (ch_vcfFile, ch_vcfFileToKeep) = ch_vcfFile.into(2)
@@ -99,6 +101,9 @@ ch_decompressedFiles
 ch_notCompressedfiles
   .mix(ch_fastaFileToKeep, ch_vcfFileToKeep, ch_otherFile)
   .collectFile(storeDir: params.outDir)
+
+ch_chrFile
+  .collectFile(storeDir: params.outDir+"/chr")
 
 process BuildBWAindexes {
   tag {f_reference}
