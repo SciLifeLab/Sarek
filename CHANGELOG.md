@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### `Changed`
 
 -   [#663](https://github.com/SciLifeLab/Sarek/pull/663) - Update `do_release.sh` script
+-   [#674](https://github.com/SciLifeLab/Sarek/pull/674) - Update Nextflow to `18.10.1`
 
 ### `Fixed`
 
