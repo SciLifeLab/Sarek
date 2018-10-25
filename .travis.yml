@@ -9,7 +9,7 @@ addons:
 
 env:
   global:
-    - NXF_VER=0.32.0
+    - NXF_VER=18.10.1
   matrix:
     - TEST=SOMATIC
     - TEST=ANNOTATEVEP
