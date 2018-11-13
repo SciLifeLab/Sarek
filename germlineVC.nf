@@ -174,23 +174,31 @@ bamsNormal = bamsNormal.map { idPatient, status, idSample, bam, bai -> [idPatien
 bamsTumor = bamsTumor.map { idPatient, status, idSample, bam, bai -> [idPatient, idSample, bam, bai] }
 
 // Check BED file for compatibility if we have Exome data
+if(params.targetBED){
+Channel
+    .fromFile(targetBED)
+    .splitCsv(header: false)
+    .map{ row-> tuple(row[0]) }
+    .set { splitted_bed }
+
+Channel
+    .fromFile(genomeIndex)
+    .splitCsv(header: false)
+    .map{ row-> tuple(row[0]) }
+    .set { splitted_idx }
 
 process CheckBEDCompatibility {
-  tag {intervals.fileName}
-
-  when: params.targetBED
 
   input:
-  file(targetBED) from Channel.value(params.targetBED)
-  file(faindex) from Channel.value(referenceMap.genomeIndex)
+  file(splitted_bed) from splitted_bed
+  file(splitted_idx) from splitted_idx
 
   script:
   //Check whether the chromosome identifiers are consistent between specified intervals and the 
-  """
-  cut -f 1 $faindex > index.txt
-  cut -f 1 $targetBED > bed.txt
-
-  """
+  def unique_bed = splitted_bed.unique()
+  def unique_idx = splitted_idx.unique()
+  assert (unique_bed.sort() == unique_idx.sort()) == false
+}
 }
 
 // We know that MuTect2 (and other somatic callers) are notoriously slow.
