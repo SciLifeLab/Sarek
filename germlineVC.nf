@@ -197,7 +197,7 @@ process CheckBEDCompatibility {
   //Check whether the chromosome identifiers are consistent between specified intervals and the 
   def unique_bed = splitted_bed.unique()
   def unique_idx = splitted_idx.unique()
-  assert (unique_bed.sort() == unique_idx.sort()) == false
+  assert (unique_bed.sort() == unique_idx.sort()) == true
 }
 }
 
