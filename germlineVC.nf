@@ -173,6 +173,26 @@ bamsNormal = bamsNormal.map { idPatient, status, idSample, bam, bai -> [idPatien
 
 bamsTumor = bamsTumor.map { idPatient, status, idSample, bam, bai -> [idPatient, idSample, bam, bai] }
 
+// Check BED file for compatibility if we have Exome data
+
+process CheckBEDCompatibility {
+  tag {intervals.fileName}
+
+  when: params.targetBED
+
+  input:
+  file(targetBED) from Channel.value(params.targetBED)
+  file(faindex) from Channel.value(referenceMap.genomeIndex)
+
+  script:
+  //Check whether the chromosome identifiers are consistent between specified intervals and the 
+  """
+  cut -f 1 $faindex > index.txt
+  cut -f 1 $targetBED > bed.txt
+
+  """
+}
+
 // We know that MuTect2 (and other somatic callers) are notoriously slow.
 // To speed them up we are chopping the reference into smaller pieces.
 // (see repeats/centromeres.list).
