@@ -103,7 +103,7 @@ vcfForVep = vcfForVep.map {
 process RunBcftoolsStats {
   tag {vcf}
 
-  publishDir directoryMap.bcftoolsStats, mode: 'link'
+  publishDir directoryMap.bcftoolsStats, mode: params.publishDirMode
 
   input:
     set variantCaller, file(vcf) from vcfForBCFtools
@@ -124,7 +124,7 @@ if (params.verbose) bcfReport = bcfReport.view {
 process RunVcftools {
   tag {vcf}
 
-  publishDir directoryMap.vcftools, mode: 'link'
+  publishDir directoryMap.vcftools, mode: params.publishDirMode
 
   input:
     set variantCaller, file(vcf) from vcfForVCFtools
@@ -145,10 +145,10 @@ if (params.verbose) vcfReport = vcfReport.view {
 process RunSnpeff {
   tag {"${variantCaller} - ${vcf}"}
 
-  publishDir params.outDir, mode: 'link', saveAs: {
-    if (it == "${vcf.simpleName}_snpEff.csv") "${directoryMap.snpeffReports}/${it}"
+  publishDir params.outDir, mode: params.publishDirMode, saveAs: {
+    if (it == "${vcf.simpleName}_snpEff.csv") "${directoryMap.snpeffReports.minus(params.outDir+'/')}/${it}"
     else if (it == "${vcf.simpleName}_snpEff.ann.vcf") null
-    else "${directoryMap.snpeff}/${it}"
+    else "${directoryMap.snpeff.minus(params.outDir+'/')}/${it}"
   }
 
   input:
@@ -198,8 +198,8 @@ if('merge' in tools) {
 process RunVEP {
   tag {"${variantCaller} - ${vcf}"}
 
-  publishDir params.outDir, mode: 'link', saveAs: {
-    if (it == "${vcf.simpleName}_VEP.summary.html") "${directoryMap.vep}/${it}"
+  publishDir params.outDir, mode: params.publishDirMode, saveAs: {
+    if (it == "${vcf.simpleName}_VEP.summary.html") "${directoryMap.vep.minus(params.outDir+'/')}/${it}"
     else null
   }
 
@@ -215,13 +215,14 @@ process RunVEP {
   script:
   finalannotator = annotator == "snpeff" ? 'merge' : 'vep'
   genome = params.genome == 'smallGRCh37' ? 'GRCh37' : params.genome
+  cache_version = params.genome == 'GRCh38' || params.genome == 'iGRCh38' ? 92 : 91
   """
   /opt/vep/src/ensembl-vep/vep --dir /opt/vep/.vep/  \
   -i ${vcf} \
   -o ${vcf.simpleName}_VEP.ann.vcf \
   --assembly ${genome} \
   --cache \
-	--cache_version 91 \
+	--cache_version ${cache_version} \
   --database \
   --everything \
   --filter_common \
@@ -245,7 +246,7 @@ vcfToCompress = snpeffVCF.mix(vepVCF)
 process CompressVCF {
   tag {"${annotator} - ${vcf}"}
 
-  publishDir "${directoryMap."$finalannotator"}", mode: 'link'
+  publishDir "${directoryMap."$finalannotator"}", mode: params.publishDirMode
 
   input:
     set annotator, variantCaller, file(vcf) from vcfToCompress
@@ -268,14 +269,14 @@ if (params.verbose) vcfCompressedoutput = vcfCompressedoutput.view {
 }
 
 process GetVersionSnpeff {
-  publishDir directoryMap.version, mode: 'link'
+  publishDir directoryMap.version, mode: params.publishDirMode
   output: file("v_*.txt")
   when: 'snpeff' in tools || 'merge' in tools
   script: QC.getVersionSnpEFF()
 }
 
 process GetVersionVEP {
-  publishDir directoryMap.version, mode: 'link'
+  publishDir directoryMap.version, mode: params.publishDirMode
   output: file("v_*.txt")
   when: 'vep' in tools || 'merge' in tools
   script: QC.getVersionVEP()
