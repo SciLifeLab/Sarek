@@ -33,7 +33,8 @@ kate: syntax groovy; space-indent on; indent-width 2;
  - CreateRecalibrationTable - Create Recalibration Table with BaseRecalibrator
  - RecalibrateBam - Recalibrate Bam with PrintReads
  - RunSamtoolsStats - Run Samtools stats on recalibrated BAM files
- - RunBamQC - Run qualimap BamQC on recalibrated BAM files
+ - RunBamQCmapped - Run qualimap BamQC on mapped BAM files
+ - RunBamQCrecalibrated - Run qualimap BamQC on recalibrated BAM files
 ================================================================================
 =                           C O N F I G U R A T I O N                          =
 ================================================================================
@@ -73,7 +74,6 @@ if (!params.sample && !params.sampleDir) {
 }
 
 // Set up the fastqFiles and bamFiles channels. One of them remains empty
-// Except for step annotate, in which both stay empty
 fastqFiles = Channel.empty()
 bamFiles = Channel.empty()
 if (tsvPath) {
@@ -123,7 +123,7 @@ if (params.verbose) bamFiles = bamFiles.view {
 process RunFastQC {
   tag {idPatient + "-" + idRun}
 
-  publishDir "${directoryMap.fastQC}/${idRun}", mode: 'link'
+  publishDir "${directoryMap.fastQC}/${idRun}", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, idRun, file(fastqFile1), file(fastqFile2) from fastqFilesforFastQC
@@ -152,7 +152,7 @@ process MapReads {
     set file(genomeFile), file(bwaIndex) from Channel.value([referenceMap.genomeFile, referenceMap.bwaIndex])
 
   output:
-    set idPatient, status, idSample, idRun, file("${idRun}.bam") into mappedBam
+    set idPatient, status, idSample, idRun, file("${idRun}.bam") into (mappedBam, mappedBamForQC)
 
   when: step == 'mapping' && !params.onlyQC
 
@@ -173,6 +173,40 @@ if (params.verbose) mappedBam = mappedBam.view {
   ID    : ${it[0]}\tStatus: ${it[1]}\tSample: ${it[2]}\tRun   : ${it[3]}\n\
   File  : [${it[4].fileName}]"
 }
+
+process RunBamQCmapped {
+  tag {idPatient + "-" + idSample}
+
+  publishDir directoryMap.bamQC, mode: params.publishDirMode
+
+  input:
+    set idPatient, status, idSample, idRun, file(bam) from mappedBamForQC
+
+  output:
+    file(idSample) into bamQCmappedReport
+
+  when: !params.noReports && !params.noBAMQC
+
+  script:
+  """
+  qualimap --java-mem-size=${task.memory.toGiga()}G \
+  bamqc \
+  -bam ${bam} \
+  --paint-chromosome-limits \
+  --genome-gc-distr HUMAN \
+  -nt ${task.cpus} \
+  -skip-duplicated \
+  --skip-dup-mode 0 \
+  -outdir ${idSample} \
+  -outformat HTML
+  """
+}
+
+if (params.verbose) bamQCmappedReport = bamQCmappedReport.view {
+  "BamQC report:\n\
+  Dir   : [${it.fileName}]"
+}
+
 
 // Sort bam whether they are standalone or should be merged
 // Borrowed code from https://github.com/guigolab/chip-nf
@@ -226,10 +260,10 @@ if (params.verbose) mergedBam = mergedBam.view {
 process MarkDuplicates {
   tag {idPatient + "-" + idSample}
 
-  publishDir params.outDir, mode: 'link',
+  publishDir params.outDir, mode: params.publishDirMode,
     saveAs: {
-      if (it == "${bam}.metrics") "${directoryMap.markDuplicatesQC}/${it}"
-      else "${directoryMap.duplicateMarked}/${it}"
+      if (it == "${idSample}.bam.metrics") "${directoryMap.markDuplicatesQC.minus(params.outDir+'/')}/${it}"
+      else "${directoryMap.duplicateMarked.minus(params.outDir+'/')}/${it}"
     }
 
   input:
@@ -244,7 +278,7 @@ process MarkDuplicates {
 
   script:
   """
-  gatk --java-options -Xmx${task.memory.toGiga()}g \
+  gatk --java-options ${params.markdup_java_options} \
   MarkDuplicates \
   --MAX_RECORDS_IN_RAM 50000 \
   --INPUT ${idSample}.bam \
@@ -283,7 +317,7 @@ if (params.verbose) duplicateMarkedBams = duplicateMarkedBams.view {
 process CreateRecalibrationTable {
   tag {idPatient + "-" + idSample}
 
-  publishDir directoryMap.duplicateMarked, mode: 'link', overwrite: false
+  publishDir directoryMap.duplicateMarked, mode: params.publishDirMode, overwrite: false
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from mdBam // realignedBam
@@ -350,7 +384,7 @@ recalTables = recalTables.map { [it[0]] + it[2..-1] } // remove status
 process RecalibrateBam {
   tag {idPatient + "-" + idSample}
 
-  publishDir directoryMap.recalibrated, mode: 'link'
+  publishDir directoryMap.recalibrated, mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai), file(recalibrationReport) from recalibrationTable
@@ -398,7 +432,7 @@ if (params.verbose) recalibratedBam = recalibratedBam.view {
 process RunSamtoolsStats {
   tag {idPatient + "-" + idSample}
 
-  publishDir directoryMap.samtoolsStats, mode: 'link'
+  publishDir directoryMap.samtoolsStats, mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamForSamToolsStats
@@ -416,23 +450,35 @@ if (params.verbose) samtoolsStatsReport = samtoolsStatsReport.view {
   File  : [${it.fileName}]"
 }
 
-process RunBamQC {
+process RunBamQCrecalibrated {
   tag {idPatient + "-" + idSample}
 
-  publishDir directoryMap.bamQC, mode: 'link'
+  publishDir directoryMap.bamQC, mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamForBamQC
 
   output:
-    file(idSample) into bamQCreport
+    file(idSample) into bamQCrecalibratedReport
 
   when: !params.noReports && !params.noBAMQC
 
-  script: QC.bamQC(bam,idSample,task.memory)
+  script:
+  """
+  qualimap --java-mem-size=${task.memory.toGiga()}G \
+  bamqc \
+  -bam ${bam} \
+  --paint-chromosome-limits \
+  --genome-gc-distr HUMAN \
+  -nt ${task.cpus} \
+  -skip-duplicated \
+  --skip-dup-mode 0 \
+  -outdir ${idSample} \
+  -outformat HTML
+  """
 }
 
-if (params.verbose) bamQCreport = bamQCreport.view {
+if (params.verbose) bamQCrecalibratedReport = bamQCrecalibratedReport.view {
   "BamQC report:\n\
   Dir   : [${it.fileName}]"
 }

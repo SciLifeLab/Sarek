@@ -7,13 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### `Added`
+
+-   [#671](https://github.com/SciLifeLab/Sarek/pull/671) - New `publishDirMode` param and docs
+-   [#673](https://github.com/SciLifeLab/Sarek/pull/673), [#675](https://github.com/SciLifeLab/Sarek/pull/675),  [#676](https://github.com/SciLifeLab/Sarek/pull/676) - Profiles for BinAC and CFC clusters in Tübingen
+-   [#679](https://github.com/SciLifeLab/Sarek/pull/679) - Add container for `CreateIntervalBeds`
+-   [#692](https://github.com/SciLifeLab/Sarek/pull/692) - Add AWS iGenomes possibilities (currently under `iGRCh37` and `iGRCh38`)
+-   [#694](https://github.com/SciLifeLab/Sarek/pull/694) - Add monochrome and grey logos for light or dark background
+
 ### `Changed`
 
+-   [#678](https://github.com/SciLifeLab/Sarek/pull/678) - Changing VEP to v92 and adjusting CPUs for VEP
 -   [#663](https://github.com/SciLifeLab/Sarek/pull/663) - Update `do_release.sh` script
+-   [#671](https://github.com/SciLifeLab/Sarek/pull/671) - publishDir modes are now params
+-   [#677](https://github.com/SciLifeLab/Sarek/pull/677) - Update docs
+-   [#679](https://github.com/SciLifeLab/Sarek/pull/679) - Update old awsbatch configuration
+-   [#693](https://github.com/SciLifeLab/Sarek/pull/693) - Qualimap bamQC is now ran after mapping and after recalibration for better QC
 
 ### `Fixed`
 
 -   [#665](https://github.com/SciLifeLab/Sarek/pull/665) - Input bam file now has always the same name (whether it is from a single fastq pair or multiple) in the MarkDuplicates process, so metrics too
+-   [#672](https://github.com/SciLifeLab/Sarek/pull/672) - process `PullSingularityContainers` from `buildContainers.nf` now expect a file with the correct `.simg` extension for singularity images, and no longer the `.img` one.
+-   [#679](https://github.com/SciLifeLab/Sarek/pull/679) - Add publishDirMode for `germlineVC.nf`
 
 ## [2.2.1] - 2018-10-04
 
