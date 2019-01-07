@@ -40,6 +40,13 @@ kate: syntax groovy; space-indent on; indent-width 2;
 ================================================================================
 */
 
+// Check for awsbatch profile configuration
+// make sure queue is defined
+if (workflow.profile == 'awsbatch') {
+    if(!params.awsqueue) exit 1, "Provide the job queue for aws batch!"
+}
+
+
 if (params.help) exit 0, helpMessage()
 if (!SarekUtils.isAllowedParams(params)) exit 1, "params unknown, see --help for more information"
 if (!checkUppmaxProject()) exit 1, "No UPPMAX project ID found! Use --project <UPPMAX Project ID>"
@@ -345,7 +352,7 @@ process CreateRecalibrationTable {
   BaseRecalibrator \
   --input ${bam} \
   --output ${idSample}.recal.table \
-	--TMP_DIR /tmp \
+  --tmp-dir /tmp \
   -R ${genomeFile} \
   -L ${intervals} \
   --known-sites ${dbsnp} \
@@ -411,8 +418,8 @@ process RecalibrateBam {
   --input ${bam} \
   --output ${idSample}.recal.bam \
   -L ${intervals} \
-	--create-output-bam-index true \
-	--bqsr-recal-file ${recalibrationReport}
+  --create-output-bam-index true \
+  --bqsr-recal-file ${recalibrationReport}
   """
 }
 // Creating a TSV file to restart from this step

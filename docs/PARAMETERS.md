@@ -58,6 +58,18 @@ Possible values are:
 `--tools` option is case insensitive to avoid easy introduction of errors when choosing tools.
 So you can write `--tools mutect2,ascat` or `--tools MuTect2,ASCAT` without worrying about case sensitivity.
 
+### --awsqueue `BatchQueueName`
+
+Only required if you use the awsbatch profile. This parameter specifies the queue for which jobs are submitted in AWS Batch.
+
+### --awsqueue_tiny `BatchQueueName`
+
+Only used if you use the awsbatch profile. This parameter specifies a queue used for certain small jobs that might still require a significant amount of disk storage. 
+
+### --localReportDir `Directory`
+
+Only used if you use the awsbatch profile. This parameter specifies an output directory for nextflow reports, such as Sarek_timeline.html, which currently is not fully supported to store on s3. 
+
 ### --verbose
 
 Display more information about files being processed.
