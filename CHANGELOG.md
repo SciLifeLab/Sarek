@@ -9,21 +9,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### `Added`
 -   [#712](https://github.com/SciLifeLab/Sarek/pull/712), [#718](https://github.com/SciLifeLab/Sarek/pull/718) - Added possibilities to run Sarek with `conda`
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - Annotation documentation
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - Helper script to download `snpeff` and `VEP` cache files
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - New `--annotation_cache`, `--snpEff_cache`, `--vep_cache` parameters
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - Possibility to use cache wen annotating with `snpEff` and `VEP`
+-   [#728](https://github.com/SciLifeLab/Sarek/pull/728) - Update `Sarek-data` submodule with multiple patients TSV file
 
 ### `Changed`
 
 -   [#710](https://github.com/SciLifeLab/Sarek/pull/710) - Improve release checklist and script
 -   [#711](https://github.com/SciLifeLab/Sarek/pull/711) - Improve configuration priorities
--   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - `vepCacheVersion` is now defined in `conf/genomes.config` or `conf/igenomes.config`
--   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - `snpeff` and `vep` containers are now built with conda
 -   [#716](https://github.com/SciLifeLab/Sarek/pull/716) - Update paths to containers and iGenomes
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - `snpeff` and `vep` containers are now built with conda
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - `vepCacheVersion` is now defined in `conf/genomes.config` or `conf/igenomes.config`
+-   [#722](https://github.com/SciLifeLab/Sarek/pull/722) - Add path to ASCAT `.gc` file in `igenomes.config`
+-   [#722](https://github.com/SciLifeLab/Sarek/pull/722) - Update `Sarek-data` submodule
 -   [#724](https://github.com/SciLifeLab/Sarek/pull/724) - Improved AwsBatch configuration
-
-### `Added`
--   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - Possibility to use cache wen annotating with `snpEff` and `VEP`
--   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - New `--annotation_cache`, `--snpEff_cache`, `--vep_cache` parameters
--   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - Helper script to download `snpeff` and `VEP` cache files
--   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - Annotation documentation
 
 ### `Removed`
 -   [#715](https://github.com/SciLifeLab/Sarek/pull/715) - Remove `defReferencesFiles` function from `buildReferences.nf`
@@ -32,6 +33,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### `Fixed`
 -   [#720](https://github.com/SciLifeLab/Sarek/pull/720) - bamQC is now run on the recalibrated bams, and not after MarkDuplicates
+-   [#728](https://github.com/SciLifeLab/Sarek/pull/728) - Fix multi sample TSV file [#691](https://github.com/SciLifeLab/Sarek/issues/691)
 
 ## [2.2.2] - 2018-12-19
 
@@ -58,7 +60,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#702](https://github.com/SciLifeLab/Sarek/pull/702) - Update FastQC to `0.11.8`
 -   [#705](https://github.com/SciLifeLab/Sarek/pull/705) - Change `--TMP_DIR` by `--tmp-dir` for GATK `4.0.9.0` BaseRecalibrator
 -   [#706](https://github.com/SciLifeLab/Sarek/pull/706) - Update TravisCI testing
--   [#XXX](https://github.com/SciLifeLab/Sarek/pull/XXX) - Update `Sarek-data` submodule with multiple patients TSV file
 
 ### `Fixed`
 
