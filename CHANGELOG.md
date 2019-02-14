@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#694](https://github.com/SciLifeLab/Sarek/pull/694) - Add monochrome and grey logos for light or dark background
 -   [#698](https://github.com/SciLifeLab/Sarek/pull/698) - Add btb profile for munin server
 -   [#702](https://github.com/SciLifeLab/Sarek/pull/702) - Add font-ttf-dejavu-sans-mono `2.37` and fontconfig `2.12.6` to container
+-   [#XXX](https://github.com/SciLifeLab/Sarek/pull/XXX) - Add `MULTIPLE` as a test
 
 ### `Changed`
 
@@ -30,6 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#702](https://github.com/SciLifeLab/Sarek/pull/702) - Update FastQC to `0.11.8`
 -   [#705](https://github.com/SciLifeLab/Sarek/pull/705) - Change `--TMP_DIR` by `--tmp-dir` for GATK `4.0.9.0` BaseRecalibrator
 -   [#706](https://github.com/SciLifeLab/Sarek/pull/706) - Update TravisCI testing
+-   [#XXX](https://github.com/SciLifeLab/Sarek/pull/XXX) - Update `Sarek-data` submodule with multiple patients TSV file
 
 ### `Fixed`
 
