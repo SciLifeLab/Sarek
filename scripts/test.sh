@@ -125,6 +125,12 @@ then
   clean_repo
 fi
 
+if [[ MULTIPLE =~ $TEST ]]
+then
+  run_wrapper --somatic --sample Sarek-data/testdata/tsv/tiny-multiple.tsv --variantCalling --tools FreeBayes,HaplotypeCaller,Manta,Mutect2 --noReports
+	run_wrapper --somatic --sample Sarek-data/testdata/tsv/tiny-multiple.tsv --variantCalling --tools Manta,Strelka --noReports --strelkaBP
+fi
+
 if [[ BUILDCONTAINERS =~ $TEST ]] && [[ $PROFILE == docker ]]
 then
   ./scripts/do_all.sh --genome $GENOME
