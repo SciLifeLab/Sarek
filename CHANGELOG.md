@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### `Added`
+-   [#712](https://github.com/SciLifeLab/Sarek/pull/712), [#718](https://github.com/SciLifeLab/Sarek/pull/718) - Added possibilities to run Sarek with `conda`
+
+### `Changed`
+
+-   [#710](https://github.com/SciLifeLab/Sarek/pull/710) - Improve release checklist and script
+-   [#711](https://github.com/SciLifeLab/Sarek/pull/711) - Improve configuration priorities
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - `vepCacheVersion` is now defined in `conf/genomes.config` or `conf/igenomes.config`
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - `snpeff` and `vep` containers are now built with conda
+-   [#716](https://github.com/SciLifeLab/Sarek/pull/716) - Update paths to containers and iGenomes
+-   [#724](https://github.com/SciLifeLab/Sarek/pull/724) - Improved AwsBatch configuration
+
+### `Added`
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - Possibility to use cache wen annotating with `snpEff` and `VEP`
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - New `--annotation_cache`, `--snpEff_cache`, `--vep_cache` parameters
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - Helper script to download `snpeff` and `VEP` cache files
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - Annotation documentation
+
+### `Removed`
+-   [#715](https://github.com/SciLifeLab/Sarek/pull/715) - Remove `defReferencesFiles` function from `buildReferences.nf`
+-   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - `snpEff` base container is no longer used
+-   [#721](https://github.com/SciLifeLab/Sarek/pull/721) - Remove COSMIC docs
+
+### `Fixed`
+-   [#720](https://github.com/SciLifeLab/Sarek/pull/720) - bamQC is now run on the recalibrated bams, and not after MarkDuplicates
+
 ## [2.2.2] - 2018-12-19
 
 ### `Added`
@@ -16,7 +44,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#694](https://github.com/SciLifeLab/Sarek/pull/694) - Add monochrome and grey logos for light or dark background
 -   [#698](https://github.com/SciLifeLab/Sarek/pull/698) - Add btb profile for munin server
 -   [#702](https://github.com/SciLifeLab/Sarek/pull/702) - Add font-ttf-dejavu-sans-mono `2.37` and fontconfig `2.12.6` to container
--   [#XXX](https://github.com/SciLifeLab/Sarek/pull/XXX) - Add `MULTIPLE` as a test
 
 ### `Changed`
 
