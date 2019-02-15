@@ -92,13 +92,7 @@ if (tsvPath) {
 startMessage()
 
 if (params.verbose) bamFiles = bamFiles.view {
-  "BAMs to process:\n\
-  ID    : ${it[0]}\tStatus: ${it[1]}\tSample: ${it[2]}\n\
-  Files : [${it[3].fileName}, ${it[4].fileName}]"
-}
-
-if (params.verbose) bamFiles = bamFiles.view {
-  "Recalibrated BAM for variant Calling:\n\
+  "BAMs for variant Calling:\n\
   ID    : ${it[0]}\tStatus: ${it[1]}\tSample: ${it[2]}\n\
   Files : [${it[3].fileName}, ${it[4].fileName}]"
 }
@@ -286,7 +280,7 @@ if (params.verbose) vcfsToMerge = vcfsToMerge.view {
 process ConcatVCF {
   tag {variantCaller + "_" + idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir "${directoryMap."$variantCaller"}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap."$variantCaller"}", mode: params.publishDirMode
 
   input:
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file(vcFiles) from vcfsToMerge
@@ -321,7 +315,7 @@ if (params.verbose) vcfConcatenated = vcfConcatenated.view {
 process RunStrelka {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir directoryMap.strelka, mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.strelka}", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForStrelka
@@ -378,7 +372,7 @@ if (params.verbose) strelkaOutput = strelkaOutput.view {
 process RunManta {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir directoryMap.manta, mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.manta}", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForManta
@@ -432,7 +426,7 @@ if (params.verbose) mantaOutput = mantaOutput.view {
 process RunSingleManta {
   tag {idSample + " - Tumor-Only"}
 
-  publishDir directoryMap.manta, mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.manta}", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamsForSingleManta
@@ -491,7 +485,7 @@ bamsForStrelkaBP = bamsForStrelkaBP.map {
 process RunStrelkaBP {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir directoryMap.strelkabp, mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.strelkabp}", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor), file(mantaCSI), file(mantaCSIi) from bamsForStrelkaBP
@@ -583,7 +577,7 @@ alleleCountOutput = alleleCountOutput.map {
 process RunConvertAlleleCounts {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir directoryMap.ascat, mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.ascat}", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(alleleCountNormal), file(alleleCountTumor) from alleleCountOutput
@@ -605,7 +599,7 @@ process RunConvertAlleleCounts {
 process RunAscat {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir directoryMap.ascat, mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.ascat}", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(bafNormal), file(logrNormal), file(bafTumor), file(logrTumor) from convertAlleleCountsOutput

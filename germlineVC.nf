@@ -318,7 +318,7 @@ if (params.verbose) vcfsToMerge = vcfsToMerge.view {
 process ConcatVCF {
   tag {variantCaller + "-" + idSampleNormal}
 
-  publishDir "${directoryMap."$variantCaller"}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap."$variantCaller"}", mode: params.publishDirMode
 
   input:
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file(vcFiles) from vcfsToMerge
@@ -356,7 +356,7 @@ if (params.verbose) vcfConcatenated = vcfConcatenated.view {
 process RunSingleStrelka {
   tag {idSample}
 
-  publishDir directoryMap.strelka, mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.strelka}", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamsForSingleStrelka
@@ -409,7 +409,7 @@ if (params.verbose) singleStrelkaOutput = singleStrelkaOutput.view {
 process RunSingleManta {
   tag {idSample + " - Single Diploid"}
 
-  publishDir directoryMap.manta, mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.manta}", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamsForSingleManta

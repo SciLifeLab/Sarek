@@ -70,15 +70,15 @@ vcfNotToAnnotate = Channel.create()
 if (annotateVCF == []) {
 // we annote all available vcfs by default that we can find in the VariantCalling directory
   Channel.empty().mix(
-    Channel.fromPath("${directoryMap.haplotypecaller}/*.vcf.gz")
+    Channel.fromPath("${params.outDir}/VariantCalling/*/${directoryMap.haplotypecaller}/*.vcf.gz")
       .flatten().map{vcf -> ['haplotypecaller', vcf]},
-    Channel.fromPath("${directoryMap.manta}/*SV.vcf.gz")
+    Channel.fromPath("${params.outDir}/VariantCalling/*/${directoryMap.manta}/*SV.vcf.gz")
       .flatten().map{vcf -> ['manta', vcf]},
-    Channel.fromPath("${directoryMap.mutect2}/*.vcf.gz")
+    Channel.fromPath("${params.outDir}/VariantCalling/*/${directoryMap.mutect2}/*.vcf.gz")
       .flatten().map{vcf -> ['mutect2', vcf]},
-    Channel.fromPath("${directoryMap.strelka}/*{somatic,variants}*.vcf.gz")		// Strelka only
+    Channel.fromPath("${params.outDir}/VariantCalling/*/${directoryMap.strelka}/*{somatic,variants}*.vcf.gz")		// Strelka only
       .flatten().map{vcf -> ['strelka', vcf]},
-    Channel.fromPath("${directoryMap.strelkabp}/*{somatic,variants}*.vcf.gz")	// Strelka with Manta indel candidates
+    Channel.fromPath("${params.outDir}/VariantCalling/*/${directoryMap.strelkabp}/*{somatic,variants}*.vcf.gz")	// Strelka with Manta indel candidates
       .flatten().map{vcf -> ['strelkabp', vcf]}
   ).choice(vcfToAnnotate, vcfNotToAnnotate) {
     annotateTools == [] || (annotateTools != [] && it[0] in annotateTools) ? 0 : 1
@@ -147,20 +147,18 @@ if (params.verbose) vcfReport = vcfReport.view {
   "Files : [${it.fileName}]"
 }
 
-snpEff_cache = params.snpEff_cache ? params.snpEff_cache : "null"
-
 process RunSnpeff {
   tag {"${variantCaller} - ${vcf}"}
 
   publishDir params.outDir, mode: params.publishDirMode, saveAs: {
-    if (it == "${vcf.simpleName}_snpEff.csv") "${directoryMap.snpeffReports.minus(params.outDir+'/')}/${it}"
+    if (it == "${vcf.simpleName}_snpEff.csv") "${params.outDir}/Reports/${directoryMap.snpeff}/${it}"
     else if (it == "${vcf.simpleName}_snpEff.ann.vcf") null
-    else "${directoryMap.snpeff.minus(params.outDir+'/')}/${it}"
+    else "${params.outDir}/Annotation/${directoryMap.snpeff}/${it}"
   }
 
   input:
     set variantCaller, file(vcf) from vcfForSnpeff
-    file dataDir from Channel.fromPath(snpEff_cache, type: 'dir')
+    file dataDir from Channel.value(params.snpEff_cache ? params.snpEff_cache : "null")
     val snpeffDb from Channel.value(params.genomes[params.genome].snpeffDb)
 
   output:
@@ -204,19 +202,17 @@ if('merge' in tools) {
   )
 }
 
-vep_cache = params.vep_cache ? params.vep_cache : "null"
-
 process RunVEP {
   tag {"${variantCaller} - ${vcf}"}
 
   publishDir params.outDir, mode: params.publishDirMode, saveAs: {
-    if (it == "${vcf.simpleName}_VEP.summary.html") "${directoryMap.vep.minus(params.outDir+'/')}/${it}"
+    if (it == "${vcf.simpleName}_VEP.summary.html") "${params.outDir}/Annotation/${directoryMap.vep}/${it}"
     else null
   }
 
   input:
     set annotator, variantCaller, file(vcf), file(idx) from vcfForVep
-    file dataDir from Channel.fromPath(vep_cache, type: 'dir')
+    file dataDir from Channel.value(params.vep_cache ? params.vep_cache : "null")
     val cache_version from Channel.value(params.genomes[params.genome].vepCacheVersion)
 
   output:
@@ -260,7 +256,7 @@ vcfToCompress = snpeffVCF.mix(vepVCF)
 process CompressVCF {
   tag {"${annotator} - ${vcf}"}
 
-  publishDir "${directoryMap."$finalannotator"}", mode: params.publishDirMode
+  publishDir "${params.outDir}/Annotation/${directoryMap."$finalannotator"}", mode: params.publishDirMode
 
   input:
     set annotator, variantCaller, file(vcf) from vcfToCompress
