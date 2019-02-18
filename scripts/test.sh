@@ -94,7 +94,7 @@ if [[ ALL,GERMLINE =~ $TEST ]]
 then
 	# Added Strelka to germline test (no Strelka best practices test for this small data) and not asking for reports
 	run_wrapper --germline --sampleDir Sarek-data/testdata/tiny/normal --variantCalling --tools HaplotypeCaller,Strelka --noReports
-	run_wrapper --germline --sampleDir Sarek-data/testdata/tiny/normal --variantCalling --tools HaplotypeCaller,Strelka --bed `pwd`/Sarek-data/testdata/target.bed --noReports
+	run_wrapper --germline --sampleDir Sarek-data/testdata/tiny/normal --variantCalling --tools HaplotypeCaller,Strelka --bed Sarek-data/testdata/target.bed --noReports
 	run_wrapper --germline --step recalibrate --noReports
 	clean_repo
 fi
@@ -120,8 +120,7 @@ then
   then
     ANNOTATOR=merge,snpEFF,VEP
   fi
-  run_wrapper --annotate --tools ${ANNOTATOR} --annotateVCF Sarek-data/testdata/vcf/Strelka_1234N_variants.vcf.gz --noReports
-  run_wrapper --annotate --tools ${ANNOTATOR} --annotateVCF Sarek-data/testdata/vcf/Strelka_1234N_variants.vcf.gz,Sarek-data/testdata/vcf/Strelka_9876T_variants.vcf.gz
+  run_wrapper --annotate --tools ${ANNOTATOR} --annotateVCF Sarek-data/testdata/vcf/Strelka_1234N_variants.vcf.gz
   clean_repo
 fi
 
