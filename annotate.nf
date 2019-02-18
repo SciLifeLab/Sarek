@@ -253,7 +253,7 @@ vcfToCompress = snpeffVCF.mix(vepVCF)
 process CompressVCF {
   tag {"${idPatient} - ${annotator} - ${vcf}"}
 
-  publishDir "${params.outDir}/Annotation/${idPatient}/${finalAnnotator}/${it}", mode: params.publishDirMode
+  publishDir "${params.outDir}/Annotation/${idPatient}/${finalAnnotator}", mode: params.publishDirMode
 
   input:
     set annotator, variantCaller, idPatient, file(vcf) from vcfToCompress
