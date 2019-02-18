@@ -69,9 +69,9 @@ vcfNotToAnnotate = Channel.create()
 if (annotateVCF == []) {
 // Sarek, by default, annotates all available vcfs that it can find in the VariantCalling directory
 // Excluding vcfs from FreeBayes, and g.vcf from HaplotypeCaller
-// Basically it's: VariantCalling/*/{HaplotypeCaller,Manta,MuTect2,Strelka,StrelkaBP}/*.vcf.gz
+// Basically it's: VariantCalling/*/{HaplotypeCaller,Manta,MuTect2,Strelka}/*.vcf.gz
 // Without *SmallIndels.vcf.gz from Manta, and *.genome.vcf.gz from Strelka
-// This small snipet `vcf.minus(vcf.fileName)[-2]` catches idPatient
+// The small snipet `vcf.minus(vcf.fileName)[-2]` catches idPatient
 // This field is used to output final annotated VCFs in the correct directory
   Channel.empty().mix(
     Channel.fromPath("${params.outDir}/VariantCalling/*/HaplotypeCaller/*.vcf.gz")
@@ -80,17 +80,16 @@ if (annotateVCF == []) {
       .flatten().map{vcf -> ['manta', vcf.minus(vcf.fileName)[-2], vcf]},
     Channel.fromPath("${params.outDir}/VariantCalling/*/MuTect2/*.vcf.gz")
       .flatten().map{vcf -> ['mutect2', vcf.minus(vcf.fileName)[-2], vcf]},
-    Channel.fromPath("${params.outDir}/VariantCalling/*/Strelka/*{somatic,variant}*.vcf.gz")		// Strelka only
+    Channel.fromPath("${params.outDir}/VariantCalling/*/Strelka/*{somatic,variant}*.vcf.gz")
       .flatten().map{vcf -> ['strelka', vcf.minus(vcf.fileName)[-2], vcf]},
-    Channel.fromPath("${params.outDir}/VariantCalling/*/StrelkaBP/*{somatic,variant}*.vcf.gz")	// Strelka with Manta indel candidates
-      .flatten().map{vcf -> ['strelkabp', vcf.minus(vcf.fileName)[-2], vcf]}
   ).choice(vcfToAnnotate, vcfNotToAnnotate) {
     annotateTools == [] || (annotateTools != [] && it[0] in annotateTools) ? 0 : 1
   }
 } else if (annotateTools == []) {
-// alternatively, annotate user-submitted VCFs
+// Annotate user-submitted VCFs
+// If user-submitted, Sarek assume that the idPatient should be assumed automatically
   vcfToAnnotate = Channel.fromPath(annotateVCF)
-    .map{vcf -> ['userspecified', '', vcf]}
+    .map{vcf -> ['userspecified', vcf.minus(vcf.fileName)[-2], vcf]}
 } else exit 1, "specify only tools or files to annotate, not both"
 
 vcfNotToAnnotate.close()
@@ -105,10 +104,7 @@ vcfForVep = vcfForVep.map {
 }
 
 process RunBcftoolsStats {
-  tag { idPatient != ""
-    ? "${idPatient} - ${vcf}"
-    : "${vcf}"
-  }
+  tag {"${idPatient} - ${vcf}"}
 
   publishDir directoryMap.bcftoolsStats, mode: params.publishDirMode
 
@@ -129,10 +125,7 @@ if (params.verbose) bcfReport = bcfReport.view {
 }
 
 process RunVcftools {
-  tag { idPatient != ""
-    ? "${idPatient} - ${variantCaller} - ${vcf}"
-    : "${variantCaller} - ${vcf}"
-  }
+  tag {"${idPatient} - ${variantCaller} - ${vcf}"}
 
   publishDir directoryMap.vcftools, mode: params.publishDirMode
 
@@ -153,15 +146,11 @@ if (params.verbose) vcfReport = vcfReport.view {
 }
 
 process RunSnpeff {
-  tag { idPatient != ""
-    ? "${idPatient} - ${variantCaller} - ${vcf}"
-    : "${variantCaller} - ${vcf}"
-  }
+  tag {"${idPatient} - ${variantCaller} - ${vcf}"}
 
   publishDir params.outDir, mode: params.publishDirMode, saveAs: {
     if (it == "${vcf.simpleName}_snpEff.ann.vcf") null
-    else if (idPatient != "") "Annotation/${idPatient}/snpEff/${it}"
-    else "Annotation/snpEff/${it}"
+    else "Annotation/${idPatient}/snpEff/${it}"
   }
 
   input:
@@ -211,16 +200,10 @@ if('merge' in tools) {
 }
 
 process RunVEP {
-  tag { idPatient != ""
-    ? "${idPatient} - ${variantCaller} - ${vcf}"
-    : "${variantCaller} - ${vcf}"
-  }
+  tag {"${idPatient} - ${variantCaller} - ${vcf}"}
 
   publishDir params.outDir, mode: params.publishDirMode, saveAs: {
-    if (it == "${vcf.simpleName}_VEP.summary.html") {
-      if (idPatient != "") "Annotation/${idPatient}/VEP/${it}"
-      else "Annotation/VEP/${it}"
-    }
+    if (it == "${vcf.simpleName}_VEP.summary.html") "Annotation/${idPatient}/VEP/${it}"
     else null
   }
 
@@ -268,16 +251,9 @@ if (params.verbose) vepReport = vepReport.view {
 vcfToCompress = snpeffVCF.mix(vepVCF)
 
 process CompressVCF {
-  tag { idPatient != ""
-    ? "${idPatient} - ${annotator} - ${vcf}"
-    : "${annotator} - ${vcf}"
-  }
+  tag {"${idPatient} - ${annotator} - ${vcf}"}
 
-  publishDir params.outDir, mode: params.publishDirMode, saveAs: {
-    idPatient != ""
-    ? "Annotation/${idPatient}/${finalAnnotator}/${it}"
-    : "Annotation/${finalAnnotator}/${it}"
-  }
+  publishDir "${params.outDir}/Annotation/${idPatient}/${finalAnnotator}/${it}", mode: params.publishDirMode
 
   input:
     set annotator, variantCaller, idPatient, file(vcf) from vcfToCompress

@@ -318,11 +318,12 @@ if (params.verbose) vcfsToMerge = vcfsToMerge.view {
 process ConcatVCF {
   tag {variantCaller + "-" + idSampleNormal}
 
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap."$variantCaller"}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${"$variantCaller"}", mode: params.publishDirMode
 
   input:
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file(vcFiles) from vcfsToMerge
     file(genomeIndex) from Channel.value(referenceMap.genomeIndex)
+    file(targetBED) from Channel.value(params.targetBED ? params.targetBED : "null")
 
   output:
 		// we have this funny *_* pattern to avoid copying the raw calls to publishdir
@@ -335,12 +336,10 @@ process ConcatVCF {
   if (variantCaller == 'haplotypecaller') outputFile = "${variantCaller}_${idSampleNormal}.vcf"
   else if (variantCaller == 'gvcf-hc') outputFile = "haplotypecaller_${idSampleNormal}.g.vcf"
   else outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
-
 	if(params.targetBED)		// targeted
-		concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${params.targetBED}"
+		concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${targetBED}"
 	else										// WGS
 		concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} "
-
 	"""
 	concatenateVCFs.sh ${concatOptions}
 	"""
@@ -356,10 +355,11 @@ if (params.verbose) vcfConcatenated = vcfConcatenated.view {
 process RunSingleStrelka {
   tag {idSample}
 
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.strelka}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/Strelka", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamsForSingleStrelka
+    file(targetBED) from Channel.value(params.targetBED ? params.targetBED : "null")
     set file(genomeFile), file(genomeIndex) from Channel.value([
       referenceMap.genomeFile,
       referenceMap.genomeIndex
@@ -372,15 +372,15 @@ process RunSingleStrelka {
 
   script:
 	"""
-	if [ ! -s "${params.targetBED}" ]; then
-		# do WGS
+	if [ ! -s "${targetBED}" ]; then
+		# WGS
 		configureStrelkaGermlineWorkflow.py \
 		--bam ${bam} \
 		--referenceFasta ${genomeFile} \
 		--runDir Strelka
 	else
 		# WES or targeted
-		bgzip --threads ${task.cpus} -c ${params.targetBED} > call_targets.bed.gz
+		bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz
 		tabix call_targets.bed.gz
 		configureStrelkaGermlineWorkflow.py \
 		--bam ${bam} \
@@ -409,7 +409,7 @@ if (params.verbose) singleStrelkaOutput = singleStrelkaOutput.view {
 process RunSingleManta {
   tag {idSample + " - Single Diploid"}
 
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.manta}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/Manta", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamsForSingleManta

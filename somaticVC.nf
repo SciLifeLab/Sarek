@@ -280,11 +280,12 @@ if (params.verbose) vcfsToMerge = vcfsToMerge.view {
 process ConcatVCF {
   tag {variantCaller + "_" + idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap."$variantCaller"}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${"$variantCaller"}", mode: params.publishDirMode
 
   input:
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file(vcFiles) from vcfsToMerge
     file(genomeIndex) from Channel.value(referenceMap.genomeIndex)
+    file(targetBED) from Channel.value(params.targetBED ? params.targetBED : "null")
 
   output:
 		// we have this funny *_* pattern to avoid copying the raw calls to publishdir
@@ -297,7 +298,7 @@ process ConcatVCF {
   outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
 
   if(params.targetBED)		// targeted
-		concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${params.targetBED}"
+		concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${targetBED}"
 	else										// WGS
 		concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} "
 
@@ -315,10 +316,11 @@ if (params.verbose) vcfConcatenated = vcfConcatenated.view {
 process RunStrelka {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.strelka}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/Strelka", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForStrelka
+    file(targetBED) from Channel.value(params.targetBED ? params.targetBED : "null")
     set file(genomeFile), file(genomeIndex), file(genomeDict) from Channel.value([
       referenceMap.genomeFile,
       referenceMap.genomeIndex,
@@ -332,7 +334,7 @@ process RunStrelka {
 
   script:
 	"""
-	if [ ! -s "${params.targetBED}" ]; then
+	if [ ! -s "${targetBED}" ]; then
 		# do WGS
 		configureStrelkaSomaticWorkflow.py \
 		--tumor ${bamTumor} \
@@ -341,7 +343,7 @@ process RunStrelka {
 		--runDir Strelka
 	else
 		# WES or targeted
-		bgzip --threads ${task.cpus} -c ${params.targetBED} > call_targets.bed.gz
+		bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz
 		tabix call_targets.bed.gz
 		configureStrelkaSomaticWorkflow.py \
 		--tumor ${bamTumor} \
@@ -372,7 +374,7 @@ if (params.verbose) strelkaOutput = strelkaOutput.view {
 process RunManta {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.manta}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/Manta", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForManta
@@ -426,7 +428,7 @@ if (params.verbose) mantaOutput = mantaOutput.view {
 process RunSingleManta {
   tag {idSample + " - Tumor-Only"}
 
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.manta}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/Manta", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamsForSingleManta
@@ -485,7 +487,7 @@ bamsForStrelkaBP = bamsForStrelkaBP.map {
 process RunStrelkaBP {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.strelkabp}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/Strelka", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor), file(mantaCSI), file(mantaCSIi) from bamsForStrelkaBP
@@ -512,13 +514,13 @@ process RunStrelkaBP {
   python Strelka/runWorkflow.py -m local -j ${task.cpus}
 
   mv Strelka/results/variants/somatic.indels.vcf.gz \
-    Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz
+    StrelkaBP_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz
   mv Strelka/results/variants/somatic.indels.vcf.gz.tbi \
-    Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz.tbi
+    StrelkaBP_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz.tbi
   mv Strelka/results/variants/somatic.snvs.vcf.gz \
-    Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz
+    StrelkaBP_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz
   mv Strelka/results/variants/somatic.snvs.vcf.gz.tbi \
-    Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz.tbi
+    StrelkaBP_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz.tbi
   """
 }
 
@@ -577,7 +579,7 @@ alleleCountOutput = alleleCountOutput.map {
 process RunConvertAlleleCounts {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.ascat}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/ASCAT", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(alleleCountNormal), file(alleleCountTumor) from alleleCountOutput
@@ -599,7 +601,7 @@ process RunConvertAlleleCounts {
 process RunAscat {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/${directoryMap.ascat}", mode: params.publishDirMode
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/ASCAT", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(bafNormal), file(logrNormal), file(bafTumor), file(logrTumor) from convertAlleleCountsOutput
