@@ -336,7 +336,7 @@ process ConcatVCF {
   else outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
   options = params.targetBED ? "-t ${targetBED}" : ""
   """
-  concatenateVCFs.sh -i ${genomeIndex} -c ${task.cpus} -o ${outputFile} ${concatOptions}
+  concatenateVCFs.sh -i ${genomeIndex} -c ${task.cpus} -o ${outputFile} ${options}
   """
 }
 
