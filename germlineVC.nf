@@ -371,31 +371,23 @@ process RunSingleStrelka {
   when: 'strelka' in tools && !params.onlyQC
 
   script:
+  if (params.targetBED) {
+    beforeScript = "bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz ; tabix call_targets.bed.gz"
+    options = "--exome --callRegions call_targets.bed.gz"
+  }
 	"""
-	if [ ! -s "${targetBED}" ]; then
-		# WGS
-		configureStrelkaGermlineWorkflow.py \
-		--bam ${bam} \
-		--referenceFasta ${genomeFile} \
-		--runDir Strelka
-	else
-		# WES or targeted
-		bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz
-		tabix call_targets.bed.gz
-		configureStrelkaGermlineWorkflow.py \
-		--bam ${bam} \
-		--referenceFasta ${genomeFile} \
-		--exome \
-		--callRegions call_targets.bed.gz \
-		--runDir Strelka
-	fi
+	${beforeScript}
+  configureStrelkaGermlineWorkflow.py \
+	--bam ${bam} \
+	--referenceFasta ${genomeFile} \
+  ${options} \
+	--runDir Strelka
 
-	# always run this part
-		python Strelka/runWorkflow.py -m local -j ${task.cpus}
-		mv Strelka/results/variants/genome.*.vcf.gz Strelka_${idSample}_genome.vcf.gz
-		mv Strelka/results/variants/genome.*.vcf.gz.tbi Strelka_${idSample}_genome.vcf.gz.tbi
-		mv Strelka/results/variants/variants.vcf.gz Strelka_${idSample}_variants.vcf.gz
-		mv Strelka/results/variants/variants.vcf.gz.tbi Strelka_${idSample}_variants.vcf.gz.tbi
+	python Strelka/runWorkflow.py -m local -j ${task.cpus}
+	mv Strelka/results/variants/genome.*.vcf.gz Strelka_${idSample}_genome.vcf.gz
+	mv Strelka/results/variants/genome.*.vcf.gz.tbi Strelka_${idSample}_genome.vcf.gz.tbi
+	mv Strelka/results/variants/variants.vcf.gz Strelka_${idSample}_variants.vcf.gz
+	mv Strelka/results/variants/variants.vcf.gz.tbi Strelka_${idSample}_variants.vcf.gz.tbi
 	"""
 }
 
