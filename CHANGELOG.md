@@ -28,17 +28,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#722](https://github.com/SciLifeLab/Sarek/pull/722) - Update `Sarek-data` submodule
 -   [#723](https://github.com/SciLifeLab/Sarek/pull/723), [#725](https://github.com/SciLifeLab/Sarek/pull/725) - Update docs
 -   [#724](https://github.com/SciLifeLab/Sarek/pull/724) - Improved AwsBatch configuration
+-   [#728](https://github.com/SciLifeLab/Sarek/pull/728) - VCFs and Annotated VCFs are now ordered by Patient, then tools
+-   [#728](https://github.com/SciLifeLab/Sarek/pull/728) - Strelka Best Practices output is now prefixed with `StrelkaBP_`
+-   [#728](https://github.com/SciLifeLab/Sarek/pull/728) - Improved usage of `targetBED` params
 
 ### `Removed`
 -   [#715](https://github.com/SciLifeLab/Sarek/pull/715) - Remove `defReferencesFiles` function from `buildReferences.nf`
 -   [#719](https://github.com/SciLifeLab/Sarek/pull/719) - `snpEff` base container is no longer used
 -   [#721](https://github.com/SciLifeLab/Sarek/pull/721) - Remove COSMIC docs
+-   [#728](https://github.com/SciLifeLab/Sarek/pull/728) - Remove `defineDirectoryMap()`
 
 ### `Fixed`
 -   [#720](https://github.com/SciLifeLab/Sarek/pull/720) - bamQC is now run on the recalibrated bams, and not after MarkDuplicates
 -   [#726](https://github.com/SciLifeLab/Sarek/pull/726) - Fix Ascat ref file input (one file can't be a set)
 -   [#727](https://github.com/SciLifeLab/Sarek/pull/727) - bamQC outputs are no longer overwritten (name of dir is now the file instead of sample)
 -   [#728](https://github.com/SciLifeLab/Sarek/pull/728) - Fix multi sample TSV file [#691](https://github.com/SciLifeLab/Sarek/issues/691)
+-   [#728](https://github.com/SciLifeLab/Sarek/pull/728) - Fix issue with annotation that was consuming `cache` channels
 
 ## [2.2.2] - 2018-12-19
 
