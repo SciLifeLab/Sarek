@@ -374,6 +374,9 @@ process RunSingleStrelka {
   if (params.targetBED) {
     beforeScript = "bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz ; tabix call_targets.bed.gz"
     options = "--exome --callRegions call_targets.bed.gz"
+  } else {
+    beforeScript = ""
+    options = ""
   }
   """
   ${beforeScript}
