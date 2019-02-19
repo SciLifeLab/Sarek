@@ -326,7 +326,7 @@ process ConcatVCF {
     file(targetBED) from Channel.value(params.targetBED ? params.targetBED : "null")
 
   output:
-		// we have this funny *_* pattern to avoid copying the raw calls to publishdir
+    // we have this funny *_* pattern to avoid copying the raw calls to publishdir
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("*_*.vcf.gz"), file("*_*.vcf.gz.tbi") into vcfConcatenated
 
 
@@ -336,13 +336,13 @@ process ConcatVCF {
   if (variantCaller == 'haplotypecaller') outputFile = "${variantCaller}_${idSampleNormal}.vcf"
   else if (variantCaller == 'gvcf-hc') outputFile = "haplotypecaller_${idSampleNormal}.g.vcf"
   else outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
-	if(params.targetBED)		// targeted
-		concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${targetBED}"
-	else										// WGS
-		concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} "
-	"""
-	concatenateVCFs.sh ${concatOptions}
-	"""
+  if(params.targetBED)    // targeted
+    concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${targetBED}"
+  else                    // WGS
+    concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} "
+  """
+  concatenateVCFs.sh ${concatOptions}
+  """
 }
 
 if (params.verbose) vcfConcatenated = vcfConcatenated.view {
@@ -375,20 +375,20 @@ process RunSingleStrelka {
     beforeScript = "bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz ; tabix call_targets.bed.gz"
     options = "--exome --callRegions call_targets.bed.gz"
   }
-	"""
-	${beforeScript}
+  """
+  ${beforeScript}
   configureStrelkaGermlineWorkflow.py \
-	--bam ${bam} \
-	--referenceFasta ${genomeFile} \
+  --bam ${bam} \
+  --referenceFasta ${genomeFile} \
   ${options} \
-	--runDir Strelka
+  --runDir Strelka
 
-	python Strelka/runWorkflow.py -m local -j ${task.cpus}
-	mv Strelka/results/variants/genome.*.vcf.gz Strelka_${idSample}_genome.vcf.gz
-	mv Strelka/results/variants/genome.*.vcf.gz.tbi Strelka_${idSample}_genome.vcf.gz.tbi
-	mv Strelka/results/variants/variants.vcf.gz Strelka_${idSample}_variants.vcf.gz
-	mv Strelka/results/variants/variants.vcf.gz.tbi Strelka_${idSample}_variants.vcf.gz.tbi
-	"""
+  python Strelka/runWorkflow.py -m local -j ${task.cpus}
+  mv Strelka/results/variants/genome.*.vcf.gz Strelka_${idSample}_genome.vcf.gz
+  mv Strelka/results/variants/genome.*.vcf.gz.tbi Strelka_${idSample}_genome.vcf.gz.tbi
+  mv Strelka/results/variants/variants.vcf.gz Strelka_${idSample}_variants.vcf.gz
+  mv Strelka/results/variants/variants.vcf.gz.tbi Strelka_${idSample}_variants.vcf.gz.tbi
+  """
 }
 
 if (params.verbose) singleStrelkaOutput = singleStrelkaOutput.view {

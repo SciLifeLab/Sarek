@@ -219,18 +219,18 @@ process RunMutect2 {
 
   script:
   """
-	gatk --java-options "-Xmx${task.memory.toGiga()}g" \
-		Mutect2 \
-		-R ${genomeFile}\
-		-I ${bamTumor}  -tumor ${idSampleTumor} \
-		-I ${bamNormal} -normal ${idSampleNormal} \
-		-L ${intervalBed} \
-		-O ${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf
+  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+    Mutect2 \
+    -R ${genomeFile}\
+    -I ${bamTumor}  -tumor ${idSampleTumor} \
+    -I ${bamNormal} -normal ${idSampleNormal} \
+    -L ${intervalBed} \
+    -O ${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf
   """
 }
-//		--germline_resource af-only-gnomad.vcf.gz \
-//		--normal_panel pon.vcf.gz \
-//		--dbsnp ${dbsnp} \
+//    --germline_resource af-only-gnomad.vcf.gz \
+//    --normal_panel pon.vcf.gz \
+//    --dbsnp ${dbsnp} \
 
 mutect2Output = mutect2Output.groupTuple(by:[0,1,2,3])
 
@@ -288,22 +288,22 @@ process ConcatVCF {
     file(targetBED) from Channel.value(params.targetBED ? params.targetBED : "null")
 
   output:
-		// we have this funny *_* pattern to avoid copying the raw calls to publishdir
+    // we have this funny *_* pattern to avoid copying the raw calls to publishdir
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("*_*.vcf.gz"), file("*_*.vcf.gz.tbi") into vcfConcatenated
-		// TODO DRY with ConcatVCF
+    // TODO DRY with ConcatVCF
 
   when: ( 'mutect2' in tools || 'freebayes' in tools ) && !params.onlyQC
 
   script:
   outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
 
-  if(params.targetBED)		// targeted
-		concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${targetBED}"
-	else										// WGS
-		concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} "
+  if(params.targetBED)    // targeted
+    concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${targetBED}"
+  else                    // WGS
+    concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} "
 
-	"""
-	concatenateVCFs.sh ${concatOptions}
+  """
+  concatenateVCFs.sh ${concatOptions}
   """
 }
 
@@ -337,21 +337,21 @@ process RunStrelka {
     beforeScript = "bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz ; tabix call_targets.bed.gz"
     options = "--exome --callRegions call_targets.bed.gz"
   }
-	"""
-	${beforeScript}
+  """
+  ${beforeScript}
   configureStrelkaSomaticWorkflow.py \
   --tumor ${bamTumor} \
   --normal ${bamNormal} \
-	--referenceFasta ${genomeFile} \
+  --referenceFasta ${genomeFile} \
   ${options} \
-	--runDir Strelka
+  --runDir Strelka
 
-	python Strelka/runWorkflow.py -m local -j ${task.cpus}
-	mv Strelka/results/variants/somatic.indels.vcf.gz Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz
-	mv Strelka/results/variants/somatic.indels.vcf.gz.tbi Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz.tbi
-	mv Strelka/results/variants/somatic.snvs.vcf.gz Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz
-	mv Strelka/results/variants/somatic.snvs.vcf.gz.tbi Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz.tbi
-	"""
+  python Strelka/runWorkflow.py -m local -j ${task.cpus}
+  mv Strelka/results/variants/somatic.indels.vcf.gz Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz
+  mv Strelka/results/variants/somatic.indels.vcf.gz.tbi Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_indels.vcf.gz.tbi
+  mv Strelka/results/variants/somatic.snvs.vcf.gz Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz
+  mv Strelka/results/variants/somatic.snvs.vcf.gz.tbi Strelka_${idSampleTumor}_vs_${idSampleNormal}_somatic_snvs.vcf.gz.tbi
+  """
 }
 
 if (params.verbose) strelkaOutput = strelkaOutput.view {

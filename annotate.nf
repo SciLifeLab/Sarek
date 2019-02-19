@@ -270,15 +270,9 @@ process CompressVCF {
 }
 
 if (params.verbose) vcfCompressedoutput = vcfCompressedoutput.view {
-  if (it[2] != "") {
-    "${it[2]} - ${it[0]} VCF:\n" +
-    "File  : ${it[3].fileName}\n" +
-    "Index : ${it[4].fileName}"
-  } else {
-    "${it[0]} VCF:\n" +
-    "File  : ${it[3].fileName}\n" +
-    "Index : ${it[4].fileName}"
-  }
+  "${it[2]} - ${it[0]} VCF:\n" +
+  "File  : ${it[3].fileName}\n" +
+  "Index : ${it[4].fileName}"
 }
 
 /*
