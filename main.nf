@@ -43,9 +43,8 @@ kate: syntax groovy; space-indent on; indent-width 2;
 // Check for awsbatch profile configuration
 // make sure queue is defined
 if (workflow.profile == 'awsbatch') {
-    if(!params.awsqueue) exit 1, "Provide the job queue for aws batch!"
+    if (!params.awsqueue) exit 1, "Provide the job queue for aws batch!"
 }
-
 
 if (params.help) exit 0, helpMessage()
 if (!SarekUtils.isAllowedParams(params)) exit 1, "params unknown, see --help for more information"
@@ -213,7 +212,6 @@ if (params.verbose) bamQCmappedReport = bamQCmappedReport.view {
   "BamQC report:\n\
   Dir   : [${it.fileName}]"
 }
-
 
 // Sort bam whether they are standalone or should be merged
 // Borrowed code from https://github.com/guigolab/chip-nf

@@ -43,7 +43,7 @@ if (!checkUppmaxProject()) exit 1, "No UPPMAX project ID found! Use --project <U
 // Check for awsbatch profile configuration
 // make sure queue is defined
 if (workflow.profile == 'awsbatch') {
-    if(!params.awsqueue) exit 1, "Provide the job queue for aws batch!"
+    if (!params.awsqueue) exit 1, "Provide the job queue for aws batch!"
 }
 
 annotateTools = params.annotateTools ? params.annotateTools.split(',').collect{it.trim().toLowerCase()} : []
@@ -155,7 +155,7 @@ process RunSnpeff {
 
   input:
     set variantCaller, idPatient, file(vcf) from vcfForSnpeff
-    file dataDir from Channel.value(params.snpEff_cache ? params.snpEff_cache : "null")
+    file dataDir from Channel.value(params.snpEff_cache ? file(params.snpEff_cache) : "null")
     val snpeffDb from Channel.value(params.genomes[params.genome].snpeffDb)
 
   output:
@@ -186,7 +186,7 @@ if (params.verbose) snpeffOutput = snpeffOutput.view {
   "File  : ${it.fileName}"
 }
 
-if('merge' in tools) {
+if ('merge' in tools) {
   // When running in the 'merge' mode
   // snpEff output is used as VEP input
   // Used a feedback loop from vcfCompressed
@@ -209,7 +209,7 @@ process RunVEP {
 
   input:
     set annotator, variantCaller,  idPatient, file(vcf), file(idx) from vcfForVep
-    file dataDir from Channel.value(params.vep_cache ? params.vep_cache : "null")
+    file dataDir from Channel.value(params.vep_cache ? file(params.vep_cache) : "null")
     val cache_version from Channel.value(params.genomes[params.genome].vepCacheVersion)
 
   output:
