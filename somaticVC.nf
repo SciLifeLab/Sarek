@@ -53,7 +53,7 @@ if (!checkUppmaxProject()) exit 1, "No UPPMAX project ID found! Use --project <U
 // Check for awsbatch profile configuration
 // make sure queue is defined
 if (workflow.profile == 'awsbatch') {
-    if(!params.awsqueue) exit 1, "Provide the job queue for aws batch!"
+    if (!params.awsqueue) exit 1, "Provide the job queue for aws batch!"
 }
 
 tools = params.tools ? params.tools.split(',').collect{it.trim().toLowerCase()} : []
@@ -285,7 +285,7 @@ process ConcatVCF {
   input:
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file(vcFiles) from vcfsToMerge
     file(genomeIndex) from Channel.value(referenceMap.genomeIndex)
-    file(targetBED) from Channel.value(params.targetBED ? params.targetBED : "null")
+    file(targetBED) from Channel.value(params.targetBED ? file(params.targetBED) : "null")
 
   output:
     // we have this funny *_* pattern to avoid copying the raw calls to publishdir
@@ -297,7 +297,7 @@ process ConcatVCF {
   script:
   outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
 
-  if(params.targetBED)    // targeted
+  if (params.targetBED)   // targeted
     concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${targetBED}"
   else                    // WGS
     concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} "
@@ -320,7 +320,7 @@ process RunStrelka {
 
   input:
     set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForStrelka
-    file(targetBED) from Channel.value(params.targetBED ? params.targetBED : "null")
+    file(targetBED) from Channel.value(params.targetBED ? file(params.targetBED) : "null")
     set file(genomeFile), file(genomeIndex), file(genomeDict) from Channel.value([
       referenceMap.genomeFile,
       referenceMap.genomeIndex,

@@ -46,7 +46,7 @@ if (!checkUppmaxProject()) exit 1, "No UPPMAX project ID found! Use --project <U
 // Check for awsbatch profile configuration
 // make sure queue is defined
 if (workflow.profile == 'awsbatch') {
-    if(!params.awsqueue) exit 1, "Provide the job queue for aws batch!"
+    if (!params.awsqueue) exit 1, "Provide the job queue for aws batch!"
 }
 
 tools = params.tools ? params.tools.split(',').collect{it.trim().toLowerCase()} : []
@@ -323,12 +323,11 @@ process ConcatVCF {
   input:
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file(vcFiles) from vcfsToMerge
     file(genomeIndex) from Channel.value(referenceMap.genomeIndex)
-    file(targetBED) from Channel.value(params.targetBED ? params.targetBED : "null")
+    file(targetBED) from Channel.value(params.targetBED ? file(params.targetBED) : "null")
 
   output:
     // we have this funny *_* pattern to avoid copying the raw calls to publishdir
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("*_*.vcf.gz"), file("*_*.vcf.gz.tbi") into vcfConcatenated
-
 
   when: ( 'haplotypecaller' in tools || 'mutect2' in tools || 'freebayes' in tools ) && !params.onlyQC
 
@@ -336,7 +335,7 @@ process ConcatVCF {
   if (variantCaller == 'haplotypecaller') outputFile = "${variantCaller}_${idSampleNormal}.vcf"
   else if (variantCaller == 'gvcf-hc') outputFile = "haplotypecaller_${idSampleNormal}.g.vcf"
   else outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
-  if(params.targetBED)    // targeted
+  if (params.targetBED)   // targeted
     concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${targetBED}"
   else                    // WGS
     concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} "
@@ -359,7 +358,7 @@ process RunSingleStrelka {
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamsForSingleStrelka
-    file(targetBED) from Channel.value(params.targetBED ? params.targetBED : "null")
+    file(targetBED) from Channel.value(params.targetBED ? file(params.targetBED) : "null")
     set file(genomeFile), file(genomeIndex) from Channel.value([
       referenceMap.genomeFile,
       referenceMap.genomeIndex
