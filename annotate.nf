@@ -50,7 +50,6 @@ annotateTools = params.annotateTools ? params.annotateTools.split(',').collect{i
 annotateVCF = params.annotateVCF ? params.annotateVCF.split(',').collect{it.trim()} : []
 tools = params.tools ? params.tools.split(',').collect{it.trim().toLowerCase()} : []
 
-directoryMap = SarekUtils.defineDirectoryMap(params.outDir)
 toolList = defineToolList()
 
 if (!SarekUtils.checkParameterList(tools,toolList)) exit 1, 'Unknown tool(s), see --help for more information'
@@ -106,7 +105,7 @@ vcfForVep = vcfForVep.map {
 process RunBcftoolsStats {
   tag {"${idPatient} - ${vcf}"}
 
-  publishDir directoryMap.bcftoolsStats, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/BCFToolsStats", mode: params.publishDirMode
 
   input:
     set variantCaller, idPatient, file(vcf) from vcfForBCFtools
@@ -127,7 +126,7 @@ if (params.verbose) bcfReport = bcfReport.view {
 process RunVcftools {
   tag {"${idPatient} - ${variantCaller} - ${vcf}"}
 
-  publishDir directoryMap.vcftools, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/VCFTools", mode: params.publishDirMode
 
   input:
     set variantCaller, idPatient, file(vcf) from vcfForVCFtools

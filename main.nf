@@ -53,7 +53,6 @@ if (!checkUppmaxProject()) exit 1, "No UPPMAX project ID found! Use --project <U
 step = params.step.toLowerCase()
 if (step == 'preprocessing') step = 'mapping'
 
-directoryMap = SarekUtils.defineDirectoryMap(params.outDir)
 referenceMap = defineReferenceMap()
 stepList = defineStepList()
 
@@ -74,7 +73,7 @@ if (params.sample) tsvPath = params.sample
 if (!params.sample && !params.sampleDir) {
   tsvPaths = [
       'mapping': "${workflow.projectDir}/Sarek-data/testdata/tsv/tiny.tsv",
-      'recalibrate': "${directoryMap.duplicateMarked}/duplicateMarked.tsv"
+      'recalibrate': "${params.outDir}/Preprocessing/DuplicateMarked/duplicateMarked.tsv"
   ]
   if (params.test || step != 'mapping') tsvPath = tsvPaths[step]
 }
@@ -129,7 +128,7 @@ if (params.verbose) bamFiles = bamFiles.view {
 process RunFastQC {
   tag {idPatient + "-" + idRun}
 
-  publishDir "${directoryMap.fastQC}/${idRun}", mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/FastQC/${idRun}", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, idRun, file(fastqFile1), file(fastqFile2) from fastqFilesforFastQC
@@ -183,7 +182,7 @@ if (params.verbose) mappedBam = mappedBam.view {
 process RunBamQCmapped {
   tag {idPatient + "-" + idSample}
 
-  publishDir directoryMap.bamQC, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/bamQC", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, idRun, file(bam) from mappedBamForQC
@@ -267,8 +266,8 @@ process MarkDuplicates {
 
   publishDir params.outDir, mode: params.publishDirMode,
     saveAs: {
-      if (it == "${idSample}.bam.metrics") "${directoryMap.markDuplicatesQC.minus(params.outDir+'/')}/${it}"
-      else "${directoryMap.duplicateMarked.minus(params.outDir+'/')}/${it}"
+      if (it == "${idSample}.bam.metrics") "Reports/MarkDuplicates/${it}"
+      else "Preprocessing/DuplicateMarked/${it}"
     }
 
   input:
@@ -298,9 +297,9 @@ process MarkDuplicates {
 // Creating a TSV file to restart from this step
 markDuplicatesTSV.map { idPatient, status, idSample, bam, bai ->
   gender = patientGenders[idPatient]
-  "${idPatient}\t${gender}\t${status}\t${idSample}\t${directoryMap.duplicateMarked}/${bam}\t${directoryMap.duplicateMarked}/${bai}\n"
+  "${idPatient}\t${gender}\t${status}\t${idSample}\t${params.outDir}/Preprocessing/DuplicateMarked/${bam}\t${params.outDir}/Preprocessing/DuplicateMarked/${bai}\n"
 }.collectFile(
-  name: 'duplicateMarked.tsv', sort: true, storeDir: directoryMap.duplicateMarked
+  name: 'duplicateMarked.tsv', sort: true, storeDir: "${params.outDir}/Preprocessing/DuplicateMarked"
 )
 
 duplicateMarkedBams = duplicateMarkedBams.map {
@@ -322,7 +321,7 @@ if (params.verbose) duplicateMarkedBams = duplicateMarkedBams.view {
 process CreateRecalibrationTable {
   tag {idPatient + "-" + idSample}
 
-  publishDir directoryMap.duplicateMarked, mode: params.publishDirMode, overwrite: false
+  publishDir "${params.outDir}/Preprocessing/DuplicateMarked", mode: params.publishDirMode, overwrite: false
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from mdBam // realignedBam
@@ -362,9 +361,9 @@ process CreateRecalibrationTable {
 // Create a TSV file to restart from this step
 recalibrationTableTSV.map { idPatient, status, idSample, bam, bai, recalTable ->
   gender = patientGenders[idPatient]
-  "${idPatient}\t${gender}\t${status}\t${idSample}\t${directoryMap.duplicateMarked}/${bam}\t${directoryMap.duplicateMarked}/${bai}\t${directoryMap.duplicateMarked}/${recalTable}\n"
+  "${idPatient}\t${gender}\t${status}\t${idSample}\t${params.outDir}/Preprocessing/DuplicateMarked/${bam}\t${params.outDir}/Preprocessing/DuplicateMarked/${bai}\t${params.outDir}/Preprocessing/DuplicateMarked/${recalTable}\n"
 }.collectFile(
-  name: 'duplicateMarked.tsv', sort: true, storeDir: directoryMap.duplicateMarked
+  name: 'duplicateMarked.tsv', sort: true, storeDir: "${params.outDir}/Preprocessing/DuplicateMarked"
 )
 
 recalibrationTable = mdBamToJoin.join(recalibrationTable, by:[0,1,2])
@@ -380,7 +379,7 @@ if (params.verbose) recalibrationTable = recalibrationTable.view {
 process RecalibrateBam {
   tag {idPatient + "-" + idSample}
 
-  publishDir directoryMap.recalibrated, mode: params.publishDirMode
+  publishDir "${params.outDir}/Preprocessing/Recalibrated", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai), file(recalibrationReport) from recalibrationTable
@@ -412,9 +411,9 @@ process RecalibrateBam {
 // Creating a TSV file to restart from this step
 recalibratedBamTSV.map { idPatient, status, idSample, bam, bai ->
   gender = patientGenders[idPatient]
-  "${idPatient}\t${gender}\t${status}\t${idSample}\t${directoryMap.recalibrated}/${bam}\t${directoryMap.recalibrated}/${bai}\n"
+  "${idPatient}\t${gender}\t${status}\t${idSample}\t${params.outDir}/Preprocessing/Recalibrated/${bam}\t${params.outDir}/Preprocessing/Recalibrated/${bai}\n"
 }.collectFile(
-  name: 'recalibrated.tsv', sort: true, storeDir: directoryMap.recalibrated
+  name: 'recalibrated.tsv', sort: true, storeDir: "${params.outDir}/Preprocessing/Recalibrated"
 )
 
 if (params.verbose) recalibratedBam = recalibratedBam.view {
@@ -430,7 +429,7 @@ if (params.verbose) recalibratedBam = recalibratedBam.view {
 process RunSamtoolsStats {
   tag {idPatient + "-" + idSample}
 
-  publishDir directoryMap.samtoolsStats, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/SamToolsStats", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamForSamToolsStats
@@ -451,7 +450,7 @@ if (params.verbose) samtoolsStatsReport = samtoolsStatsReport.view {
 process RunBamQCrecalibrated {
   tag {idPatient + "-" + idSample}
 
-  publishDir directoryMap.bamQC, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/bamQC", mode: params.publishDirMode
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamForBamQC

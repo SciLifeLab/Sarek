@@ -58,7 +58,6 @@ if (workflow.profile == 'awsbatch') {
 
 tools = params.tools ? params.tools.split(',').collect{it.trim().toLowerCase()} : []
 
-directoryMap = SarekUtils.defineDirectoryMap(params.outDir)
 referenceMap = defineReferenceMap()
 toolList = defineToolList()
 
@@ -71,7 +70,7 @@ if (params.test && params.genome in ['GRCh37', 'GRCh38']) {
 
 tsvPath = ''
 if (params.sample) tsvPath = params.sample
-else tsvPath = "${directoryMap.recalibrated}/recalibrated.tsv"
+else tsvPath = "${params.outDir}/Preprocessing/Recalibrated/recalibrated.tsv"
 
 // Set up the bamFiles channel
 
@@ -296,14 +295,9 @@ process ConcatVCF {
 
   script:
   outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
-
-  if (params.targetBED)   // targeted
-    concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${targetBED}"
-  else                    // WGS
-    concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} "
-
+  options = params.targetBED ? "-t ${targetBED}" : ""
   """
-  concatenateVCFs.sh ${concatOptions}
+  concatenateVCFs.sh -i ${genomeIndex} -c ${task.cpus} -o ${outputFile} ${options}
   """
 }
 
@@ -333,13 +327,8 @@ process RunStrelka {
   when: 'strelka' in tools && !params.onlyQC
 
   script:
-  if (params.targetBED) {
-    beforeScript = "bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz ; tabix call_targets.bed.gz"
-    options = "--exome --callRegions call_targets.bed.gz"
-  } else {
-    beforeScript = ""
-    options = ""
-  }
+  beforeScript = params.targetBED ? "bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz ; tabix call_targets.bed.gz" : ""
+  options = params.targetBED ? "--exome --callRegions call_targets.bed.gz" : ""
   """
   ${beforeScript}
   configureStrelkaSomaticWorkflow.py \
@@ -653,7 +642,7 @@ vcfForQC = Channel.empty().mix(
 process RunBcftoolsStats {
   tag {vcf}
 
-  publishDir directoryMap.bcftoolsStats, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/BCFToolsStats", mode: params.publishDirMode
 
   input:
     set variantCaller, file(vcf) from vcfForBCFtools
@@ -676,7 +665,7 @@ bcfReport.close()
 process RunVcftools {
   tag {vcf}
 
-  publishDir directoryMap.vcftools, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/VCFTools", mode: params.publishDirMode
 
   input:
     set variantCaller, file(vcf) from vcfForVCFtools
@@ -697,7 +686,7 @@ if (params.verbose) vcfReport = vcfReport.view {
 vcfReport.close()
 
 process GetVersionAlleleCount {
-  publishDir directoryMap.version, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/ToolsVersion", mode: params.publishDirMode
   output: file("v_*.txt")
   when: 'ascat' in tools && !params.onlyQC
 
@@ -708,7 +697,7 @@ process GetVersionAlleleCount {
 }
 
 process GetVersionASCAT {
-  publishDir directoryMap.version, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/ToolsVersion", mode: params.publishDirMode
   output: file("v_*.txt")
   when: 'ascat' in tools && !params.onlyQC
 

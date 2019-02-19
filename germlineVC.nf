@@ -51,7 +51,6 @@ if (workflow.profile == 'awsbatch') {
 
 tools = params.tools ? params.tools.split(',').collect{it.trim().toLowerCase()} : []
 
-directoryMap = SarekUtils.defineDirectoryMap(params.outDir)
 referenceMap = defineReferenceMap()
 toolList = defineToolList()
 
@@ -68,7 +67,7 @@ if (params.test && params.genome in ['GRCh37', 'GRCh38']) {
 
 tsvPath = ''
 if (params.sample) tsvPath = params.sample
-else tsvPath = "${directoryMap.recalibrated}/recalibrated.tsv"
+else tsvPath = "${params.outDir}/Preprocessing/Recalibrated/recalibrated.tsv"
 
 // Set up the bamFiles channel
 
@@ -335,12 +334,9 @@ process ConcatVCF {
   if (variantCaller == 'haplotypecaller') outputFile = "${variantCaller}_${idSampleNormal}.vcf"
   else if (variantCaller == 'gvcf-hc') outputFile = "haplotypecaller_${idSampleNormal}.g.vcf"
   else outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
-  if (params.targetBED)   // targeted
-    concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} -t ${targetBED}"
-  else                    // WGS
-    concatOptions = "-i ${genomeIndex} -c ${task.cpus} -o ${outputFile} "
+  options = params.targetBED ? "-t ${targetBED}" : ""
   """
-  concatenateVCFs.sh ${concatOptions}
+  concatenateVCFs.sh -i ${genomeIndex} -c ${task.cpus} -o ${outputFile} ${concatOptions}
   """
 }
 
@@ -370,13 +366,8 @@ process RunSingleStrelka {
   when: 'strelka' in tools && !params.onlyQC
 
   script:
-  if (params.targetBED) {
-    beforeScript = "bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz ; tabix call_targets.bed.gz"
-    options = "--exome --callRegions call_targets.bed.gz"
-  } else {
-    beforeScript = ""
-    options = ""
-  }
+  beforeScript = params.targetBED ? "bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz ; tabix call_targets.bed.gz" : ""
+  options = params.targetBED ? "--exome --callRegions call_targets.bed.gz" : ""
   """
   ${beforeScript}
   configureStrelkaGermlineWorkflow.py \
@@ -467,7 +458,7 @@ vcfForQC = Channel.empty().mix(
 process RunBcftoolsStats {
   tag {vcf}
 
-  publishDir directoryMap.bcftoolsStats, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/BCFToolsStats", mode: params.publishDirMode
 
   input:
     set variantCaller, file(vcf) from vcfForBCFtools
@@ -490,7 +481,7 @@ bcfReport.close()
 process RunVcftools {
   tag {vcf}
 
-  publishDir directoryMap.vcftools, mode: params.publishDirMode
+  publishDir "${params.outDir}/Reports/VCFTools", mode: params.publishDirMode
 
   input:
     set variantCaller, file(vcf) from vcfForVCFtools
