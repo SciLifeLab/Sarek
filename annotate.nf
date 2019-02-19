@@ -70,7 +70,7 @@ if (annotateVCF == []) {
 // Excluding vcfs from FreeBayes, and g.vcf from HaplotypeCaller
 // Basically it's: VariantCalling/*/{HaplotypeCaller,Manta,MuTect2,Strelka}/*.vcf.gz
 // Without *SmallIndels.vcf.gz from Manta, and *.genome.vcf.gz from Strelka
-// The small snipet `vcf.minus(vcf.fileName)[-2]` catches idPatient
+// The small snippet `vcf.minus(vcf.fileName)[-2]` catches idPatient
 // This field is used to output final annotated VCFs in the correct directory
   Channel.empty().mix(
     Channel.fromPath("${params.outDir}/VariantCalling/*/HaplotypeCaller/*.vcf.gz")
