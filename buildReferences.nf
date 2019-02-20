@@ -95,9 +95,9 @@ process BuildCache_VEP {
   wget --quiet -O ${species}_vep_${cache_version}_${genome}.tar.gz \
     ftp://ftp.ensembl.org/pub/release-${cache_version}/variation/VEP/${species}_vep_${cache_version}_${genome}.tar.gz
   tar xzf ${species}_vep_${cache_version}_${genome}.tar.gz
+  vep_convert_cache -species ${species} -version ${cache_version} --dir ${species}
   mv ${species}/* .
   rm -rf ${species} ${species}_vep_${cache_version}_${genome}.tar.gz
-  vep_convert_cache -species ${species} -version ${cache_version}
   """
 }
 
