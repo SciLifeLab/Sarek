@@ -97,6 +97,7 @@ process BuildCache_VEP {
   tar xzf ${species}_vep_${cache_version}_${genome}.tar.gz
   mv ${species}/* .
   rm -rf ${species} ${species}_vep_${cache_version}_${genome}.tar.gz
+  vep_convert_cache -species ${species} -version ${cache_version}
   """
 }
 
