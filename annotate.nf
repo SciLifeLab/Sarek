@@ -220,21 +220,19 @@ process RunVEP {
   script:
   finalAnnotator = annotator == "snpEff" ? 'merge' : 'VEP'
   genome = params.genome == 'smallGRCh37' ? 'GRCh37' : params.genome
-  cache = (params.vep_cache && params.annotation_cache) ? "--dir_cache \${PWD}/${dataDir}" : "--dir_cache /.vep"
+  dir_cache = (params.vep_cache && params.annotation_cache) ? " \${PWD}/${dataDir}" : "/.vep"
   """
-  vep  \
+  vep \
   -i ${vcf} \
   -o ${vcf.simpleName}_VEP.ann.vcf \
   --assembly ${genome} \
   --cache \
-	--cache_version ${cache_version} \
-  ${cache} \
-  --database \
+  --cache_version ${cache_version} \
+  --dir_cache ${dir_cache} \
   --everything \
   --filter_common \
   --fork ${task.cpus} \
   --format vcf \
-  --offline \
   --per_gene \
   --stats_file ${vcf.simpleName}_VEP.summary.html \
   --total_length \
