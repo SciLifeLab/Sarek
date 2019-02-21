@@ -3,11 +3,6 @@ import nextflow.Channel
 
 class SarekUtils {
 
-  // Check file extension
-  static def checkFileExtension(it, extension) {
-    if (!it.toString().toLowerCase().endsWith(extension.toLowerCase())) exit 1, "File: ${it} has the wrong extension: ${extension} see --help for more information"
-  }
-
   // Check if a row has the expected number of item
   static def checkNumberOfItem(row, number) {
     if (row.size() != number) exit 1, "Malformed row in TSV file: ${row}, see --help for more information"
@@ -132,33 +127,6 @@ class SarekUtils {
     return true
   }
 
-  // Define map of directories
-  static def defineDirectoryMap(outDir) {
-    return [
-    'duplicateMarked'  : "${outDir}/Preprocessing/DuplicateMarked",
-    'recalibrated'     : "${outDir}/Preprocessing/Recalibrated",
-    'ascat'            : "${outDir}/VariantCalling/Ascat",
-    'freebayes'        : "${outDir}/VariantCalling/FreeBayes",
-    'gvcf-hc'          : "${outDir}/VariantCalling/HaplotypeCallerGVCF",
-    'haplotypecaller'  : "${outDir}/VariantCalling/HaplotypeCaller",
-    'manta'            : "${outDir}/VariantCalling/Manta",
-    'mutect2'          : "${outDir}/VariantCalling/MuTect2",
-    'strelka'          : "${outDir}/VariantCalling/Strelka",
-    'strelkabp'        : "${outDir}/VariantCalling/StrelkaBP",
-    'snpeff'           : "${outDir}/Annotation/SnpEff",
-    'vep'              : "${outDir}/Annotation/VEP",
-    'bamQC'            : "${outDir}/Reports/bamQC",
-    'bcftoolsStats'    : "${outDir}/Reports/BCFToolsStats",
-    'fastQC'           : "${outDir}/Reports/FastQC",
-    'markDuplicatesQC' : "${outDir}/Reports/MarkDuplicates",
-    'multiQC'          : "${outDir}/Reports/MultiQC",
-    'samtoolsStats'    : "${outDir}/Reports/SamToolsStats",
-    'snpeffReports'    : "${outDir}/Reports/SnpEff",
-    'vcftools'         : "${outDir}/Reports/VCFTools",
-    'version'          : "${outDir}/Reports/ToolsVersion"
-    ]
-  }
-
   // Channeling the TSV file containing BAM.
   // Format is: "subject gender status sample bam bai"
   static def extractBams(tsvFile, mode) {
@@ -173,8 +141,8 @@ class SarekUtils {
         def bamFile   = SarekUtils.returnFile(row[4])
         def baiFile   = SarekUtils.returnFile(row[5])
 
-        SarekUtils.checkFileExtension(bamFile,".bam")
-        SarekUtils.checkFileExtension(baiFile,".bai")
+        if (!SarekUtils.hasExtension(bamFile,".bam")) exit 1, "File: ${bamFile} has the wrong extension. See --help for more information"
+        if (!SarekUtils.hasExtension(baiFile,".bai")) exit 1, "File: ${baiFile} has the wrong extension. See --help for more information"
 
         if (mode == "germline") return [ idPatient, status, idSample, bamFile, baiFile ]
         else return [ idPatient, gender, status, idSample, bamFile, baiFile ]
@@ -191,6 +159,11 @@ class SarekUtils {
       [idPatient] + it[2..-1]
     }
     [genders, channel]
+  }
+
+  // Check file extension
+  static def hasExtension(it, extension) {
+    it.toString().toLowerCase().endsWith(extension.toLowerCase())
   }
 
   // Compare params to list of verified params
