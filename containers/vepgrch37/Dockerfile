@@ -19,5 +19,5 @@ RUN mkdir -p .vep && cd .vep \
   && wget --quiet -O homo_sapiens_vep_${VEP_VERSION}_${GENOME}.tar.gz \
     ftp://ftp.ensembl.org/pub/release-${VEP_VERSION}/variation/VEP/homo_sapiens_vep_${VEP_VERSION}_${GENOME}.tar.gz \
   && tar xzf homo_sapiens_vep_${VEP_VERSION}_${GENOME}.tar.gz \
-  && rm -rf homo_sapiens_vep_${VEP_VERSION}_${GENOME}.tar.gz \
-  && vep_convert_cache -species homo_sapiens -version ${VEP_VERSION}
+  && vep_convert_cache -species homo_sapiens -version ${VEP_VERSION} --dir homo_sapiens \
+  && rm -rf homo_sapiens_vep_${VEP_VERSION}_${GENOME}.tar.gz
