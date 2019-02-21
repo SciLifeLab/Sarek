@@ -345,28 +345,22 @@ process BuildCache_VEP {
   """
 }
 
-caddFileToDownload = (params.genome == "GRCh37" || params.genome == "GRCh38") ?
-  [
-    "https://krishna.gs.washington.edu/download/CADD/v1.4/${params.genome}/whole_genome_SNVs.tsv.gz",
-    "https://krishna.gs.washington.edu/download/CADD/v1.4/${params.genome}/InDels.tsv.gz"
-  ] : []
-
 process DownloadCADD {
-  tag {caddFile}
+  tag {"Downloading ${params.genome} in ${params.cadd_cache}"}
 
   publishDir "${params.cadd_cache}/${params.genome}", mode: params.publishDirMode
 
   input:
-    val(caddfile) from caddFileToDownload
 
   output:
     set file("*.tsv.gz"), file("*.tsv.gz.tbi") into caddFile
 
-  when: params.cadd_cache
+  when: params.cadd_cache && (params.genome == "GRCh37" || params.genome == "GRCh38")
 
   script:
   """
-  wget --quiet ${caddFile}
+  wget --quiet https://krishna.gs.washington.edu/download/CADD/v1.4/${params.genome}/whole_genome_SNVs.tsv.gz
+  wget --quiet https://krishna.gs.washington.edu/download/CADD/v1.4/${params.genome}/InDels.tsv.gz
   tabix *.tsv.gz
   """
 }
