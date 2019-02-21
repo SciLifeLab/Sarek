@@ -356,10 +356,10 @@ process DownloadCADD {
   publishDir "${params.cadd_cache}/${params.genome}", mode: params.publishDirMode
 
   input:
-    value (caddFile) from caddFileToDownload
+    val(caddFile) from caddFileToDownload
 
   output:
-    set file("*.tsv.gz"), file("*.tsv.gz.tbi") into caddFile
+    set file("*.tsv.gz"), file("*.tsv.gz.tbi")
 
   when: params.cadd_cache
 
