@@ -366,7 +366,7 @@ process DownloadCADD {
   script:
   """
   wget --quiet ${caddFile}
-  tabix ${caddFile}.tsv.gz
+  tabix *.tsv.gz
   """
 }
 
