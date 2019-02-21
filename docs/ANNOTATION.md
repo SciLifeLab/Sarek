@@ -35,5 +35,5 @@ nextflow run annotate.nf --tools VEP --annotateVCF file.vcf.gz --genome GRCh38 -
 An helper script has been designed to help downloading snpEff and VEP cache.
 Cache is meant to be share between multiple users, so this script is mainly meant for people administrating servers, clusters and advanced users.
 ```
-nextflow run buildReferences.nf --snpEff_cache /Path/To/snpEffCache --vep_cache /Path/To/vepCache --genome <GENOME>
+nextflow run build.nf --snpEff_cache /Path/To/snpEffCache --vep_cache /Path/To/vepCache --genome <GENOME>
 ```
