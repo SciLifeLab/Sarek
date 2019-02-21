@@ -209,11 +209,13 @@ process RunVEP {
   input:
     set annotator, variantCaller,  idPatient, file(vcf), file(idx) from vcfForVep
     file dataDir from Channel.value(params.vep_cache ? file(params.vep_cache) : "null")
-    file cadd_WG_SNVs from Channel.value(params.cadd_WG_SNVs ? file(params.cadd_WG_SNVs) : "null")
-    file cadd_WG_SNVs_tbi from Channel.value(params.cadd_WG_SNVs_tbi ? file(params.cadd_WG_SNVs_tbi) : "null")
-    file cadd_InDels from Channel.value(params.cadd_InDels ? file(params.cadd_InDels) : "null")
-    file cadd_InDels_tbi from Channel.value(params.cadd_InDels_tbi ? file(params.cadd_InDels_tbi) : "null")
     val cache_version from Channel.value(params.genomes[params.genome].vepCacheVersion)
+    set file(cadd_WG_SNVs), file(cadd_WG_SNVs_tbi), file(cadd_InDels), file(cadd_InDels_tbi) from Channel.value([
+      params.cadd_WG_SNVs ? file(params.cadd_WG_SNVs) : "null",
+      params.cadd_WG_SNVs_tbi ? file(params.cadd_WG_SNVs_tbi) : "null",
+      params.cadd_InDels ? file(params.cadd_InDels) : "null",
+      params.cadd_InDels_tbi ? file(params.cadd_InDels_tbi) : "null"
+    ])
 
   output:
     set finalAnnotator, variantCaller, idPatient, file("${vcf.simpleName}_VEP.ann.vcf") into vepVCF
