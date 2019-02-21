@@ -34,6 +34,7 @@ class SarekUtils {
       'awsqueue_tiny',
       'awsqueue',
       'build',
+      'cadd_cache',
       'call-name',
       'callName',
       'contact-mail',
