@@ -209,6 +209,10 @@ process RunVEP {
   input:
     set annotator, variantCaller,  idPatient, file(vcf), file(idx) from vcfForVep
     file dataDir from Channel.value(params.vep_cache ? file(params.vep_cache) : "null")
+    file cadd_WG_SNVs from Channel.value(params.cadd_WG_SNVs ? file(params.cadd_WG_SNVs) : "null")
+    file cadd_WG_SNVs_tbi from Channel.value(params.cadd_WG_SNVs_tbi ? file(params.cadd_WG_SNVs_tbi) : "null")
+    file cadd_InDels from Channel.value(params.cadd_InDels ? file(params.cadd_InDels) : "null")
+    file cadd_InDels_tbi from Channel.value(params.cadd_InDels_tbi ? file(params.cadd_InDels_tbi) : "null")
     val cache_version from Channel.value(params.genomes[params.genome].vepCacheVersion)
 
   output:
@@ -221,6 +225,7 @@ process RunVEP {
   finalAnnotator = annotator == "snpEff" ? 'merge' : 'VEP'
   genome = params.genome == 'smallGRCh37' ? 'GRCh37' : params.genome
   dir_cache = (params.vep_cache && params.annotation_cache) ? " \${PWD}/${dataDir}" : "/.vep"
+  cadd = (params.cadd_WG_SNVs && params.cadd_InDels) ? "--plugin CADD,whole_genome_SNVs.tsv.gz,InDels.tsv.gz" : ""
   """
   vep \
   -i ${vcf} \
