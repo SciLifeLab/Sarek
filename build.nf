@@ -351,7 +351,7 @@ caddFileToDownload = (params.cadd_version) && (params.genome == "GRCh37" || para
   : Channel.empty()
 
 process DownloadCADD {
-  tag {"Downloading ${params.genome} in ${params.cadd_cache}"}
+  tag {caddFile}
 
   publishDir "${params.cadd_cache}/${params.genome}", mode: params.publishDirMode
 
