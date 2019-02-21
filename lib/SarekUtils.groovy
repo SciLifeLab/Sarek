@@ -37,6 +37,7 @@ class SarekUtils {
       'cadd_cache',
       'cadd_InDels_tbi',
       'cadd_InDels',
+      'cadd_version',
       'cadd_WG_SNVs_tbi',
       'cadd_WG_SNVs',
       'call-name',
