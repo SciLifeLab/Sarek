@@ -15,9 +15,14 @@ ENV \
   VEP_VERSION=95
 
 # Download Genome
-RUN mkdir -p .vep && cd .vep \
-  && wget --quiet -O homo_sapiens_vep_${VEP_VERSION}_${GENOME}.tar.gz \
-    ftp://ftp.ensembl.org/pub/release-${VEP_VERSION}/variation/VEP/homo_sapiens_vep_${VEP_VERSION}_${GENOME}.tar.gz \
-  && tar xzf homo_sapiens_vep_${VEP_VERSION}_${GENOME}.tar.gz \
-  && vep_convert_cache -species homo_sapiens -version ${VEP_VERSION} --dir . \
-  && rm -rf homo_sapiens_vep_${VEP_VERSION}_${GENOME}.tar.gz
+RUN vep_install \
+  -a c \
+  -c .vep \
+  -s homo_sapiens \
+  -v ${VEP_VERSION} \
+  -y ${GENOME} \
+  --CACHE_VERSION ${VEP_VERSION} \
+  --NO_HTSLIB --NO_TEST --NO_BIOPERL --NO_UPDATE
+
+# Tabix index genome
+RUN vep_convert_cache -species homo_sapiens -version ${VEP_VERSION} --dir .
