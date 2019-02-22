@@ -25,4 +25,4 @@ RUN vep_install \
   --NO_HTSLIB --NO_TEST --NO_BIOPERL --NO_UPDATE
 
 # Tabix index genome
-RUN vep_convert_cache -species homo_sapiens -version ${VEP_VERSION} --dir .
+RUN vep_convert_cache -species homo_sapiens -version ${VEP_VERSION} --dir .vep
