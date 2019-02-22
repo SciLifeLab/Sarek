@@ -336,12 +336,16 @@ process BuildCache_VEP {
   genome = params.genome == "smallGRCh37" ? "GRCh37" : params.genome
   species = genome =~ "GRCh3*" ? "homo_sapiens" : ""
   """
-  wget --quiet -O ${species}_vep_${cache_version}_${genome}.tar.gz \
-    ftp://ftp.ensembl.org/pub/release-${cache_version}/variation/VEP/${species}_vep_${cache_version}_${genome}.tar.gz
-  tar xzf ${species}_vep_${cache_version}_${genome}.tar.gz
-  vep_convert_cache --species ${species} --version ${cache_version} --dir .
-  mv ${species}/* .
-  rm -rf ${species} ${species}_vep_${cache_version}_${genome}.tar.gz
+  vep_install \
+    -a c \
+    -c . \
+    -s ${species} \
+    -v ${cache_version} \
+    -y ${genome} \
+    --CACHE_VERSION ${cache_version} \
+    --NO_HTSLIB --NO_TEST --NO_BIOPERL --NO_UPDATE
+
+  vep_convert_cache -species ${species} -version ${cache_version} --dir .
   """
 }
 
