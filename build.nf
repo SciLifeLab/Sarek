@@ -459,8 +459,15 @@ def helpMessage() {
   log.info "           nextflow run build.nf [--snpEff_cache <pathToSNPEFFcache>] [--vep_cache <pathToVEPcache>]"
   log.info "        --snpEff_cache <Directoy>"
   log.info "           Specify path to snpEff cache"
+  log.info "           Will use snpEff version specified in configuration"
   log.info "        --vep_cache <Directoy>"
   log.info "           Specify path to VEP cache"
+  log.info "           Will use VEP version specified in configuration"
+  log.info "        --cadd_cache <Directoy>"
+  log.info "           Specify path to CADD cache"
+  log.info "           Will use CADD version specified"
+  log.info "        --cadd_version <version>"
+  log.info "           Will specify which CADD version to download"
 }
 
 def minimalInformationMessage() {
