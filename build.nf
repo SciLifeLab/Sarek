@@ -337,7 +337,7 @@ process BuildCache_VEP {
   species = genome =~ "GRCh3*" ? "homo_sapiens" : ""
   """
   vep_install \
-    -a c \
+    -a cf \
     -c . \
     -s ${species} \
     -v ${cache_version} \

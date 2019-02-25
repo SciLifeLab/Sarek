@@ -16,7 +16,7 @@ ENV \
 
 # Download Genome
 RUN vep_install \
-  -a c \
+  -a cf \
   -c .vep \
   -s homo_sapiens \
   -v ${VEP_VERSION} \
