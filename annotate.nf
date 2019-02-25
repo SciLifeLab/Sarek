@@ -227,12 +227,13 @@ process RunVEP {
   finalAnnotator = annotator == "snpEff" ? 'merge' : 'VEP'
   genome = params.genome == 'smallGRCh37' ? 'GRCh37' : params.genome
   dir_cache = (params.vep_cache && params.annotation_cache) ? " \${PWD}/${dataDir}" : "/.vep"
-  cadd = (params.cadd_WG_SNVs && params.cadd_InDels) ? "--plugin CADD,whole_genome_SNVs.tsv.gz,InDels.tsv.gz" : ""
+  cadd = (params.cadd_cache && params.cadd_WG_SNVs && params.cadd_InDels) ? "--plugin CADD,whole_genome_SNVs.tsv.gz,InDels.tsv.gz" : ""
   """
   vep \
   -i ${vcf} \
   -o ${vcf.simpleName}_VEP.ann.vcf \
   --assembly ${genome} \
+  ${cadd} \
   --cache \
   --cache_version ${cache_version} \
   --dir_cache ${dir_cache} \
@@ -240,6 +241,7 @@ process RunVEP {
   --filter_common \
   --fork ${task.cpus} \
   --format vcf \
+  --offline \
   --per_gene \
   --stats_file ${vcf.simpleName}_VEP.summary.html \
   --total_length \
@@ -360,7 +362,8 @@ def minimalInformationMessage() {
   if (params.containerPath != "") log.info "  ContainerPath: " + params.containerPath
   log.info "  Tag          : " + params.tag
   log.info "Reference files used:"
-  log.info "  snpeffDb    :\n\t" + params.genomes[params.genome].snpeffDb
+  log.info "  snpEff DB    :\n\t" + params.genomes[params.genome].snpeffDb
+  log.info "  VEP Cache    :\n\t" + params.genomes[params.genome].vepCacheVersion
 }
 
 def nextflowMessage() {
