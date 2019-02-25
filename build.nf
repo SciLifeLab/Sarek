@@ -346,6 +346,8 @@ process BuildCache_VEP {
     --NO_HTSLIB --NO_TEST --NO_BIOPERL --NO_UPDATE
 
   vep_convert_cache -species ${species} -version ${cache_version} --dir .
+  mv ${species}/* .
+  rm -rf ${species}
   """
 }
 
