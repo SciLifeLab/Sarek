@@ -343,9 +343,9 @@ process BuildCache_VEP {
     -v ${cache_version} \
     -y ${genome} \
     --CACHE_VERSION ${cache_version} \
+    --CONVERT \
     --NO_HTSLIB --NO_TEST --NO_BIOPERL --NO_UPDATE
 
-  vep_convert_cache -species ${species} -version ${cache_version} --dir .
   mv ${species}/* .
   rm -rf ${species}
   """
