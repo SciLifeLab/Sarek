@@ -35,6 +35,8 @@ class SarekUtils {
       'awsqueue',
       'build',
       'cadd_cache',
+      'cadd_In-dels_tbi',
+      'cadd_In-dels',
       'cadd_InDels_tbi',
       'cadd_InDels',
       'cadd_version',
