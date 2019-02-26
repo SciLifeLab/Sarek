@@ -16,13 +16,11 @@ ENV \
 
 # Download Genome
 RUN vep_install \
-  -a cf \
+  -a c \
   -c .vep \
   -s homo_sapiens \
   -v ${VEP_VERSION} \
   -y ${GENOME} \
   --CACHE_VERSION ${VEP_VERSION} \
+  --CONVERT \
   --NO_HTSLIB --NO_TEST --NO_BIOPERL --NO_UPDATE
-
-# Tabix index genome
-RUN vep_convert_cache -species homo_sapiens -version ${VEP_VERSION} --dir .vep
