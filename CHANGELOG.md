@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#732](https://github.com/SciLifeLab/Sarek/pull/732) - Specify values for `cadd_WG_SNVs`, `cadd_WG_SNVs_tbi`, `cadd_InDels`, `cadd_InDels_tbi` and `cadd_cache` params in `munin.conf` file
 -   [#732](https://github.com/SciLifeLab/Sarek/pull/732) - Use `cadd_cache` param for optional use of CADD VEP plugin in `annotate.nf`
 -   [#732](https://github.com/SciLifeLab/Sarek/pull/732) - VEP cache has now fasta files for `--HGVS`
+-   [#735](https://github.com/SciLifeLab/Sarek/pull/735) - Added `--exome` for Manta, and for StrelkaBP
+-   [#735](https://github.com/SciLifeLab/Sarek/pull/735) - Added Travis CI test for targeted
 
 ### `Changed`
 
