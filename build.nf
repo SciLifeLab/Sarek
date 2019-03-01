@@ -8,17 +8,9 @@ kate: syntax groovy; space-indent on; indent-width 2;
  New Germline (+ Somatic) Analysis Workflow. Started March 2016.
 --------------------------------------------------------------------------------
  @Authors
- Sebastian DiLorenzo <sebastian.dilorenzo@bils.se> [@Sebastian-D]
- Jesper Eisfeldt <jesper.eisfeldt@scilifelab.se> [@J35P312]
- Phil Ewels <phil.ewels@scilifelab.se> [@ewels]
  Maxime Garcia <maxime.garcia@scilifelab.se> [@MaxUlysse]
  Szilveszter Juhos <szilveszter.juhos@scilifelab.se> [@szilvajuhos]
- Max Käller <max.kaller@scilifelab.se> [@gulfshores]
- Malin Larsson <malin.larsson@scilifelab.se> [@malinlarsson]
- Marcel Martin <marcel.martin@scilifelab.se> [@marcelm]
- Björn Nystedt <bjorn.nystedt@scilifelab.se> [@bjornnystedt]
- Pall Olason <pall.olason@scilifelab.se> [@pallolason]
- Johannes Alneberg <johannes.alneberg@scilifelab.se> [@alneberg]
+ https://github.com/SciLifeLab/Sarek/blob/master/README.md#credits
 --------------------------------------------------------------------------------
  @Homepage
  https://sarek.scilifelab.se/
