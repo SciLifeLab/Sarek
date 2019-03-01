@@ -20,7 +20,7 @@ kate: syntax groovy; space-indent on; indent-width 2;
  Pall Olason <pall.olason@scilifelab.se> [@pallolason]
 --------------------------------------------------------------------------------
  @Homepage
- http://opensource.scilifelab.se/projects/sarek/
+ https://sarek.scilifelab.se/
 --------------------------------------------------------------------------------
  @Documentation
  https://github.com/SciLifeLab/Sarek/README.md
