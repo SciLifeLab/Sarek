@@ -1,4 +1,4 @@
-# [![Sarek](https://raw.githubusercontent.com/SciLifeLab/Sarek/master/docs/images/Sarek_logo.png "Sarek")](http://sarek.scilifelab.se/)
+# [![Sarek](https://raw.githubusercontent.com/SciLifeLab/Sarek/master/docs/images/Sarek_logo.png "Sarek")](https://sarek.scilifelab.se/)
 
 #### An open-source analysis pipeline to detect germline or somatic variants from whole genome or targeted sequencing
 
@@ -26,7 +26,7 @@ Singularity has been designed specifically for high-performance computing enviro
 This means that although Sarek has been primarily designed for use with the Swedish [UPPMAX HPC systems](https://www.uppmax.uu.se), it should be able to run on any system that supports these two tools.
 
 Sarek was developed at the [National Genomics Infastructure][ngi-link] and [National Bioinformatics Infastructure Sweden][nbis-link] which are both platforms at [SciLifeLab][scilifelab-link].
-It is listed on the [Elixir - Tools and Data Services Registry](https://bio.tools/Sarek).
+It is listed on the [Elixir - Tools and Data Services Registry](https://bio.tools/Sarek), [Dockstore](https://dockstore.org/workflows/github.com/SciLifeLab/Sarek/) and [omicX - Bioinformatics tools](https://omictools.com/sarek-tool).
 
 ## Workflow steps
 
@@ -34,7 +34,7 @@ Sarek is built with several workflow scripts.
 A wrapper script contained within the repository makes it easy to run the different workflow scripts as a single job.
 To test your installation, follow the [tests documentation.](https://github.com/SciLifeLab/Sarek/blob/master/docs/TESTS.md)
 
-Raw FastQ files or aligned BAM files (with or without realignment & recalibration) can be used as inputs.
+Raw FastQ files or BAM files (unmapped, aligned or recalibrated) can be used as inputs.
 You can choose which variant callers to use, plus the pipeline is capable of accommodating additional variant calling software or CNV callers if required.
 
 The worflow steps and tools used are as follows:
