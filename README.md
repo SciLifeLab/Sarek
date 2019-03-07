@@ -84,13 +84,13 @@ The Sarek pipeline comes with documentation in the `docs/` directory:
 08. [Running the pipeline](https://github.com/SciLifeLab/Sarek/blob/master/docs/USAGE.md)
 09. [Running the pipeline using Conda](https://github.com/SciLifeLab/Sarek/blob/master/docs/CONDA.md)
 10. [Command line parameters](https://github.com/SciLifeLab/Sarek/blob/master/docs/PARAMETERS.md)
-11. [Examples](https://github.com/SciLifeLab/Sarek/blob/master/docs/USE_CASES.md)
-12. [Input files documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/INPUT.md)
-13. [Processes documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/PROCESS.md)
-14. [Documentation about containers](https://github.com/SciLifeLab/Sarek/blob/master/docs/CONTAINERS.md)
-15. [Complementary information about ASCAT](https://github.com/SciLifeLab/Sarek/blob/master/docs/ASCAT.md)
-16. [Complementary information about annotations](https://github.com/SciLifeLab/Sarek/blob/master/docs/ANNOTATION.md)
-17. [Output documentation structure](https://github.com/SciLifeLab/Sarek/blob/master/docs/OUTPUT.md)
+11. [Input files documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/INPUT.md)
+12. [Output documentation structure](https://github.com/SciLifeLab/Sarek/blob/master/docs/OUTPUT.md)
+13. [Examples](https://github.com/SciLifeLab/Sarek/blob/master/docs/USE_CASES.md)
+14. [Processes documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/PROCESS.md)
+15. [Documentation about containers](https://github.com/SciLifeLab/Sarek/blob/master/docs/CONTAINERS.md)
+16. [Complementary information about ASCAT](https://github.com/SciLifeLab/Sarek/blob/master/docs/ASCAT.md)
+17. [Complementary information about annotations](https://github.com/SciLifeLab/Sarek/blob/master/docs/ANNOTATION.md)
 
 ## Contributions & Support
 
