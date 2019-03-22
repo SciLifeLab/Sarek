@@ -167,18 +167,19 @@ process MapReads {
   readGroup = "@RG\\tID:${idRun}\\t${CN}PU:${idRun}\\tSM:${idSample}\\tLB:${idSample}\\tPL:illumina"
   // adjust mismatch penalty for tumor samples
   extra = status == 1 ? "-B 3" : ""
-  if (SarekUtils.hasExtension(inputFile1,"fastq.gz"))
-    """
-    bwa mem -R \"${readGroup}\" ${extra} -t ${task.cpus} -M \
-    ${genomeFile} ${inputFile1} ${inputFile2} | \
-    samtools sort --threads ${task.cpus} -m 2G - > ${idRun}.bam
-    """
-  else if (SarekUtils.hasExtension(inputFile1,"bam"))
   // -K is an hidden option, used to fix the number of reads processed by bwa mem
   // Chunk size can affect bwa results, if not specified, the number of threads can change
   // which can give not deterministic result.
   // cf https://github.com/CCDG/Pipeline-Standardization/blob/master/PipelineStandard.md
   // and https://github.com/gatk-workflows/gatk4-data-processing/blob/8ffa26ff4580df4ac3a5aa9e272a4ff6bab44ba2/processing-for-variant-discovery-gatk4.b37.wgs.inputs.json#L29
+  if (SarekUtils.hasExtension(inputFile1,"fastq.gz"))
+    """
+    bwa mem -K 100000000 -R \"${readGroup}\" ${extra} -t ${task.cpus} -M \
+    ${genomeFile} ${inputFile1} ${inputFile2} | \
+    samtools sort --threads ${task.cpus} -m 2G - > ${idRun}.bam
+    """
+  else if (SarekUtils.hasExtension(inputFile1,"bam"))
+  // As the FASTQ produced from the BAM  is interleaved, bwa mem has -p
     """
     gatk --java-options -Xmx${task.memory.toGiga()}g \
     SamToFastq \
@@ -187,9 +188,8 @@ process MapReads {
     --INTERLEAVE=true \
     --NON_PF=true \
     | \
-    bwa mem -K 100000000 -p -R \"${readGroup}\" ${extra} -t ${task.cpus} -M ${genomeFile} \
-    /dev/stdin - 2> >(tee ${inputFile1}.bwa.stderr.log >&2) \
-    | \
+    bwa mem -K 100000000 -p -R \"${readGroup}\" ${extra} -t ${task.cpus} -M \
+    ${genomeFile} /dev/stdin - 2> >(tee ${inputFile1}.bwa.stderr.log >&2) | \
     samtools sort --threads ${task.cpus} -m 2G - > ${idRun}.bam
     """
 }
@@ -339,23 +339,116 @@ if (params.verbose) duplicateMarkedBams = duplicateMarkedBams.view {
 
 (mdBam, mdBamToJoin) = duplicateMarkedBams.into(2)
 
-process CreateRecalibrationTable {
-  tag {idPatient + "-" + idSample}
-
-  publishDir "${params.outDir}/Preprocessing/DuplicateMarked", mode: params.publishDirMode, overwrite: false
+process CreateIntervalBeds {
+  tag {intervals.fileName}
 
   input:
-    set idPatient, status, idSample, file(bam), file(bai) from mdBam // realignedBam
-    set file(genomeFile), file(genomeIndex), file(genomeDict), file(dbsnp), file(dbsnpIndex), file(knownIndels), file(knownIndelsIndex), file(intervals) from Channel.value([
+    file(intervals) from Channel.value(referenceMap.intervals)
+
+  output:
+    file '*.bed' into bedIntervals mode flatten
+
+  script:
+  // If the interval file is BED format, the fifth column is interpreted to
+  // contain runtime estimates, which is then used to combine short-running jobs
+  if (intervals.getName().endsWith('.bed'))
+    """
+    awk -vFS="\t" '{
+      t = \$5  # runtime estimate
+      if (t == "") {
+        # no runtime estimate in this row, assume default value
+        t = (\$3 - \$2) / ${params.nucleotidesPerSecond}
+      }
+      if (name == "" || (chunk > 600 && (chunk + t) > longest * 1.05)) {
+        # start a new chunk
+        name = sprintf("%s_%d-%d.bed", \$1, \$2+1, \$3)
+        chunk = 0
+        longest = 0
+      }
+      if (t > longest)
+        longest = t
+      chunk += t
+      print \$0 > name
+    }' ${intervals}
+    """
+  else
+    """
+    awk -vFS="[:-]" '{
+      name = sprintf("%s_%d-%d", \$1, \$2, \$3);
+      printf("%s\\t%d\\t%d\\n", \$1, \$2-1, \$3) > name ".bed"
+    }' ${intervals}
+    """
+}
+
+bedIntervals = bedIntervals
+  .map { intervalFile ->
+    def duration = 0.0
+    for (line in intervalFile.readLines()) {
+      final fields = line.split('\t')
+      if (fields.size() >= 5) duration += fields[4].toFloat()
+      else {
+        start = fields[1].toInteger()
+        end = fields[2].toInteger()
+        duration += (end - start) / params.nucleotidesPerSecond
+      }
+    }
+    [duration, intervalFile]
+  }.toSortedList({ a, b -> b[0] <=> a[0] })
+  .flatten().collate(2)
+  .map{duration, intervalFile -> intervalFile}
+
+if (params.verbose) bedIntervals = bedIntervals.view {
+  "  Interv: ${it.baseName}"
+}
+
+bamForBaseRecalibrator = mdBam.combine(bedIntervals)
+
+process CreateRecalibrationTable {
+  tag {idPatient + "-" + idSample + "-" + intervalBed}
+
+  input:
+    set idPatient, status, idSample, file(bam), file(bai), file(intervalBed) from bamForBaseRecalibrator // realignedBam
+    set file(genomeFile), file(genomeIndex), file(genomeDict), file(dbsnp), file(dbsnpIndex), file(knownIndels), file(knownIndelsIndex) from Channel.value([
       referenceMap.genomeFile,
       referenceMap.genomeIndex,
       referenceMap.genomeDict,
       referenceMap.dbsnp,
       referenceMap.dbsnpIndex,
       referenceMap.knownIndels,
-      referenceMap.knownIndelsIndex,
-      referenceMap.intervals,
+      referenceMap.knownIndelsIndex
     ])
+
+  output:
+    set idPatient, status, idSample, file("${intervalBed.baseName}_${idSample}.recal.table") into recalIntervals
+
+  when: step == 'mapping' && !params.onlyQC
+
+  script:
+  known = knownIndels.collect{ "--known-sites ${it}" }.join(' ')
+  // --use-original-qualities ???
+  """
+  gatk --java-options -Xmx${task.memory.toGiga()}g \
+  BaseRecalibrator \
+  -I ${bam} \
+  -O ${intervalBed.baseName}_${idSample}.recal.table \
+  --tmp-dir /tmp \
+  -R ${genomeFile} \
+  -L ${intervalBed} \
+  --known-sites ${dbsnp} \
+  ${known} \
+  --verbosity INFO
+  """
+}
+
+recalIntervals = recalIntervals.groupTuple(by:[0,1,2])
+
+process GatherBQSRReports {
+  tag {idPatient + "-" + idSample}
+
+  publishDir "${params.outDir}/Preprocessing/DuplicateMarked", mode: params.publishDirMode, overwrite: false
+
+  input:
+    set idPatient, status, idSample, file(recalTable) from recalIntervals
 
   output:
     set idPatient, status, idSample, file("${idSample}.recal.table") into recalibrationTable
@@ -364,18 +457,12 @@ process CreateRecalibrationTable {
   when: step == 'mapping' && !params.onlyQC
 
   script:
-  known = knownIndels.collect{ "--known-sites ${it}" }.join(' ')
+  recal = recalTable.collect{ "-I ${it}" }.join(' ')
   """
   gatk --java-options -Xmx${task.memory.toGiga()}g \
-  BaseRecalibrator \
-  --input ${bam} \
-  --output ${idSample}.recal.table \
-  --tmp-dir /tmp \
-  -R ${genomeFile} \
-  -L ${intervals} \
-  --known-sites ${dbsnp} \
-  ${known} \
-  --verbosity INFO
+  GatherBQSRReports \
+  ${recal} \
+  -O ${idSample}.recal.table \
   """
 }
 
