@@ -51,11 +51,11 @@ if (workflow.profile == 'awsbatch') {
 
 tools = params.tools ? params.tools.split(',').collect{it.trim().toLowerCase()} : []
 
-referenceMap = defineReferenceMap()
 toolList = defineToolList()
-
-if (!SarekUtils.checkReferenceMap(referenceMap)) exit 1, 'Missing Reference file(s), see --help for more information'
 if (!SarekUtils.checkParameterList(tools,toolList)) exit 1, 'Unknown tool(s), see --help for more information'
+
+referenceMap = defineReferenceMap(tools)
+if (!SarekUtils.checkReferenceMap(referenceMap)) exit 1, 'Missing Reference file(s), see --help for more information'
 
 if (params.test && params.genome in ['GRCh37', 'GRCh38']) {
   referenceMap.intervals = file("$workflow.projectDir/repeats/tiny_${params.genome}.list")
@@ -205,7 +205,7 @@ process RunMutect2 {
     ])
 
   output:
-    set val("mutect2"), idPatient, idSampleNormal, idSampleTumor, file("${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf") into mutect2Output
+    set val("MuTect2"), idPatient, idSampleNormal, idSampleTumor, file("${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf") into mutect2Output
 
   when: 'mutect2' in tools && !params.onlyQC
 
@@ -235,7 +235,7 @@ process RunFreeBayes {
     file(genomeIndex) from Channel.value(referenceMap.genomeIndex)
 
   output:
-    set val("freebayes"), idPatient, idSampleNormal, idSampleTumor, file("${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf") into freebayesOutput
+    set val("FreeBayes"), idPatient, idSampleNormal, idSampleTumor, file("${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf") into freebayesOutput
 
   when: 'freebayes' in tools && !params.onlyQC
 
@@ -315,7 +315,7 @@ process RunStrelka {
     ])
 
   output:
-    set val("strelka"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz"), file("*.vcf.gz.tbi") into strelkaOutput
+    set val("Strelka"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz"), file("*.vcf.gz.tbi") into strelkaOutput
 
   when: 'strelka' in tools && !params.onlyQC
 
@@ -360,7 +360,7 @@ process RunManta {
     ])
 
   output:
-    set val("manta"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz"), file("*.vcf.gz.tbi") into mantaOutput
+    set val("Manta"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz"), file("*.vcf.gz.tbi") into mantaOutput
     set idPatient, idSampleNormal, idSampleTumor, file("*.candidateSmallIndels.vcf.gz"), file("*.candidateSmallIndels.vcf.gz.tbi") into mantaToStrelka
 
   when: 'manta' in tools && !params.onlyQC
@@ -419,7 +419,7 @@ process RunSingleManta {
     ])
 
   output:
-    set val("singlemanta"), idPatient, idSample,  file("*.vcf.gz"), file("*.vcf.gz.tbi") into singleMantaOutput
+    set val("Manta"), idPatient, idSample,  file("*.vcf.gz"), file("*.vcf.gz.tbi") into singleMantaOutput
 
   when: 'manta' in tools && status == 1 && !params.onlyQC
 
@@ -484,7 +484,7 @@ process RunStrelkaBP {
     ])
 
   output:
-    set val("strelkaBP"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz"), file("*.vcf.gz.tbi") into strelkaBPOutput
+    set val("Strelka"), idPatient, idSampleNormal, idSampleTumor, file("*.vcf.gz"), file("*.vcf.gz.tbi") into strelkaBPOutput
 
   when: 'strelka' in tools && 'manta' in tools && params.strelkaBP && !params.onlyQC
 
@@ -598,7 +598,7 @@ process RunAscat {
     file(acLociGC) from Channel.value([referenceMap.acLociGC])
 
   output:
-    set val("ascat"), idPatient, idSampleNormal, idSampleTumor, file("${idSampleTumor}.*.{png,txt}") into ascatOutput
+    set val("ASCAT"), idPatient, idSampleNormal, idSampleTumor, file("${idSampleTumor}.*.{png,txt}") into ascatOutput
 
   when: 'ascat' in tools && !params.onlyQC
 
@@ -656,7 +656,7 @@ process RunBcftoolsStats {
     set variantCaller, file(vcf) from vcfForBCFtools
 
   output:
-    file ("${vcf.simpleName}.bcf.tools.stats.out") into bcfReport
+    file ("*.bcf.tools.stats.out") into bcfReport
 
   when: !params.noReports
 
@@ -671,7 +671,7 @@ if (params.verbose) bcfReport = bcfReport.view {
 bcfReport.close()
 
 process RunVcftools {
-  tag {vcf}
+  tag {"${variantCaller} - ${vcf}"}
 
   publishDir "${params.outDir}/Reports/VCFTools", mode: params.publishDirMode
 
@@ -679,11 +679,13 @@ process RunVcftools {
     set variantCaller, file(vcf) from vcfForVCFtools
 
   output:
-    file ("${vcf.simpleName}.*") into vcfReport
+    file ("${reducedVCF}.*") into vcfReport
 
   when: !params.noReports
 
-  script: QC.vcftools(vcf)
+  script:
+    reducedVCF = SarekUtils.reduceVCF(vcf)
+    QC.vcftools(vcf)
 }
 
 if (params.verbose) vcfReport = vcfReport.view {
@@ -741,23 +743,28 @@ def checkUppmaxProject() {
   return !(workflow.profile == 'slurm' && !params.project)
 }
 
-def defineReferenceMap() {
+def defineReferenceMap(tools) {
   if (!(params.genome in params.genomes)) exit 1, "Genome ${params.genome} not found in configuration"
-  return [
-    // loci file for ascat
-    'acLoci'           : checkParamReturnFile("acLoci"),
-    'acLociGC'           : checkParamReturnFile("acLociGC"),
-    'dbsnp'            : checkParamReturnFile("dbsnp"),
-    'dbsnpIndex'       : checkParamReturnFile("dbsnpIndex"),
-    // genome reference dictionary
+  def referenceMap =
+  [
     'genomeDict'       : checkParamReturnFile("genomeDict"),
-    // FASTA genome reference
     'genomeFile'       : checkParamReturnFile("genomeFile"),
-    // genome .fai file
     'genomeIndex'      : checkParamReturnFile("genomeIndex"),
-    // intervals file for spread-and-gather processes
     'intervals'        : checkParamReturnFile("intervals")
   ]
+  if ('ascat' in tools) {
+    referenceMap.putAll(
+      'acLoci'           : checkParamReturnFile("acLoci"),
+      'acLociGC'         : checkParamReturnFile("acLociGC")
+    )
+  }
+  if ('mutect2' in tools) {
+    referenceMap.putAll(
+      'dbsnp'            : checkParamReturnFile("dbsnp"),
+      'dbsnpIndex'       : checkParamReturnFile("dbsnpIndex")
+    )
+  }
+  return referenceMap
 }
 
 def defineToolList() {
