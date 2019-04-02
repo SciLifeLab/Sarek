@@ -668,16 +668,23 @@ mpileupOutput = mpileupOutput.map {
   [idPatientNormal, idSampleNormal, idSampleTumor, mpileupNormal, mpileupTumor]
 }
 
-process GenerateControlFreecConfig {
+process RunControlFreec {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
   publishDir params.outDir, mode: params.publishDirMode, saveAs: { it == "${idSampleTumor}_vs_${idSampleNormal}.config.txt" ? "VariantCalling/${idPatient}/controlFREEC/${it}" : '' }
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor) from mpileupOutput
+    set file(genomeFile), file(genomeIndex), file(dbsnp), file(dbsnpIndex), file(chrDir) from Channel.value([
+      referenceMap.genomeFile,
+      referenceMap.genomeIndex,
+      referenceMap.dbsnp,
+      referenceMap.dbsnpIndex,
+      referenceMap.chrDir
+    ])
 
   output:
-    set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file("${idSampleTumor}_vs_${idSampleNormal}.config.txt") into controlFreecConfig
+    set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file("${idSampleTumor}_vs_${idSampleNormal}.config.txt") into controlFreecoutput
 
   when: 'controlfreec' in tools && !params.onlyQC
 
@@ -714,35 +721,9 @@ process GenerateControlFreecConfig {
   echo "[BAF]" >> config.txt
   echo "SNPfile = ${referenceMap.dbsnp.fileName}" >> config.txt
 
-  mv config.txt ${idSampleTumor}_vs_${idSampleNormal}.config.txt
+  freec -conf ${idSampleTumor}_vs_${idSampleNormal}.config.txt
   """
 }
-
-process RunControlFreec {
-  tag {idSampleTumor + "_vs_" + idSampleNormal}
-
-  publishDir params.outDir, mode: params.publishDirMode, saveAs: { it == "${idSampleTumor}_vs_${idSampleNormal}.config.txt" ? "VariantCalling/${idPatient}/controlFREEC/${it}" : '' }
-
-  input:
-    set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file(cfConfig) from controlFreecConfig
-    set file(genomeFile), file(genomeIndex), file(dbsnp), file(dbsnpIndex), file(chrDir) from Channel.value([
-      referenceMap.genomeFile,
-      referenceMap.genomeIndex,
-      referenceMap.dbsnp,
-      referenceMap.dbsnpIndex,
-      referenceMap.chrDir
-    ])
-
-  output:
-
-  when: 'controlfreec' in tools && !params.onlyQC
-
-  script:
-  """
-  freec -conf ${cfConfig}
-  """
-}
-
 
 (strelkaIndels, strelkaSNVS) = strelkaOutput.into(2)
 (mantaSomaticSV, mantaDiploidSV) = mantaOutput.into(2)
