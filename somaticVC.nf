@@ -695,8 +695,8 @@ process RunControlFreec {
   touch ${config}
   echo "[general]" >> ${config}
   echo "BedGraphOutput = TRUE" >> ${config}
-  echo "chrLenFile = ${referenceMap.genomeIndex.fileName}" >> ${config}
-  echo "chrFiles = ${referenceMap.chrDir.fileName}" >> ${config}
+  echo "chrLenFile = \${PWD}/${referenceMap.genomeIndex.fileName}" >> ${config}
+  echo "chrFiles = \${PWD}/${referenceMap.chrDir.fileName}" >> ${config}
   echo "coefficientOfVariation = 0.05" >> ${config}
   echo "contaminationAdjustment = TRUE" >> ${config}
   echo "forceGCcontentNormalization = 0" >> ${config}
@@ -709,13 +709,13 @@ process RunControlFreec {
 
   echo "[control]" >> ${config}
   echo "inputFormat = pileup" >> ${config}
-  echo "mateFile = ${mpileupNormal}" >> ${config}
+  echo "mateFile = \${PWD}/${mpileupNormal}" >> ${config}
   echo "mateOrientation = FR" >> ${config}
   echo "" >> ${config}
 
   echo "[sample]" >> ${config}
   echo "inputFormat = pileup" >> ${config}
-  echo "mateFile = ${mpileupTumor}" >> ${config}
+  echo "mateFile = \${PWD}/${mpileupTumor}" >> ${config}
   echo "mateOrientation = FR" >> ${config}
   echo "" >> ${config}
 
