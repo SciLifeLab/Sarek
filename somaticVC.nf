@@ -688,7 +688,7 @@ process GenerateControlFreecConfig {
   echo "[general]" >> config.txt
   echo "BedGraphOutput = TRUE" >> config.txt
   echo "chrLenFile = ${referenceMap.genomeIndex.fileName}" >> config.txt
-  echo "chrFiles = ${referenceMap.chrDir.fileName}" >> config.txt
+  echo "chrFiles = \${PWD}/${referenceMap.chrDir.fileName}" >> config.txt
   echo "coefficientOfVariation = 0.05" >> config.txt
   echo "contaminationAdjustment = TRUE" >> config.txt
   echo "forceGCcontentNormalization = 0" >> config.txt
