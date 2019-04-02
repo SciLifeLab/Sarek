@@ -689,39 +689,40 @@ process RunControlFreec {
   when: 'controlfreec' in tools && !params.onlyQC
 
   script:
+  config = "${idSampleTumor}_vs_${idSampleNormal}.config.txt"
   gender = patientGenders[idPatient]
   """
-  touch config.txt
-  echo "[general]" >> config.txt
-  echo "BedGraphOutput = TRUE" >> config.txt
-  echo "chrLenFile = ${referenceMap.genomeIndex.fileName}" >> config.txt
-  echo "chrFiles = ${referenceMap.chrDir.fileName}" >> config.txt
-  echo "coefficientOfVariation = 0.05" >> config.txt
-  echo "contaminationAdjustment = TRUE" >> config.txt
-  echo "forceGCcontentNormalization = 0" >> config.txt
-  echo "maxThreads = 8" >> config.txt
-  echo "minimalSubclonePresence = 20" >> config.txt
-  echo "ploidy = 2,3,4" >> config.txt
-  echo "sex = ${gender}" >> config.txt
-  echo "window = 50000" >> config.txt
-  echo "" >> config.txt
+  touch ${config}
+  echo "[general]" >> ${config}
+  echo "BedGraphOutput = TRUE" >> ${config}
+  echo "chrLenFile = ${referenceMap.genomeIndex.fileName}" >> ${config}
+  echo "chrFiles = ${referenceMap.chrDir.fileName}" >> ${config}
+  echo "coefficientOfVariation = 0.05" >> ${config}
+  echo "contaminationAdjustment = TRUE" >> ${config}
+  echo "forceGCcontentNormalization = 0" >> ${config}
+  echo "maxThreads = 8" >> ${config}
+  echo "minimalSubclonePresence = 20" >> ${config}
+  echo "ploidy = 2,3,4" >> ${config}
+  echo "sex = ${gender}" >> ${config}
+  echo "window = 50000" >> ${config}
+  echo "" >> ${config}
 
-  echo "[control]" >> config.txt
-  echo "inputFormat = pileup" >> config.txt
-  echo "mateFile = ${mpileupNormal}" >> config.txt
-  echo "mateOrientation = FR" >> config.txt
-  echo "" >> config.txt
+  echo "[control]" >> ${config}
+  echo "inputFormat = pileup" >> ${config}
+  echo "mateFile = ${mpileupNormal}" >> ${config}
+  echo "mateOrientation = FR" >> ${config}
+  echo "" >> ${config}
 
-  echo "[sample]" >> config.txt
-  echo "inputFormat = pileup" >> config.txt
-  echo "mateFile = ${mpileupTumor}" >> config.txt
-  echo "mateOrientation = FR" >> config.txt
-  echo "" >> config.txt
+  echo "[sample]" >> ${config}
+  echo "inputFormat = pileup" >> ${config}
+  echo "mateFile = ${mpileupTumor}" >> ${config}
+  echo "mateOrientation = FR" >> ${config}
+  echo "" >> ${config}
 
-  echo "[BAF]" >> config.txt
-  echo "SNPfile = ${referenceMap.dbsnp.fileName}" >> config.txt
+  echo "[BAF]" >> ${config}
+  echo "SNPfile = ${referenceMap.dbsnp.fileName}" >> ${config}
 
-  freec -conf ${idSampleTumor}_vs_${idSampleNormal}.config.txt
+  freec -conf ${config}
   """
 }
 
