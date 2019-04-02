@@ -15,7 +15,6 @@ env:
     - TEST=GERMLINE
     - TEST=TARGETED
     - TEST=ANNOTATEVEP
-    - TEST=CONTROLFREEC
     - TEST=ANNOTATESNPEFF
 
 before_install:

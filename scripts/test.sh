@@ -112,11 +112,6 @@ then
 	clean_repo
 fi
 
-if [[ ALL,CONTROLFREEC =~ $TEST ]]
-then
-  run_wrapper --somatic --sample $SAMPLE --variantCalling --tools ControlFREEC --noReports
-fi
-
 if [[ ALL,ANNOTATEALL,ANNOTATESNPEFF,ANNOTATEVEP =~ $TEST ]]
 then
   if [[ $TEST = ANNOTATESNPEFF ]]
