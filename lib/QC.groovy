@@ -2,7 +2,7 @@ class QC {
 // Run bcftools on vcf file
   static def bcftools(vcf) {
     """
-    bcftools stats ${vcf} > ${vcf.simpleName}.bcf.tools.stats.out
+    bcftools stats ${vcf} > ${SarekUtils.reduceVCF(vcf)}.bcf.tools.stats.out
     """
   }
 
@@ -19,37 +19,22 @@ class QC {
     vcftools \
     --gzvcf ${vcf} \
     --relatedness2 \
-    --out ${vcf.simpleName}
+    --out ${SarekUtils.reduceVCF(vcf)}
 
     vcftools \
     --gzvcf ${vcf} \
     --TsTv-by-count \
-    --out ${vcf.simpleName}
+    --out ${SarekUtils.reduceVCF(vcf)}
 
     vcftools \
     --gzvcf ${vcf} \
     --TsTv-by-qual \
-    --out ${vcf.simpleName}
+    --out ${SarekUtils.reduceVCF(vcf)}
 
     vcftools \
     --gzvcf ${vcf} \
     --FILTER-summary \
-    --out ${vcf.simpleName}
-    """
-  }
-
-
-// Get SnpEFF version
-  static def getVersionSnpEFF() {
-    """
-    echo "SNPEFF version"\$(java -jar \$SNPEFF_HOME/snpEff.jar -h 2>&1) > v_snpeff.txt
-    """
-  }
-
-// Get VEP version
-  static def getVersionVEP() {
-    """
-    /opt/vep/src/ensembl-vep/vep --help > v_vep.txt
+    --out ${SarekUtils.reduceVCF(vcf)}
     """
   }
 }
