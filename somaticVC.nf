@@ -625,9 +625,9 @@ if (params.verbose) ascatOutput = ascatOutput.view {
 }
 
 process RunMpileup {
-  publishDir directoryMap.controlfreec, saveAs: { it == "${idSample}.pileup.gz" ? it : '' }, mode: 'link'
-
   tag {idSample}
+
+  publishDir params.outDir, mode: params.publishDirMode, saveAs: { it == "${idSample}.pileup.gz" ? "VariantCalling/${idPatient}/mpileup/${it}" : '' }
 
   input:
     set idPatient, status, idSample, file(bam), file(bai) from bamsForMpileup
@@ -671,7 +671,7 @@ mpileupOutput = mpileupOutput.map {
 process GenerateControlFreecConfig {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir directoryMap.controlfreec, saveAs: { it == "${idSampleTumor}_vs_${idSampleNormal}.config.txt" ? it : '' }, mode: 'link'
+  publishDir params.outDir, mode: params.publishDirMode, saveAs: { it == "${idSampleTumor}_vs_${idSampleNormal}.config.txt" ? "VariantCalling/${idPatient}/controlFREEC/${it}" : '' }
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor) from mpileupOutput
@@ -721,7 +721,7 @@ process GenerateControlFreecConfig {
 process RunControlFreec {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir directoryMap.controlfreec, saveAs: { it == "${idSampleTumor}_vs_${idSampleNormal}.config.txt" ? it : '' }, mode: 'link'
+  publishDir params.outDir, mode: params.publishDirMode, saveAs: { it == "${idSampleTumor}_vs_${idSampleNormal}.config.txt" ? "VariantCalling/${idPatient}/controlFREEC/${it}" : '' }
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file(cfConfig) from controlFreecConfig
