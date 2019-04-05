@@ -646,7 +646,7 @@ process RunMpileup {
   samtools mpileup \
   -f ${genomeFile} ${bam} \
   -l ${intervalBed} \
-  | gzip -c > ${idSample}_${intervalBed.baseName}.pileup.gz
+  | bgzip --threads ${task.cpus} -c > ${idSample}_${intervalBed.baseName}.pileup.gz
   """
 }
 
@@ -659,7 +659,6 @@ process MergeMpileup {
 
   input:
     set idPatient, status, idSample, file(mpileup) from mpileupToMerge
-    file(intervals) from Channel.value(referenceMap.intervals)
 
   output:
     set idPatient, status, idSample, file("${idSample}.pileup.gz") into mpileupOutput
@@ -667,18 +666,13 @@ process MergeMpileup {
     when: ('controlfreec' in tools || 'mpileup' in tools) && !params.onlyQC
 
   script:
-  if (intervals.getName().endsWith('.bed'))
-    """
-    for i in `cat ${intervals}`;
-      do zcat ${idSample}_\$(printf \$i | awk -v FS="[:-]" '{printf "%s_%d-%d", \$1, \$2+1, \$3}').pileup.gz >> ${idSample}.pileup.gz
-    done
-    """
-  else
-    """
-    for i in `cat ${intervals}`;
-      do zcat ${idSample}_\$(printf \$i | awk -v FS="[:-]" '{printf "%s_%d-%d", \$1, \$2, \$3}').pileup.gz >> ${idSample}.pileup.gz
-    done
-    """
+  """
+  for i in `ls -1v *.pileup.gz`;
+    do zcat \$i >> ${idSample}.pileup
+  done
+  bgzip --threads ${task.cpus} -c ${idSample}.pileup > ${idSample}.pileup.gz
+  rm ${idSample}.pileup
+  """
 }
 
 if (params.verbose) mpileupOutput = mpileupOutput.view {
