@@ -193,7 +193,9 @@ bamsAll = bamsNormal.join(bamsTumor)
 // Manta and Strelka
 (bamsForManta, bamsForStrelka, bamsForStrelkaBP, bamsAll) = bamsAll.into(4)
 
+(bedIntervals, bedIntervalsForMpileup) = bedIntervals.into(2)
 bamsTumorNormalIntervals = bamsAll.spread(bedIntervals)
+bamsForMpileup = bamsForMpileup.spread(bedIntervalsForMpileup)
 
 // MuTect2, FreeBayes
 ( bamsFMT2, bamsFFB) = bamsTumorNormalIntervals.into(3)
@@ -625,27 +627,58 @@ if (params.verbose) ascatOutput = ascatOutput.view {
 }
 
 process RunMpileup {
-  tag {idSample}
-
-  publishDir params.outDir, mode: params.publishDirMode, saveAs: { it == "${idSample}.pileup.gz" ? "VariantCalling/${idPatient}/mpileup/${it}" : '' }
+  tag {idSample + "-" + intervalBed.baseName}
 
   input:
-    set idPatient, status, idSample, file(bam), file(bai) from bamsForMpileup
+    set idPatient, status, idSample, file(bam), file(bai), file(intervalBed) from bamsForMpileup
     set file(genomeFile), file(genomeIndex) from Channel.value([
       referenceMap.genomeFile,
       referenceMap.genomeIndex
     ])
 
   output:
-    set idPatient, status, idSample, file("${idSample}.pileup.gz") into mpileupOutput
+    set idPatient, status, idSample, file("${idSample}_${intervalBed.baseName}.pileup.gz") into mpileupToMerge
 
-  when: 'controlfreec' in tools && !params.onlyQC
+  when: ('controlfreec' in tools || 'mpileup' in tools) && !params.onlyQC
 
   script:
   """
   samtools mpileup \
-  -f ${genomeFile} ${bam} | gzip -c > ${idSample}.pileup.gz
+  -f ${genomeFile} ${bam} \
+  -l ${intervalBed} \
+  | gzip -c > ${idSample}_${intervalBed.baseName}.pileup.gz
   """
+}
+
+mpileupToMerge = mpileupToMerge.groupTuple(by:[0,1,2])
+
+process MergeMpileup {
+  tag {idSample}
+
+  publishDir params.outDir, mode: params.publishDirMode, saveAs: { it == "${idSample}.pileup.gz" ? "VariantCalling/${idPatient}/mpileup/${it}" : '' }
+
+  input:
+    set idPatient, status, idSample, file(mpileup) from mpileupToMerge
+    file(intervals) from Channel.value(referenceMap.intervals)
+
+  output:
+    set idPatient, status, idSample, file("${idSample}.pileup.gz") into mpileupOutput
+
+    when: ('controlfreec' in tools || 'mpileup' in tools) && !params.onlyQC
+
+  script:
+  if (intervals.getName().endsWith('.bed'))
+    """
+    for i in `cat ${intervals}`;
+      do zcat ${idSample}_\$(printf \$i | awk -v FS="[:-]" '{printf "%s_%d-%d", \$1, \$2+1, \$3}').pileup.gz >> ${idSample}.pileup.gz
+    done
+    """
+  else
+    """
+    for i in `cat ${intervals}`;
+      do zcat ${idSample}_\$(printf \$i | awk -v FS="[:-]" '{printf "%s_%d-%d", \$1, \$2, \$3}').pileup.gz >> ${idSample}.pileup.gz
+    done
+    """
 }
 
 if (params.verbose) mpileupOutput = mpileupOutput.view {
@@ -891,6 +924,7 @@ def defineToolList() {
     'freebayes',
     'haplotypecaller',
     'manta',
+    'mpileup',
     'mutect2',
     'strelka'
   ]
