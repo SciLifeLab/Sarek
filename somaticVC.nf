@@ -899,6 +899,7 @@ def defineReferenceMap(tools) {
   if ('controlfreec' in tools) {
     referenceMap.putAll(
       'chrDir'           : checkParamReturnFile("chrDir"),
+      'chrLength'        : checkParamReturnFile("chrLength"),
       'dbsnp'            : checkParamReturnFile("dbsnp"),
       'dbsnpIndex'       : checkParamReturnFile("dbsnpIndex")
     )
