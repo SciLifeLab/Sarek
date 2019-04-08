@@ -702,7 +702,7 @@ process RunControlFreec {
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor) from mpileupOutput
-    set file(genomeFile), file(genomeIndex), file(dbsnp), file(dbsnpIndex), file(chrDir) from Channel.value([
+    set file(genomeFile), file(genomeIndex), file(dbsnp), file(dbsnpIndex), file(chrDir), file(chrLength) from Channel.value([
       referenceMap.genomeFile,
       referenceMap.genomeIndex,
       referenceMap.dbsnp,
