@@ -702,12 +702,11 @@ process RunControlFreec {
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor) from mpileupOutput
-    set file(genomeFile), file(genomeIndex), file(dbsnp), file(dbsnpIndex), file(chrDir) from Channel.value([
+    set file(genomeFile), file(genomeIndex), file(dbsnp), file(dbsnpIndex) from Channel.value([
       referenceMap.genomeFile,
       referenceMap.genomeIndex,
       referenceMap.dbsnp,
-      referenceMap.dbsnpIndex,
-      referenceMap.chrDir
+      referenceMap.dbsnpIndex
     ])
 
   output:
@@ -722,12 +721,12 @@ process RunControlFreec {
   touch ${config}
   echo "[general]" >> ${config}
   echo "BedGraphOutput = TRUE" >> ${config}
+  echo "chrFiles = \${PWD}/${referenceMap.genomeFile.fileName}" >> ${config}
   echo "chrLenFile = \${PWD}/${referenceMap.genomeIndex.fileName}" >> ${config}
-  echo "chrFiles = \${PWD}/${referenceMap.chrDir.fileName}" >> ${config}
   echo "coefficientOfVariation = 0.05" >> ${config}
   echo "contaminationAdjustment = TRUE" >> ${config}
   echo "forceGCcontentNormalization = 0" >> ${config}
-  echo "maxThreads = 8" >> ${config}
+  echo "maxThreads = ${task.cpus}" >> ${config}
   echo "minimalSubclonePresence = 20" >> ${config}
   echo "ploidy = 2,3,4" >> ${config}
   echo "sex = ${gender}" >> ${config}
