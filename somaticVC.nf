@@ -698,7 +698,7 @@ mpileupOutput = mpileupOutput.map {
 process RunControlFreec {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
-  publishDir params.outDir, mode: params.publishDirMode, saveAs: { it == "${idSampleTumor}_vs_${idSampleNormal}.config.txt" ? "VariantCalling/${idPatient}/controlFREEC/${it}" : '' }
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/controlFREEC", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor) from mpileupOutput
@@ -712,7 +712,7 @@ process RunControlFreec {
     ])
 
   output:
-    set idPatient, idSampleNormal, idSampleTumor, file(mpileupNormal), file(mpileupTumor), file("${idSampleTumor}_vs_${idSampleNormal}.config.txt") into controlFreecoutput
+    set file("*.pileup.gz*"), file("${idSampleTumor}_vs_${idSampleNormal}.config.txt") into controlFreecOutput
 
   when: 'controlfreec' in tools && !params.onlyQC
 
@@ -751,8 +751,14 @@ process RunControlFreec {
   echo "SNPfile = ${referenceMap.dbsnp.fileName}" >> ${config}
 
   freec -conf ${config}
+
+  R assess_significance.R --args ${idSampleTumor}.pileup.gz_CNVs ${idSampleTumor}.pileup.gz_ratio.txt
+  R assess_significance.R --args ${idSampleTumor}.pileup.gz_normal_CNVs ${idSampleTumor}.pileup.gz_normal_ratio.txt
+  R makeGraph.R --args 2 ${idSampleTumor}.pileup.gz_ratio.txt ${idSampleTumor}.pileup.gz_BAF.txt
+  R makeGraph.R --args 2 ${idSampleTumor}.pileup.gz_normal_ratio.txt ${idSampleNormal}.pileup.gz_BAF.txt
+  perl freec2bed.pl -f ${idSampleTumor}.pileup.gz_ratio.txt > ${idSampleTumor}.bed
+  perl freec2bed.pl -f ${idSampleTumor}.pileup.gz_normal_ratio.txt > ${idSampleNormal}.bed
   """
-}
 
 (strelkaIndels, strelkaSNVS) = strelkaOutput.into(2)
 (mantaSomaticSV, mantaDiploidSV) = mantaOutput.into(2)
