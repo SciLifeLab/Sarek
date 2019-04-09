@@ -759,6 +759,7 @@ process RunControlFreec {
   perl freec2bed.pl -f ${idSampleTumor}.pileup.gz_ratio.txt > ${idSampleTumor}.bed
   perl freec2bed.pl -f ${idSampleTumor}.pileup.gz_normal_ratio.txt > ${idSampleNormal}.bed
   """
+}
 
 (strelkaIndels, strelkaSNVS) = strelkaOutput.into(2)
 (mantaSomaticSV, mantaDiploidSV) = mantaOutput.into(2)
