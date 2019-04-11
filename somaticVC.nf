@@ -569,7 +569,7 @@ alleleCountOutput = alleleCountNormal.combine(alleleCountTumor)
 alleleCountOutput = alleleCountOutput.map {
   idPatientNormal, statusNormal, idSampleNormal, alleleCountNormal,
   idPatientTumor,  statusTumor,  idSampleTumor,  alleleCountTumor ->
-  [idPatient, idSampleNormal, idSampleTumor, alleleCountNormal, alleleCountTumor]
+  [idPatientNormal, idSampleNormal, idSampleTumor, alleleCountNormal, alleleCountTumor]
 }
 
 // R script from Malin Larssons bitbucket repo:
