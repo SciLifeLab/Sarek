@@ -7,13 +7,19 @@ channels:
   - defaults
 
 dependencies:
+  # conda-forge packages
+  - r=3.5.1
+  - r-rcolorbrewer=1.1
+  # bioconda packages
   - bcftools=1.8
+  - bioconductor-rtracklayer=1.42.1
   - bwa=0.7.17
+  - cancerit-allelecount=2.1.2
   - control-freec=11.4
   - ensembl-vep=95.1
   - fastqc=0.11.8
-  - font-ttf-dejavu-sans-mono=2.37 #for FastQC
-  - fontconfig=2.12.6 #for FastQC
+  - font-ttf-dejavu-sans-mono=2.37 # Needed for FastQC
+  - fontconfig=2.13                # Needed for FastQC
   - freebayes=1.2.0
   - gatk4=4.0.9.0
   - genesplicer=1.0

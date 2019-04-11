@@ -8,13 +8,14 @@ regexes = {
     'ASCAT': ['v_ascat.txt', r"(\d\.\d+)"],
     'bcftools': ['v_bcftools.txt', r"bcftools (\S+)"],
     'BWA': ['v_bwa.txt', r"Version: (\S+)"],
+    'ControlFREEC': ['v_controlfreec.txt', r"Control-FREEC v(\S+)"],
     'FastQC': ['v_fastqc.txt', r"FastQC v(\S+)"],
+    'FreeBayes': ['v_freebayes.txt', r"version:  v(\d\.\d\.\d+)"],
     'GATK': ['v_gatk.txt', r"Version:(\S+)"],
     'htslib': ['v_samtools.txt', r"htslib (\S+)"],
     'Manta': ['v_manta.txt', r"([0-9.]+)"],
     'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"],
     'Nextflow': ['v_nextflow.txt', r"(\S+)"],
-    'FreeBayes': ['v_freebayes.txt', r"version:  v(\d\.\d\.\d+)"],
     'Picard': ['v_picard.txt', r"Picard version:(\d\.\d\.\d+)"],
     'Qualimap': ['v_qualimap.txt', r"QualiMap v.(\S+)"],
     'R': ['v_r.txt', r"R version (\S+)"],
@@ -23,7 +24,7 @@ regexes = {
     'SnpEff': ['v_snpeff.txt', r"version SnpEff (\S+)"],
     'Strelka': ['v_strelka.txt', r"([0-9.]+)"],
     'vcftools': ['v_vcftools.txt', r"([0-9.]+)"],
-    'VEP': ['v_vep.txt', r"ensembl-vep          : (\S+)"],
+    'VEP': ['v_vep.txt', r"ensembl-vep          : (\S+)"]
 }
 results = OrderedDict()
 results['Sarek'] = '<span style="color:#999999;\">N/A</span>'
@@ -32,6 +33,7 @@ results['AlleleCount'] = '<span style="color:#999999;\">N/A</span>'
 results['ASCAT'] = '<span style="color:#999999;\">N/A</span>'
 results['bcftools'] = '<span style="color:#999999;\">N/A</span>'
 results['BWA'] = '<span style="color:#999999;\">N/A</span>'
+results['ControlFREEC'] = '<span style="color:#999999;\">N/A</span>'
 results['FastQC'] = '<span style="color:#999999;\">N/A</span>'
 results['FreeBayes'] = '<span style="color:#999999;\">N/A</span>'
 results['GATK'] = '<span style="color:#999999;\">N/A</span>'
@@ -59,7 +61,7 @@ for k, v in regexes.items():
       print("No such file:", v[0])
 
 # Remove empty keys (defining them above ensures correct order)
-for k in ['Sarek', 'Nextflow', 'BWA', 'samtools', 'htslib', 'GATK', 'Picard', 'Manta', 'Strelka', 'FreeBayes', 'AlleleCount', 'R', 'ASCAT', 'SnpEff', 'VEP', 'FastQC', 'Qualimap', 'bcftools', 'vcftools', 'MultiQC']:
+for k in ['Sarek', 'Nextflow', 'BWA', 'samtools', 'htslib', 'GATK', 'Picard', 'Manta', 'Strelka', 'FreeBayes', 'AlleleCount', 'R', 'ASCAT', 'ControlFREEC', 'SnpEff', 'VEP', 'FastQC', 'Qualimap', 'bcftools', 'vcftools', 'MultiQC']:
     if results[k] == '<span style="color:#999999;\">N/A</span>':
         del(results[k])
 
