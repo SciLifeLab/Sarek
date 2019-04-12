@@ -768,12 +768,12 @@ process RunControlFreecVisualization {
   when: 'controlfreec' in tools && !params.onlyQC
 
   """
-  R < assess_significance.R --no-save ${cnvTumor} ${ratioTumor}
-  R < assess_significance.R --no-save ${cnvNormal} ${ratioNormal}
-  R < makeGraph.R --no-save 2 ${ratioTumor} ${bafTumor}
-  R < makeGraph.R --no-save 2 ${ratioNormal} ${bafNormal}
-  perl freec2bed.pl -f ${ratioTumor} > ${idSampleTumor}.bed
-  perl freec2bed.pl -f ${ratioNormal} > ${idSampleNormal}.bed
+  Rscript /opt/conda/envs/sarek-2.3/bin/assess_significance.R --no-save ${cnvTumor} ${ratioTumor}
+  Rscript /opt/conda/envs/sarek-2.3/bin/assess_significance.R --no-save ${cnvNormal} ${ratioNormal}
+  Rscript /opt/conda/envs/sarek-2.3/bin/makeGraph.R --no-save 2 ${ratioTumor} ${bafTumor}
+  Rscript /opt/conda/envs/sarek-2.3/bin/makeGraph.R --no-save 2 ${ratioNormal} ${bafNormal}
+  perl /opt/conda/envs/sarek-2.3/bin/freec2bed.pl -f ${ratioTumor} > ${idSampleTumor}.bed
+  perl /opt/conda/envs/sarek-2.3/bin/freec2bed.pl -f ${ratioNormal} > ${idSampleNormal}.bed
   """
 }
 
