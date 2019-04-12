@@ -710,6 +710,7 @@ process RunControlFreec {
     ])
 
   output:
+    set idPatient, idSampleNormal, idSampleTumor, file("${idSampleTumor}.pileup.gz_CNVs"), file("${idSampleTumor}.pileup.gz_ratio.txt"), file("${idSampleTumor}.pileup.gz_normal_CNVs"), file("${idSampleTumor}.pileup.gz_normal_ratio.txt"), file("${idSampleTumor}.pileup.gz_BAF.txt"), file("${idSampleNormal}.pileup.gz_BAF.txt") into controlFreecOutputVisualization
     set file("*.pileup.gz*"), file("${idSampleTumor}_vs_${idSampleNormal}.config.txt") into controlFreecOutput
 
   when: 'controlfreec' in tools && !params.onlyQC
@@ -749,13 +750,30 @@ process RunControlFreec {
   echo "SNPfile = ${referenceMap.dbsnp.fileName}" >> ${config}
 
   freec -conf ${config}
+  """
+}
 
-  R assess_significance.R --args ${idSampleTumor}.pileup.gz_CNVs ${idSampleTumor}.pileup.gz_ratio.txt
-  R assess_significance.R --args ${idSampleTumor}.pileup.gz_normal_CNVs ${idSampleTumor}.pileup.gz_normal_ratio.txt
-  R makeGraph.R --args 2 ${idSampleTumor}.pileup.gz_ratio.txt ${idSampleTumor}.pileup.gz_BAF.txt
-  R makeGraph.R --args 2 ${idSampleTumor}.pileup.gz_normal_ratio.txt ${idSampleNormal}.pileup.gz_BAF.txt
-  perl freec2bed.pl -f ${idSampleTumor}.pileup.gz_ratio.txt > ${idSampleTumor}.bed
-  perl freec2bed.pl -f ${idSampleTumor}.pileup.gz_normal_ratio.txt > ${idSampleNormal}.bed
+process RunControlFreecVisualization {
+
+  tag {idSampleTumor + "_vs_" + idSampleNormal}
+
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/controlFREEC", mode: params.publishDirMode
+
+  input:
+    set idPatient, idSampleNormal, idSampleTumor, file(cnvTumor), file(ratioTumor), file(cnvNormal), file(ratioNormal), file(bafTumor), file(bafNormal) from controlFreecOutputVisualization
+
+  output:
+    set file("*.png"), file("*.bed") into controlFreecOutputFinal
+
+  when: 'controlfreec' in tools && !params.onlyQC
+
+  """
+  R assess_significance.R --args ${cnvTumor} ${ratioTumor}
+  R assess_significance.R --args ${cnvNormal} ${ratioNormal}
+  R makeGraph.R --args 2 ${ratioTumor} ${bafTumor}
+  R makeGraph.R --args 2 ${ratioNormal} ${bafNormal}
+  perl freec2bed.pl -f ${ratioTumor} > ${idSampleTumor}.bed
+  perl freec2bed.pl -f ${ratioNormal} > ${idSampleNormal}.bed
   """
 }
 
