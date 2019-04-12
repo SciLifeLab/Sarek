@@ -768,10 +768,10 @@ process RunControlFreecVisualization {
   when: 'controlfreec' in tools && !params.onlyQC
 
   """
-  assess_significance.R ${cnvTumor} ${ratioTumor}
-  assess_significance.R ${cnvNormal} ${ratioNormal}
-  makeGraph.R 2 ${ratioTumor} ${bafTumor}
-  makeGraph.R 2 ${ratioNormal} ${bafNormal}
+  R < assess_significance.R --no-save ${cnvTumor} ${ratioTumor}
+  R < assess_significance.R --no-save ${cnvNormal} ${ratioNormal}
+  R < makeGraph.R --no-save 2 ${ratioTumor} ${bafTumor}
+  R < makeGraph.R --no-save 2 ${ratioNormal} ${bafNormal}
   perl freec2bed.pl -f ${ratioTumor} > ${idSampleTumor}.bed
   perl freec2bed.pl -f ${ratioNormal} > ${idSampleNormal}.bed
   """
