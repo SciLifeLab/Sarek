@@ -763,15 +763,15 @@ process RunControlFreecVisualization {
     set idPatient, idSampleNormal, idSampleTumor, file(cnvTumor), file(ratioTumor), file(cnvNormal), file(ratioNormal), file(bafTumor), file(bafNormal) from controlFreecOutputVisualization
 
   output:
-    set file("*.png"), file("*.bed") into controlFreecOutputFinal
+    set file("*.txt"), file("*.png"), file("*.bed") into controlFreecOutputFinal
 
   when: 'controlfreec' in tools && !params.onlyQC
 
   """
-  R assess_significance.R --args ${cnvTumor} ${ratioTumor}
-  R assess_significance.R --args ${cnvNormal} ${ratioNormal}
-  R makeGraph.R --args 2 ${ratioTumor} ${bafTumor}
-  R makeGraph.R --args 2 ${ratioNormal} ${bafNormal}
+  assess_significance.R ${cnvTumor} ${ratioTumor}
+  assess_significance.R ${cnvNormal} ${ratioNormal}
+  makeGraph.R 2 ${ratioTumor} ${bafTumor}
+  makeGraph.R 2 ${ratioNormal} ${bafNormal}
   perl freec2bed.pl -f ${ratioTumor} > ${idSampleTumor}.bed
   perl freec2bed.pl -f ${ratioNormal} > ${idSampleNormal}.bed
   """
