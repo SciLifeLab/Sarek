@@ -55,6 +55,7 @@ process GetVersionAll {
   publishDir "${params.outDir}/Reports/MultiQC", mode: params.publishDirMode
 
   input:
+    file(versions) from Channel.fromPath("${params.outDir}/Reports/ToolsVersion/*").collect().ifEmpty(null)
 
   output:
     file ("tool_versions_mqc.yaml") into versionsForMultiQC
