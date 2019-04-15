@@ -217,6 +217,9 @@ process RunMutect2 {
   when: 'mutect2' in tools && !params.onlyQC
 
   script:
+	// please, make a panel-of-normals, using at least 40 samples
+	// https://gatkforums.broadinstitute.org/gatk/discussion/11136/how-to-call-somatic-mutations-using-gatk4-mutect2
+	PON = params.pon ? "--panel-of-normals $params.pon" : ""
   """
   gatk --java-options "-Xmx${task.memory.toGiga()}g" \
     Mutect2 \
@@ -224,7 +227,9 @@ process RunMutect2 {
     -I ${bamTumor}  -tumor ${idSampleTumor} \
     -I ${bamNormal} -normal ${idSampleNormal} \
     -L ${intervalBed} \
+		${PON} \
     -O ${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf
+	echo "exit code is " \$?
   """
 }
 //    --germline_resource af-only-gnomad.vcf.gz \

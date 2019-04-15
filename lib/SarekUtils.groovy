@@ -100,6 +100,7 @@ class SarekUtils {
       'out-dir',
       'outDir',
       'params',
+			'pon',
       'project',
       'publish-dir-mode',
       'publishDirMode',
