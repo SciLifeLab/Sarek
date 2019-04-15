@@ -14,7 +14,7 @@ dependencies:
   - bioconductor-rtracklayer=1.42.1
   - bwa=0.7.17
   - control-freec=11.4
-  - ensembl-vep=95.2
+  - ensembl-vep=95.1
   - fastqc=0.11.8
   - freebayes=1.2.0
   - gatk4=4.0.9.0
@@ -26,6 +26,6 @@ dependencies:
   - qualimap=2.2.2b
   - samtools=1.8
   - snpeff=4.3.1t
-  - strelka=2.9.10
+  - strelka=2.9.3
   - vcfanno=0.3.0
   - vcftools=0.1.16
