@@ -43,14 +43,13 @@ Additional containers need to be downloaded for somatic variant calling with ASC
 - Contain **[MultiQC][multiqc-link]** 1.6
 - Contain **[Qualimap][qualimap-link]** 2.2.2b
 - Contain **[R][r-link]** 3.5.1
-- Contain **[RColorBrewer][rcolorbrewer-link]** 1.1
 - Contain **[Rtracklayer][rtracklayer-link]** 1.42.1
 - Contain **[samtools][samtools-link]** 1.8
 - Contain **[snpEff][snpeff-link]** 4.3.1t
 - Contain **[Strelka2][strelka-link]** 2.9.3
 - Contain **[VCFanno][vcfanno-link]** 0.3.0
 - Contain **[VCFtools][vcftools-link]** 0.1.16
-- Contain **[VEP][vep-link]** 95.2
+- Contain **[VEP][vep-link]** 95.1
 
 ### snpeffgrch37 [![snpeffgrch37-docker status][snpeffgrch37-docker-badge]][snpeffgrch37-docker-link]
 
@@ -68,14 +67,14 @@ Additional containers need to be downloaded for somatic variant calling with ASC
 
 - Based on `nfcore/base:latest`
 - Contain **[GeneSplicer][genesplicer-link]** 1.0
-- Contain **[VEP][vep-link]** 95.2
+- Contain **[VEP][vep-link]** 95.1
 - Contain cache for GRCh37 version 95
 
 ### vepgrch38 [![vepgrch38-docker status][vepgrch38-docker-badge]][vepgrch38-docker-link]
 
 - Based on `nfcore/base:latest`
 - Contain **[GeneSplicer][genesplicer-link]** 1.0
-- Contain **[VEP][vep-link]** 95.2
+- Contain **[VEP][vep-link]** 95.1
 - Contain cache for GRCh38 version 95
 
 ## Building
