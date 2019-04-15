@@ -18,27 +18,27 @@ For annotation, the main container can be used, but the cache has to be download
 
 - Based on `nfcore/base:latest`
 - Contain **[AlleleCount][allelecount-link]** 2.1.2
-- Contain **[BCFTools][bcftools-link]** 1.8
+- Contain **[BCFTools][bcftools-link]** 1.9
 - Contain **[BWA][bwa-link]** 0.7.17
 - Contain **[ControlFREEC][controlfreec-link]** 11.4
 - Contain **[FastQC][fastqc-link]** 0.11.8
 - Contain **[FreeBayes][freebayes-link]** 1.2.0
-- Contain **[GATK4][gatk4-link]** 4.0.9.0
+- Contain **[GATK4][gatk4-link]** 4.1.1.0
 - Contain **[GeneSplicer][genesplicer-link]** 1.0
 - Contain **[HTSlib][htslib-link]** 1.9
 - Contain **[IGVtools][igvtools-link]** 2.3.93
-- Contain **[Manta][manta-link]** 1.4.0
-- Contain **[MultiQC][multiqc-link]** 1.6
+- Contain **[Manta][manta-link]** 1.5.0
+- Contain **[MultiQC][multiqc-link]** 1.7
 - Contain **[Qualimap][qualimap-link]** 2.2.2b
 - Contain **[R][r-link]** 3.5.1
 - Contain **[RColorBrewer][rcolorbrewer-link]** 1.1
 - Contain **[Rtracklayer][rtracklayer-link]** 1.42.1
-- Contain **[samtools][samtools-link]** 1.8
+- Contain **[samtools][samtools-link]** 1.9
 - Contain **[snpEff][snpeff-link]** 4.3.1t
 - Contain **[Strelka2][strelka-link]** 2.9.3
-- Contain **[VCFanno][vcfanno-link]** 0.3.0
+- Contain **[VCFanno][vcfanno-link]** 0.3.1
 - Contain **[VCFtools][vcftools-link]** 0.1.16
-- Contain **[VEP][vep-link]** 95.1
+- Contain **[VEP][vep-link]** 96.0
 
 ### snpeffgrch37 [![snpeffgrch37-docker status][snpeffgrch37-docker-badge]][snpeffgrch37-docker-link]
 
@@ -56,15 +56,15 @@ For annotation, the main container can be used, but the cache has to be download
 
 - Based on `nfcore/base:latest`
 - Contain **[GeneSplicer][genesplicer-link]** 1.0
-- Contain **[VEP][vep-link]** 95.1
-- Contain cache for GRCh37 version 95
+- Contain **[VEP][vep-link]** 96.0
+- Contain cache for GRCh37 version 96
 
 ### vepgrch38 [![vepgrch38-docker status][vepgrch38-docker-badge]][vepgrch38-docker-link]
 
 - Based on `nfcore/base:latest`
 - Contain **[GeneSplicer][genesplicer-link]** 1.0
-- Contain **[VEP][vep-link]** 95.1
-- Contain cache for GRCh38 version 95
+- Contain **[VEP][vep-link]** 96.0
+- Contain cache for GRCh38 version 96
 
 ## Building
 
