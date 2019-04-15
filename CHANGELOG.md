@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#777](https://github.com/SciLifeLab/Sarek/pull/777) - Add GeneSplicer `1.0` to container
 -   [#777](https://github.com/SciLifeLab/Sarek/pull/777) - Add possibility to use VEP GeneSplicer plugin
 -   [#777](https://github.com/SciLifeLab/Sarek/pull/777) - Add `removeVCF()` function to remove `.ann`, `.gz` and `.vcf` from a VCF filename
+-   [#773](https://github.com/SciLifeLab/Sarek/pull/773) - Implement spread and gather for BaseRecalibrator
 
 ### `Fixed`
 
