@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 -   [#744](https://github.com/SciLifeLab/Sarek/pull/744) - Refactor `germlineVC.nf`
 -   [#776](https://github.com/SciLifeLab/Sarek/pull/776) - Helper script now download annotations for VEP CADD plugin
+-   [#778](https://github.com/SciLifeLab/Sarek/pull/778) - add `|| true` for all tools when gathering versions
 
 ### `Added`
 
@@ -33,6 +34,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#758](https://github.com/SciLifeLab/Sarek/pull/758) - Typos in `ASCAT` documentation
 -   [#765](https://github.com/SciLifeLab/Sarek/pull/765) - Check only for references that are needed to fix [#754](https://github.com/SciLifeLab/Sarek/issues/754)
 -   [#777](https://github.com/SciLifeLab/Sarek/pull/777) - Fix name collision in `annotate.nf`
+-   [#788](https://github.com/SciLifeLab/Sarek/pull/788) - Fix `genome_base` path in `munin.config`
+-   [#788](https://github.com/SciLifeLab/Sarek/pull/788) - Fix `markdup_java_options` definition
+-   [#788](https://github.com/SciLifeLab/Sarek/pull/788) - Include `conf/resources.config` in `btb` profile
 
 ## [2.3.FIX1] - 2019-03-04
 
