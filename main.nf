@@ -174,7 +174,7 @@ process MapReads {
   // and https://github.com/gatk-workflows/gatk4-data-processing/blob/8ffa26ff4580df4ac3a5aa9e272a4ff6bab44ba2/processing-for-variant-discovery-gatk4.b37.wgs.inputs.json#L29
   if (SarekUtils.hasExtension(inputFile1,"fastq.gz"))
     """
-    bwa mem -K 100000000 -R \"${readGroup}\" ${extra} -t ${task.cpus} -M \
+    bwa mem -R \"${readGroup}\" ${extra} -t ${task.cpus} -M \
     ${genomeFile} ${inputFile1} ${inputFile2} | \
     samtools sort --threads ${task.cpus} -m 2G - > ${idRun}.bam
     """
