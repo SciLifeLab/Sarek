@@ -169,7 +169,7 @@ process MapReads {
   extra = status == 1 ? "-B 3" : ""
   if (SarekUtils.hasExtension(inputFile1,"fastq.gz"))
     """
-    bwa mem -R \"${readGroup}\" ${extra} -t ${task.cpus} -M \
+    bwa mem -K 100000000 -R \"${readGroup}\" ${extra} -t ${task.cpus} -M \
     ${genomeFile} ${inputFile1} ${inputFile2} | \
     samtools sort --threads ${task.cpus} -m 2G - > ${idRun}.bam
     """
