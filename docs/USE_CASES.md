@@ -42,11 +42,12 @@ SUBJECT_ID  XX    0    SAMPLEID    1    /samples/normal_1.fastq.gz    /samples/n
 The columns are:
 
 1. Subject id
-2. status: 0 if normal, 1 if tumor
-3. sample id: actual text representation of the type of the sample
-4. read group ID: it is irrelevant in this simple case, should to be 1
-5. first set of reads
-6. second set of reads
+2. gender: XX, XY (Used for ASCAT)
+3. status: 0 if normal, 1 if tumor
+4. sample id: actual text representation of the type of the sample
+5. read group ID: it is irrelevant in this simple case, should to be 1
+6. first set of reads
+7. second set of reads
 
 ## Starting from raw FASTQ on a normal sample only (with `--sampleDir`)
 

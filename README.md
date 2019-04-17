@@ -1,6 +1,5 @@
-# [![Sarek](https://raw.githubusercontent.com/SciLifeLab/Sarek/master/docs/images/Sarek_logo.png "Sarek")](http://sarek.scilifelab.se/)
-
-#### An open-source analysis pipeline to detect germline or somatic variants from whole genome or targeted sequencing
+# [![Sarek](https://raw.githubusercontent.com/SciLifeLab/Sarek/master/docs/images/Sarek_logo.png "Sarek")](https://sarek.scilifelab.se/)
+#### An open-source analysis pipeline to detect germline and/or somatic variants from whole genome or targeted sequencing
 
 [![Nextflow version][nextflow-badge]][nextflow-link]
 [![Travis build status][travis-badge]][travis-link]
@@ -18,15 +17,12 @@
 <img align="right" title="CAW" src="https://raw.githubusercontent.com/SciLifeLab/Sarek/master/docs/images/CAW_logo.png">
 
 Previously known as the Cancer Analysis Workflow (CAW),
-Sarek is a workflow designed to run analyses on WGS data from regular samples or tumour / normal pairs, including relapse samples if required.
+Sarek is a workflow designed to run analyses on WGS / targeted sequencing data from regular samples or tumour / normal pairs, including relapse samples if required.
 
 It's built using [Nextflow][nextflow-link], a domain specific language for workflow building.
-Software dependencies are handled using [Docker](https://www.docker.com) or [Singularity](https://www.sylabs.io/singularity/) - container technologies that provide excellent reproducibility and ease of use.
-Singularity has been designed specifically for high-performance computing environments.
-This means that although Sarek has been primarily designed for use with the Swedish [UPPMAX HPC systems](https://www.uppmax.uu.se), it should be able to run on any system that supports these two tools.
+Software dependencies are handled using [Conda](https://conda.io/en/latest/#), [Docker](https://www.docker.com) or [Singularity](https://www.sylabs.io/singularity/) - container technologies that provide excellent reproducibility and ease of use.
 
-Sarek was developed at the [National Genomics Infastructure][ngi-link] and [National Bioinformatics Infastructure Sweden][nbis-link] which are both platforms at [SciLifeLab][scilifelab-link].
-It is listed on the [Elixir - Tools and Data Services Registry](https://bio.tools/Sarek).
+It is listed on the [Elixir - Tools and Data Services Registry](https://bio.tools/Sarek), [Dockstore](https://dockstore.org/workflows/github.com/SciLifeLab/Sarek/) and [omicX - Bioinformatics tools](https://omictools.com/sarek-tool).
 
 ## Workflow steps
 
@@ -34,7 +30,7 @@ Sarek is built with several workflow scripts.
 A wrapper script contained within the repository makes it easy to run the different workflow scripts as a single job.
 To test your installation, follow the [tests documentation.](https://github.com/SciLifeLab/Sarek/blob/master/docs/TESTS.md)
 
-Raw FastQ files or aligned BAM files (with or without realignment & recalibration) can be used as inputs.
+Raw FastQ files or BAM files (unmapped, aligned or recalibrated) can be used as inputs.
 You can choose which variant callers to use, plus the pipeline is capable of accommodating additional variant calling software or CNV callers if required.
 
 The worflow steps and tools used are as follows:
@@ -84,13 +80,13 @@ The Sarek pipeline comes with documentation in the `docs/` directory:
 08. [Running the pipeline](https://github.com/SciLifeLab/Sarek/blob/master/docs/USAGE.md)
 09. [Running the pipeline using Conda](https://github.com/SciLifeLab/Sarek/blob/master/docs/CONDA.md)
 10. [Command line parameters](https://github.com/SciLifeLab/Sarek/blob/master/docs/PARAMETERS.md)
-11. [Examples](https://github.com/SciLifeLab/Sarek/blob/master/docs/USE_CASES.md)
-12. [Input files documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/INPUT.md)
-13. [Processes documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/PROCESS.md)
-14. [Documentation about containers](https://github.com/SciLifeLab/Sarek/blob/master/docs/CONTAINERS.md)
-15. [Complementary information about ASCAT](https://github.com/SciLifeLab/Sarek/blob/master/docs/ASCAT.md)
-16. [Complementary information about annotations](https://github.com/SciLifeLab/Sarek/blob/master/docs/ANNOTATION.md)
-17. [Output documentation structure](https://github.com/SciLifeLab/Sarek/blob/master/docs/OUTPUT.md)
+11. [Input files documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/INPUT.md)
+12. [Output documentation structure](https://github.com/SciLifeLab/Sarek/blob/master/docs/OUTPUT.md)
+13. [Examples](https://github.com/SciLifeLab/Sarek/blob/master/docs/USE_CASES.md)
+14. [Processes documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/PROCESS.md)
+15. [Documentation about containers](https://github.com/SciLifeLab/Sarek/blob/master/docs/CONTAINERS.md)
+16. [Complementary information about ASCAT](https://github.com/SciLifeLab/Sarek/blob/master/docs/ASCAT.md)
+17. [Complementary information about annotations](https://github.com/SciLifeLab/Sarek/blob/master/docs/ANNOTATION.md)
 
 ## Contributions & Support
 
@@ -103,6 +99,8 @@ For further information or help, don't hesitate to get in touch on [Gitter][gitt
 - [CHANGELOG](https://github.com/SciLifeLab/Sarek/blob/master/CHANGELOG.md)
 
 ## Credits
+
+Sarek was developed at the [National Genomics Infastructure][ngi-link] and [National Bioinformatics Infastructure Sweden][nbis-link] which are both platforms at [SciLifeLab][scilifelab-link], with the support of [The Swedish Childhood Tumor Biobank (Barntumörbanken)][btb-link].
 
 Main authors:
 * [Maxime Garcia](https://github.com/MaxUlysse)
@@ -123,13 +121,10 @@ Helpful contributors:
 
 ## Aknowledgements
 
-
---------------------------------------------------------------------------------
-
-[<img src="docs/images/SciLifeLab_logo.png" alt="SciLifeLab logo" title="SciLifeLab" style="padding:20px;height:80px">][scilifelab-link]
-[<img src="docs/images/BTB_logo.png" alt="Barntumörbanken logo" title="Barntumörbanken" style="padding:20px;height:80px">][btb-link]
-[<img src="docs/images/NGI_logo.png" alt="National Genomics Infrastructure logo" title="National Genomics Infrastructure" style="padding:20px;height:80px">][ngi-link]
-[<img src="docs/images/NBIS_logo.png" alt="National Bioinformatics Infrastructure Sweden logo" title="National Bioinformatics Infrastructure Sweden" style="padding:20px;height:80px">][nbis-link]
+[<img src="https://raw.githubusercontent.com/SciLifeLab/Sarek/master/docs/images/SciLifeLab_logo.png" alt="SciLifeLab logo" title="SciLifeLab" style="padding:20px;height:80px">][scilifelab-link]
+[<img src="https://raw.githubusercontent.com/SciLifeLab/Sarek/master/docs/images/BTB_logo.png" alt="Barntumörbanken logo" title="Barntumörbanken" style="padding:20px;height:80px">][btb-link]
+[<img src="https://raw.githubusercontent.com/SciLifeLab/Sarek/master/docs/images/NGI_logo.png" alt="National Genomics Infrastructure logo" title="National Genomics Infrastructure" style="padding:20px;height:80px">][ngi-link]
+[<img src="https://raw.githubusercontent.com/SciLifeLab/Sarek/master/docs/images/NBIS_logo.png" alt="National Bioinformatics Infrastructure Sweden logo" title="National Bioinformatics Infrastructure Sweden" style="padding:20px;height:80px">][nbis-link]
 
 [bioconda-badge]: https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADEAAAAyCAYAAAD1CDOyAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAa2SURBVGiBxZprjFVXFcd/e2aA6UAoYGrk0aZYKvXdwWAyoDyswRqhxmpNjQFrNOIHTR+aJhoxrWBoAz4aGz80bdWCsW1qq5IGSlvDQA1aUGw7BEuR4dFCrVSY0qFYYH5+WHt674zzOHdm7sw/uTn7nLP2Put/z9prr7X2SQwh1InASqAJmAyMBcYDbUA7cAR4HngOaAZ2ppTODqUOA4Jar16mTsjnU9THLIYT6j3qPDWNlPI/V29X31T3qV9Ux6tJ/WlBIp14Vl2m1lZb8Tnqwtz+XH54i7olt9eoreqMTOSOComo/kVtrIbyo9Ufqe3qWLVR3azuzg++LR9vzcfvq+/NRO4bAJEz6koLvpWaAgQmAVuAm4DtKaV2YBlwBfBIFuucnOOADmAKsCalJPDriv6xQB3wPeBx9YL+hPskoU4hvEhTvvRCPp7IfccBp4HZ+V4jsBeYASxXa4AVlXN4CwuBreqFfQn1SkJtAL4N7AG2AvuBV/LtscBh4FribSwANgMfBp4G/pRSOgzcCMwdBAmAy4Bt6rRBjtMV6i3qDdl+V+TjLfn4NUtu99QA5kNv2G2sQ/+HHn2zegmwBJgEzAcOAuuB4ymlHVmmFvgK8BFgFvBX4HJgaUrpWfVtwCjgVD5OA94DzMtjTx3A//cosCTPtd6hvl99PbPfpD6S283q17PMSnV2bjeoi8yutwjUWvXThnuuFDcWGXyz4Sr/mzvtVNfl9t1Z7ol8fldRxft43nL13xWQeMOwlF4H/WAWbM9E9ufz/cZCtifL3aduVScPhkTZc6dbWnOK4A99DTY/K38gC/9G/V1uH1NXZLkr1fOGgkDZsyeoT1ZAZF5Pg0xVP5oFHlbvVM+qe9QfG6vovqFUvAcdxqnPFSTxaPfO09WfGK7xP1nouLpK3WG4ytvsb1INDZFLy3ToCx3qzPKOt2alG9Ql6sYspGH7q9TvWu0Is6TPsoJv4wflnf6ZL35LPV+9X12oXmX4+2GFWmOE5v1hb2eHi/KFM+qasoHOM5KV76gb1DnDTGRJwbdxMeoX1O1G6FyrfsaYGzeUCR4wgrnhJJEsufi+cF0N8C8iWhwD3A6sBe4G7gDuyWM+kFLqGE4SObR4qIDoLOCtgK4j/14wXOxydZQReiyuqsa9QP1EgTexKakfB64DJgIX5t+EPM43iaTGlNKJESDxdsJS+sK+pL5KRKsALwOHgKNEmeUUsDqldKhqmvYD9SSRfPWGYxiVip5w1lh0BpOZDRrq4X7M6XQdkSfUAqOJ3HYUUJ+vTQSOjRiDQH8OJdUB19D1db1BVOqOAgeAjVVRrTjO7+f+63XA9UQhYAxB5gKiBNkIfAmYpLallI5XU9OeYKSj/ZFoQ61Tf9bNzl4zQpCp2SavHA6lu0NdUMDFPlkHfBZYRZjNHOBiYDuwDthG5MZNwKYR4FEk5d2LulQ9alQpGtSrjSrf/WVs9zgCBV+LZXvLO3OJThw0MqxLM5GPqavVv6vzh5lAEVNSnVmXUmpVXyJKKE8R5vM34DHgGeBVYCml6t9wEEjA6gKiL6aUnu/stCaz+oD6DXW9USzQiKXWGZHu+6qqfUY26SJYW95pprG/ME09lwVeU39hKRx+ybJ8o4oEphlztAgau3depl6bb/7RrpWHjca+wYtG5je6SgTq83OKoLmnAWoykXvV01mwLZ+fVA+pDxrZ3ga1fogJjFV/X5CA9rZ2GRWPTmyztPfWalT9Dlh6W09YYO+gIIEpRlWlKLbam8tXZxt12HvVI7nDP9SncnujelPZYK+onx8kgWssPgc0agFdHEyXvDlXvK8HvkzET7uIvGIu0EJsoHTmHmeAPwMz1B+qCypQvFb9pLoNeBB4RwW8V6WUWrro3cMDRhHbW4kICmcBuzMZgV8SIfpB4GYikfoUsRFzCbG+PA60EtFwGxHmTyVK+/OBxQystN8MXJFSOtcniUykAfgQEbvUE3sPY4hUcTxwF7EgLiJ2iBYBDwNXD0CxotgPzEkp9ZeulqBOVH9leIynjZJ6u/pVY8+iQ91leLI31WcqsOtK8bI6Y0DUjVrUkW4DXmUpMPttPm6xemhV39WXnn0WxFJKu4md0R1llycD7yZs/fJ8rVop7HZgbkpp76BHMkL0Ow0TWm9EtRvyP1UNUzqnrjWczNDCCM13qjdbCkuah5jALrWpf20GR6RWfadRJdTSvBgsWoywp66qBHogs9j45qNtgIqfMCLlhQ6iYD0kKac6hsjDm4gqyXTgIqCBqKC0AScpfbTVQumjrXM9jVkJ/gfEGHquO3j8DQAAAABJRU5ErkJggg==
 [bioconda-link]: http://bioconda.github.io/
