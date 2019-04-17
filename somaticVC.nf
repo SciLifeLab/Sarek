@@ -229,7 +229,6 @@ process RunMutect2 {
     -L ${intervalBed} \
 		${PON} \
     -O ${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf
-	echo "exit code is " \$?
   """
 }
 //    --germline_resource af-only-gnomad.vcf.gz \
@@ -294,7 +293,6 @@ process ConcatVCF {
   output:
     // we have this funny *_* pattern to avoid copying the raw calls to publishdir
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("*_*.vcf.gz"), file("*_*.vcf.gz.tbi") into vcfConcatenated
-    // TODO DRY with ConcatVCF
 
   when: ( 'mutect2' in tools || 'freebayes' in tools ) && !params.onlyQC
 
@@ -302,7 +300,7 @@ process ConcatVCF {
   outputFile = "${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf"
   options = params.targetBED ? "-t ${targetBED}" : ""
   """
-  concatenateVCFs.sh -i ${genomeIndex} -c ${task.cpus} -o ${outputFile} ${options}
+  ${workflow.projectDir}/bin/concatenateVCFs.sh -i ${genomeIndex} -c ${task.cpus} -o ${outputFile} ${options}
   """
 }
 
@@ -311,6 +309,41 @@ if (params.verbose) vcfConcatenated = vcfConcatenated.view {
   Tool  : ${it[0]}\tID    : ${it[1]}\tSample: [${it[3]}, ${it[2]}]\n\
   File  : ${it[4].fileName}"
 }
+
+// We have to split vcfConcatenated to further Mutect2 processing
+(vcfConcatenated, vcfForMutectFiltering) = vcfConcatenated.into(2)
+
+vcfForMutectFiltering = vcfForMutectFiltering.view {
+  "For Mutect2 filtering :\n\
+  Tool  : ${it[0]}\tID    : ${it[1]}\tSample: [${it[3]}, ${it[2]}]\n\
+  File  : ${it[4].fileName}"
+}
+
+// do Mutect2 filtering only if there is a PON defined
+process FilterMutect2Calls {
+  tag {variantCaller + "_" + idSampleTumor + "_vs_" + idSampleNormal + "_filtered"}
+
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/${variantCaller}", mode: params.publishDirMode
+
+	when: 'mutect2' in tools && params.pon
+
+	input:
+    set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz"), file("${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.tbi") from vcfForMutectFiltering
+    file(genomeFile) from Channel.value(referenceMap.genomeFile)
+    file(genomeIndex) from Channel.value(referenceMap.genomeIndex)
+  output:
+    set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz"), file("filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.tbi") into vcfConcatenatedAndFiltered
+
+	script:
+	"""
+	zcat ${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz | 	\
+	awk '/^#CHROM/{print "# Mutect2 filter comes here";print}!/^#CHROM/{print}' | \
+	bgzip -@8 -c -f > filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
+	tabix filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
+	"""
+	
+}
+
 
 process RunStrelka {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
@@ -633,6 +666,10 @@ if (params.verbose) ascatOutput = ascatOutput.view {
 
 vcfForQC = Channel.empty().mix(
   vcfConcatenated.map {
+    variantcaller, idPatient, idSampleNormal, idSampleTumor, vcf, tbi ->
+    [variantcaller, vcf]
+  },
+  vcfConcatenatedAndFiltered.map {
     variantcaller, idPatient, idSampleNormal, idSampleTumor, vcf, tbi ->
     [variantcaller, vcf]
   },
