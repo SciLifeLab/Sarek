@@ -207,8 +207,6 @@ process RunMutect2 {
       referenceMap.genomeFile,
       referenceMap.genomeIndex,
       referenceMap.genomeDict,
-      referenceMap.dbsnp,
-      referenceMap.dbsnpIndex
     ])
 
   output:
@@ -805,12 +803,6 @@ def defineReferenceMap(tools) {
     referenceMap.putAll(
       'acLoci'           : checkParamReturnFile("acLoci"),
       'acLociGC'         : checkParamReturnFile("acLociGC")
-    )
-  }
-  if ('mutect2' in tools) {
-    referenceMap.putAll(
-      'dbsnp'            : checkParamReturnFile("dbsnp"),
-      'dbsnpIndex'       : checkParamReturnFile("dbsnpIndex")
     )
   }
   return referenceMap
