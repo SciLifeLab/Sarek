@@ -323,23 +323,23 @@ process FilterMutect2Calls {
 
   publishDir "${params.outDir}/VariantCalling/${idPatient}/${variantCaller}", mode: params.publishDirMode
 
-	when: 'mutect2' in tools && params.pon
+  when: 'mutect2' in tools && params.pon
 
-	input:
+  input:
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz"), file("${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.tbi") from vcfForMutectFiltering
     file(genomeFile) from Channel.value(referenceMap.genomeFile)
     file(genomeIndex) from Channel.value(referenceMap.genomeIndex)
   output:
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz"), file("filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.tbi") into vcfConcatenatedAndFiltered
 
-	script:
-	"""
-	zcat ${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz | 	\
-	awk '/^#CHROM/{print "# Mutect2 filter comes here";print}!/^#CHROM/{print}' | \
-	bgzip -@8 -c -f > filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
-	tabix filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
-	"""
-	
+    script:
+    """
+    echo $PATH>anyad
+    zcat ${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz | \
+    awk '/^#CHROM/{print "# Mutect2 filter comes here";print}!/^#CHROM/{print}' | \
+    bgzip -@8 -c -f > filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
+    tabix filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
+    """
 }
 
 
