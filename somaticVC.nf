@@ -334,7 +334,6 @@ process FilterMutect2Calls {
 
     script:
     """
-    echo $PATH>anyad
     zcat ${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz | \
     awk '/^#CHROM/{print "# Mutect2 filter comes here";print}!/^#CHROM/{print}' | \
     bgzip -@8 -c -f > filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
