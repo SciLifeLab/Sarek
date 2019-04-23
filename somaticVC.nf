@@ -194,8 +194,8 @@ bamsAll = bamsNormal.join(bamsTumor)
 
 bamsTumorNormalIntervals = bamsAll.spread(bedIntervals)
 
-// MuTect2, FreeBayes
-( bamsFMT2, bamsFFB) = bamsTumorNormalIntervals.into(3)
+// Mutect2, Mutect2 filtering, FreeBayes
+( bamsFMT2, bamsMT2Filtering, bamsFFB) = bamsTumorNormalIntervals.into(3)
 
 // This will give as a list of unfiltered calls for MuTect2.
 process RunMutect2 {
@@ -311,13 +311,15 @@ if (params.verbose) vcfConcatenated = vcfConcatenated.view {
 // We have to split vcfConcatenated to further Mutect2 processing
 (vcfConcatenated, vcfForMutectFiltering) = vcfConcatenated.into(2)
 
-vcfForMutectFiltering = vcfForMutectFiltering.view {
+if (params.verbose) vcfForMutectFiltering = vcfForMutectFiltering.view {
   "For Mutect2 filtering :\n\
   Tool  : ${it[0]}\tID    : ${it[1]}\tSample: [${it[3]}, ${it[2]}]\n\
   File  : ${it[4].fileName}"
 }
 
 // do Mutect2 filtering only if there is a PON defined
+// see: 
+//  https://wabi-wiki.scilifelab.se/display/KB/GATK4+and+MuTect2+filtering
 process FilterMutect2Calls {
   tag {variantCaller + "_" + idSampleTumor + "_vs_" + idSampleNormal + "_filtered"}
 
@@ -326,6 +328,7 @@ process FilterMutect2Calls {
   when: 'mutect2' in tools && params.pon
 
   input:
+    set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor), file(intervalBed) from bamsMT2Filtering
     set variantCaller, idPatient, idSampleNormal, idSampleTumor, file("${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz"), file("${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.tbi") from vcfForMutectFiltering
     file(genomeFile) from Channel.value(referenceMap.genomeFile)
     file(genomeIndex) from Channel.value(referenceMap.genomeIndex)
@@ -334,10 +337,28 @@ process FilterMutect2Calls {
 
     script:
     """
-    zcat ${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz | \
-    awk '/^#CHROM/{print "# Mutect2 filter comes here";print}!/^#CHROM/{print}' | \
-    bgzip -@8 -c -f > filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
-    tabix filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
+    # first calculate pileup summaries
+    gatk GetPileupSummaries \
+      -I ${bamTumor} \
+      -V $params.commonSNPs \
+      -L $params.commonSNPs \
+      -O ${idSampleTumor}_pileupsummaries.table
+
+    # calculate pileup summaries
+    gatk CalculateContamination \
+      -I ${idSampleTumor}_pileupsummaries.table \
+      -O ${idSampleTumor}_contamination.table
+
+    # do the actual filtering
+    gatk FilterMutectCalls \
+      -V ${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz \
+      --contamination-table ${idSampleTumor}_contamination.table \
+      -O filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
+
+#    zcat ${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz | \
+#    awk '/^#CHROM/{print "# Mutect2 filter comes here";print}!/^#CHROM/{print}' | \
+#    bgzip -@8 -c -f > filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
+#    tabix filtered_${variantCaller}_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
     """
 }
 
