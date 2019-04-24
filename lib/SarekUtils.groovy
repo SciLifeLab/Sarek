@@ -52,6 +52,8 @@ class SarekUtils {
       'callName',
       'common-SNPs',
       'commonSNPs',
+      'common-SNPs-index',
+      'commonSNPsIndex',
       'contact-mail',
       'contactMail',
       'container-path',

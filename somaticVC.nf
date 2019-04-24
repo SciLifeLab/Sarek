@@ -204,11 +204,13 @@ process RunMutect2 {
 
   input:
     set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForMT2
-    set file(genomeFile), file(genomeIndex), file(genomeDict), file(intervals) from Channel.value([
+    set file(genomeFile), file(genomeIndex), file(genomeDict), file(intervals), file(commonSNPs), file(commonSNPsIndex) from Channel.value([
         referenceMap.genomeFile,
         referenceMap.genomeIndex,
         referenceMap.genomeDict,
-        referenceMap.intervals
+        referenceMap.intervals,
+        referenceMap.commonSNPs,
+        referenceMap.commonSNPsIndex
       ])
 
   output:
@@ -232,11 +234,11 @@ process RunMutect2 {
     -I ${bamNormal} -normal ${idSampleNormal} \
     -L ${intervals} \
     --native-pair-hmm-threads 8 \
+    --germline-resource ${commonSNPs} \
     ${PON} \
     -O unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
 
   """
-    //--germline-resource af-only-gnomad.vcf.gz \
 }
 
 mutect2Output = mutect2Output.groupTuple(by:[0,1,2,3])
@@ -251,11 +253,13 @@ process FilterMutect2Calls {
     set file("unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz"), 
         file("unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.tbi"), 
         file("unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.stats") from mutect2Output
-    set file(genomeFile), file(genomeIndex), file(genomeDict), file(intervals) from Channel.value([
+    set file(genomeFile), file(genomeIndex), file(genomeDict), file(intervals), file(commonSNPs), file(commonSNPsIndex) from Channel.value([
         referenceMap.genomeFile,
         referenceMap.genomeIndex,
         referenceMap.genomeDict,
-        referenceMap.intervals
+        referenceMap.intervals,
+        referenceMap.commonSNPs,
+        referenceMap.commonSNPsIndex
       ])
   
   output:
@@ -275,8 +279,8 @@ process FilterMutect2Calls {
   gatk --java-options "-Xmx${task.memory.toGiga()}g" \
     GetPileupSummaries \
     -I ${bamTumor} \
-    -V $params.commonSNPs \
-    -L $params.commonSNPs \
+    -V ${commonSNPs} \
+    -L ${commonSNPs} \
     -O ${idSampleTumor}_pileupsummaries.table
 
   # calculate contamination
@@ -805,6 +809,7 @@ def checkParameterExistence(it, list) {
 }
 
 def checkParamReturnFile(item) {
+  println("checking file ${item}")
   params."${item}" = params.genomes[params.genome]."${item}"
   return file(params."${item}")
 }
@@ -816,6 +821,7 @@ def checkUppmaxProject() {
 
 def defineReferenceMap(tools) {
   if (!(params.genome in params.genomes)) exit 1, "Genome ${params.genome} not found in configuration"
+  println("Params: ${params}")
   def referenceMap =
   [
     'genomeDict'       : checkParamReturnFile("genomeDict"),
@@ -829,6 +835,13 @@ def defineReferenceMap(tools) {
       'acLociGC'         : checkParamReturnFile("acLociGC")
     )
   }
+  if ( 'mutect2' in tools && params.pon ) {
+    referenceMap.putAll(
+      'commonSNPs'       : checkParamReturnFile("commonSNPs"),
+      'commonSNPsIndex'  : checkParamReturnFile("commonSNPsIndex")
+    )
+  }
+
   return referenceMap
 }
 
@@ -909,6 +922,8 @@ def minimalInformationMessage() {
   log.info "\t" + referenceMap.genomeDict
   log.info "\t" + referenceMap.genomeIndex
   log.info "  intervals   :\n\t" + referenceMap.intervals
+  log.info "  common SNPs :\n\t" + referenceMap.commonSNPs
+  log.info "\t" + referenceMap.commonSNPsIndex
 }
 
 def nextflowMessage() {
