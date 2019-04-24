@@ -27,7 +27,8 @@ kate: syntax groovy; space-indent on; indent-width 2;
 --------------------------------------------------------------------------------
  Processes overview
  - CreateIntervalBeds - Create and sort intervals into bed files
- - RunMutect2 - Run MuTect2 for Variant Calling (Parallelized processes)
+ - RunMutect2 - Run MuTect2 for Variant Calling
+ - FilterMutect2Calls - Filter Mutect2 with panel of normals
  - RunFreeBayes - Run FreeBayes for Variant Calling (Parallelized processes)
  - ConcatVCF - Merge results from paralellized variant callers
  - RunStrelka - Run Strelka for Variant Calling
@@ -198,6 +199,8 @@ bamsTumorNormalIntervals = bamsAll.spread(bedIntervals)
 bamsFFB = bamsTumorNormalIntervals
 
 process RunMutect2 {
+
+  println "reference map: ${referenceMap}"
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
   publishDir "${params.outDir}/VariantCalling/${idPatient}/Mutect2", mode: params.publishDirMode
@@ -221,11 +224,11 @@ process RunMutect2 {
   when: 'mutect2' in tools && !params.onlyQC
 
   script:
-  // please, make a panel-of-normals, using at least 40 samples
+  // please make a panel-of-normals, using at least 40 samples
   // https://gatkforums.broadinstitute.org/gatk/discussion/11136/how-to-call-somatic-mutations-using-gatk4-mutect2
   PON = params.pon ? "--panel-of-normals $params.pon" : ""
-  """
 
+  """
   # Get raw calls
   gatk --java-options "-Xmx${task.memory.toGiga()}g" \
     Mutect2 \
@@ -237,7 +240,6 @@ process RunMutect2 {
     --germline-resource ${commonSNPs} \
     ${PON} \
     -O unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
-
   """
 }
 
@@ -833,7 +835,7 @@ def defineReferenceMap(tools) {
       'acLociGC'         : checkParamReturnFile("acLociGC")
     )
   }
-  if ( 'mutect2' in tools && params.pon ) {
+  if ('mutect2' in tools) {
     referenceMap.putAll(
       'commonSNPs'       : checkParamReturnFile("commonSNPs"),
       'commonSNPsIndex'  : checkParamReturnFile("commonSNPsIndex")
