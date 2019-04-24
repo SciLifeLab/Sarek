@@ -51,9 +51,11 @@ Possible values are:
 - manta (use `Manta` for SV) (germlineVC.nf,somaticVC.nf)
 - strelka (use `Strelka` for VC) (germlineVC.nf,somaticVC.nf)
 - ascat (use `ASCAT` for CNV) (somaticVC.nf)
+- controlfreec (use `Control-FREEC` for CNV) (somaticVC.nf)
 - mutect2 (use `MuTect2` for VC) (somaticVC.nf)
 - snpeff (use `snpEff` for Annotation) (annotate.nf)
 - vep (use `VEP` for Annotation) (annotate.nf)
+- mpileup (use `samtools mpileup`) (somaticVC.nf)
 
 `--tools` option is case insensitive to avoid easy introduction of errors when choosing tools.
 So you can write `--tools mutect2,ascat` or `--tools MuTect2,ASCAT` without worrying about case sensitivity.

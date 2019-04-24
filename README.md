@@ -62,6 +62,7 @@ The worflow steps and tools used are as follows:
         * [Manta](https://github.com/Illumina/manta)
     * Sample heterogeneity, ploidy and CNVs
         * [ASCAT](https://github.com/Crick-CancerGenomics/ascat)
+        * [Control-FREEC](https://github.com/BoevaLab/FREEC)
 4. **Annotation** - `annotate.nf` _(optional)_
     * Variant annotation
         * [SnpEff](http://snpeff.sourceforge.net/)
