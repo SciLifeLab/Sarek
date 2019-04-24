@@ -809,7 +809,6 @@ def checkParameterExistence(it, list) {
 }
 
 def checkParamReturnFile(item) {
-  println("checking file ${item}")
   params."${item}" = params.genomes[params.genome]."${item}"
   return file(params."${item}")
 }
@@ -821,7 +820,6 @@ def checkUppmaxProject() {
 
 def defineReferenceMap(tools) {
   if (!(params.genome in params.genomes)) exit 1, "Genome ${params.genome} not found in configuration"
-  println("Params: ${params}")
   def referenceMap =
   [
     'genomeDict'       : checkParamReturnFile("genomeDict"),
