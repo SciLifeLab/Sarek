@@ -50,6 +50,8 @@ class SarekUtils {
       'cadd_WG_SNVs',
       'call-name',
       'callName',
+      'common-SNPs',
+      'commonSNPs',
       'contact-mail',
       'contactMail',
       'container-path',
@@ -100,7 +102,8 @@ class SarekUtils {
       'out-dir',
       'outDir',
       'params',
-			'pon',
+      'pon',
+      'PON',
       'project',
       'publish-dir-mode',
       'publishDirMode',
@@ -155,7 +158,7 @@ class SarekUtils {
     // this is an expanded wildcard: we can assume all files exist
     if (f instanceof List && f.size() > 0) return true
     else if (!f.exists()) {
-			println  "Missing references: ${referenceFile} ${fileToCheck}"
+      println  "Missing references: ${referenceFile} ${fileToCheck}"
       return false
     }
     return true
