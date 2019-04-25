@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#778](https://github.com/SciLifeLab/Sarek/pull/778) - add `|| true` for all tools when gathering versions
 -   [#753](https://github.com/SciLifeLab/Sarek/pull/753) - Update `binac`, `cfc` configuration
 -   [#775](https://github.com/SciLifeLab/Sarek/pull/775) - Update paths for munin configuration
--   [#791](https://github.com/SciLifeLab/Sarek/pull/791) - Update munin configuration
+-   [#793](https://github.com/SciLifeLab/Sarek/pull/793) - Update munin configuration
 
 ### `Added`
 
