@@ -62,4 +62,4 @@ else
     SCRIPT="--singularity --containerPath containers/"
 fi
 
-nextflow run build.nf -profile ${PROFILE} ${SCRIPT} --verbose --repository ${REPOSITORY} --tag ${TAG} --containers sarek,snpeff$(toLower ${GENOME}),vep$(toLower ${GENOME})
+nextflow run build.nf -profile ${PROFILE} ${SCRIPT} -dump-channels --repository ${REPOSITORY} --tag ${TAG} --containers sarek,snpeff$(toLower ${GENOME}),vep$(toLower ${GENOME})

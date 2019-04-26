@@ -36,6 +36,7 @@ kate: syntax groovy; space-indent on; indent-width 2;
 if (params.help) exit 0, helpMessage()
 if (!SarekUtils.isAllowedParams(params)) exit 1, "params unknown, see --help for more information"
 if (!checkUppmaxProject()) exit 1, "No UPPMAX project ID found! Use --project <UPPMAX Project ID>"
+if (params.verbose) SarekUtils.verbose()
 
 // Check for awsbatch profile configuration
 // make sure queue is defined
@@ -86,10 +87,7 @@ process GetVersionAll {
   """
 }
 
-if (params.verbose && !params.noReports) versionsForMultiQC = versionsForMultiQC.view {
-  "MultiQC tools version:\n\
-  File  : [${it.fileName}]"
-}
+versionsForMultiQC = versionsForMultiQC.dump(tag:'Versions')
 
 reportsForMultiQC = Channel.empty()
   .mix(
@@ -121,11 +119,7 @@ process RunMultiQC {
   """
 }
 
-if (params.verbose) multiQCReport = multiQCReport.view {
-  "MultiQC report:\n\
-  File  : [${it[0].fileName}]\n\
-  Dir   : [${it[1].fileName}]"
-}
+multiQCReport.dump(tag:'MultiQC')
 
 /*
 ================================================================================
@@ -173,8 +167,6 @@ def helpMessage() {
   log.info "       nextflow run runMultiQC.nf"
   log.info "    --help"
   log.info "       you're reading it"
-  log.info "    --verbose"
-  log.info "       Adds more verbosity to workflow"
 }
 
 def minimalInformationMessage() {
