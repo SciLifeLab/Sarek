@@ -236,7 +236,6 @@ process RunMutect2 {
     -I ${bamTumor}  -tumor ${idSampleTumor} \
     -I ${bamNormal} -normal ${idSampleNormal} \
     -L ${intervals} \
-    --native-pair-hmm-threads 8 \
     --germline-resource ${commonSNPs} \
     ${PON} \
     -O unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
