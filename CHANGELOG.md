@@ -9,12 +9,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### `Changed`
 
+-   [#741](https://github.com/SciLifeLab/Sarek/pull/741) - Use [dump](https://www.nextflow.io/docs/latest/operator.html#dump) operator
+-   [#744](https://github.com/SciLifeLab/Sarek/pull/744) - Refactor `germlineVC.nf`
 -   [#744](https://github.com/SciLifeLab/Sarek/pull/744) - Refactor `germlineVC.nf`
 -   [#753](https://github.com/SciLifeLab/Sarek/pull/753) - Update `binac`, `cfc` configuration
 -   [#775](https://github.com/SciLifeLab/Sarek/pull/775) - Update paths for munin configuration
 -   [#776](https://github.com/SciLifeLab/Sarek/pull/776) - Helper script now download annotations for VEP CADD plugin
+-   [#776](https://github.com/SciLifeLab/Sarek/pull/776) - Helper script now download annotations for VEP CADD plugin
 -   [#778](https://github.com/SciLifeLab/Sarek/pull/778) - add `|| true` for all tools when gathering versions
 -   [#793](https://github.com/SciLifeLab/Sarek/pull/793) - Update munin configuration
+-   [#798](https://github.com/SciLifeLab/Sarek/pull/798) - Can handle both `fastq.gz` and `fq.gz`
 
 ### `Added`
 
@@ -38,6 +42,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#788](https://github.com/SciLifeLab/Sarek/pull/788) - Fix `genome_base` path in `munin.config`
 -   [#788](https://github.com/SciLifeLab/Sarek/pull/788) - Fix `markdup_java_options` definition
 -   [#788](https://github.com/SciLifeLab/Sarek/pull/788) - Include `conf/resources.config` in `btb` profile
+-   [#795](https://github.com/SciLifeLab/Sarek/pull/795) - Use BED file for [QualiMap coverage calculation](https://github.com/SciLifeLab/Sarek/issues/794) on Targeted Data
+
+### `Deprecated`
+
+-   [#741](https://github.com/SciLifeLab/Sarek/pull/741) - Deprecated `verbose` params
 
 ## [2.3.FIX1] - 2019-03-04
 
@@ -232,14 +241,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 -   [#597](https://github.com/SciLifeLab/Sarek/pull/597) - `extractBams()` now takes an extra parameter.
 -   [#597](https://github.com/SciLifeLab/Sarek/pull/597) - Move `checkFileExtension()`, `checkParameterExistence()`, `checkParameterList()`, `checkReferenceMap()`, `checkRefExistence()`, `extractBams()`, `extractGenders()`, `returnFile()`, `returnStatus()` and `returnTSV()` functions to `SarekUtils`
 -   [#597](https://github.com/SciLifeLab/Sarek/pull/597) - Reduce data footprint for Process `CreateRecalibrationTable`
--   [#597](https://github.com/SciLifeLab/Sarek/pull/597) - Replace depreciated operator `phase` by `join`.
+-   [#597](https://github.com/SciLifeLab/Sarek/pull/597) - Replace deprecated operator `phase` by `join`.
 -   [#599](https://github.com/SciLifeLab/Sarek/pull/599) - Merge is tested with `ANNOTATEALL`
 -   [#604](https://github.com/SciLifeLab/Sarek/pull/604) - Synching `GRCh38` `wgs_calling_regions` bedfiles
 -   [#607](https://github.com/SciLifeLab/Sarek/pull/607) - One container approach
 -   [#607](https://github.com/SciLifeLab/Sarek/pull/607) - Update to GATK4
 -   [#608](https://github.com/SciLifeLab/Sarek/pull/608) - Update Nextflow required version
 -   [#616](https://github.com/SciLifeLab/Sarek/pull/616) - Update CHANGELOG
--   [#617](https://github.com/SciLifeLab/Sarek/pull/617) - Replace depreciated $name syntax with withName
+-   [#617](https://github.com/SciLifeLab/Sarek/pull/617) - Replace deprecated $name syntax with withName
 
 ### `Fixed`
 
