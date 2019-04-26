@@ -174,8 +174,8 @@ class SarekUtils {
         def bamFile   = SarekUtils.returnFile(row[4])
         def baiFile   = SarekUtils.returnFile(row[5])
 
-        if (!SarekUtils.hasExtension(bamFile,".bam")) exit 1, "File: ${bamFile} has the wrong extension. See --help for more information"
-        if (!SarekUtils.hasExtension(baiFile,".bai")) exit 1, "File: ${baiFile} has the wrong extension. See --help for more information"
+        if (!SarekUtils.hasExtension(bamFile,"bam")) exit 1, "File: ${bamFile} has the wrong extension. See --help for more information"
+        if (!SarekUtils.hasExtension(baiFile,"bai")) exit 1, "File: ${baiFile} has the wrong extension. See --help for more information"
 
         if (mode == "germline") return [ idPatient, status, idSample, bamFile, baiFile ]
         else return [ idPatient, gender, status, idSample, bamFile, baiFile ]
@@ -238,6 +238,12 @@ class SarekUtils {
     println "|   | \\  `-|   \\___ \\/__ \\| ´__/ _\\| |/ /"
     println " \\ |   \\  /    ____) | __ | | |  __|   < "
     println "  `|____\\'    |_____/\\____|_|  \\__/|_|\\_\\"
+  }
+
+  // Deprecation message for verbose command
+  static def verbose() {
+    println "--verbose is deprecated"
+    println "please use -dump-channels instead"
   }
 
 }
