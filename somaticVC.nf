@@ -27,7 +27,7 @@ kate: syntax groovy; space-indent on; indent-width 2;
 --------------------------------------------------------------------------------
  Processes overview
  - CreateIntervalBeds - Create and sort intervals into bed files
- - RunMutect2 - Run MuTect2 for Variant Calling
+ - RunMutect2 - Run Mutect2 for Variant Calling
  - FilterMutect2Calls - Filter Mutect2 with panel of normals
  - RunFreeBayes - Run FreeBayes for Variant Calling (Parallelized processes)
  - ConcatVCF - Merge results from paralellized variant callers
@@ -190,23 +190,23 @@ if (params.verbose) bedIntervals = bedIntervals.view {
 
 bamsAll = bamsNormal.join(bamsTumor)
 
-// Manta and Strelka
-(bamsForManta, bamsForStrelka, bamsForStrelkaBP, bamsForMT2, bamsForMT2Filter, bamsAll) = bamsAll.into(6)
+// Manta Strelka, and Mutect2 filtering
+(bamsForManta, bamsForStrelka, bamsForStrelkaBP, bamsForMT2Filter, bamsAll) = bamsAll.into(5)
 
 bamsTumorNormalIntervals = bamsAll.spread(bedIntervals)
 
-// FreeBayes
-bamsFFB = bamsTumorNormalIntervals
+// Mutect2 calls and FreeBayes
+(bamsForMT2, bamsFFB) = bamsTumorNormalIntervals.into(2)
 
 process RunMutect2 {
 
   println "reference map: ${referenceMap}"
-  tag {idSampleTumor + "_vs_" + idSampleNormal}
+  tag {idSampleTumor + "_vs_" + idSampleNormal + "-" + intervalBed.baseName}
 
   publishDir "${params.outDir}/VariantCalling/${idPatient}/Mutect2", mode: params.publishDirMode
 
   input:
-    set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForMT2
+    set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor), file(intervalBed) from bamsForMT2
     set file(genomeFile), file(genomeIndex), file(genomeDict), file(intervals), file(commonSNPs), file(commonSNPsIndex) from Channel.value([
         referenceMap.genomeFile,
         referenceMap.genomeIndex,
@@ -875,7 +875,7 @@ def helpMessage() {
   log.info "       Option to configure which tools to use in the workflow."
   log.info "         Different tools to be separated by commas."
   log.info "       Possible values are:"
-  log.info "         mutect2 (use MuTect2 for VC)"
+  log.info "         mutect2 (use Mutect2 for VC)"
   log.info "         freebayes (use FreeBayes for VC)"
   log.info "         strelka (use Strelka for VC)"
   log.info "         haplotypecaller (use HaplotypeCaller for normal bams VC)"
