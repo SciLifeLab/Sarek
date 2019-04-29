@@ -200,10 +200,7 @@ bamsTumorNormalIntervals = bamsAll.spread(bedIntervals)
 
 process RunMutect2 {
 
-  println "reference map: ${referenceMap}"
   tag {idSampleTumor + "_vs_" + idSampleNormal + "-" + intervalBed.baseName}
-
-  publishDir "${params.outDir}/VariantCalling/${idPatient}/Mutect2", mode: params.publishDirMode
 
   input:
     set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor), file(intervalBed) from bamsForMT2
@@ -217,9 +214,12 @@ process RunMutect2 {
       ])
 
   output:
-    set file("unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz"), 
-        file("unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.tbi"), 
-        file("unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.stats") into mutect2Output
+		set val("MuTect2"), 
+				idPatient, 
+				idSampleNormal, 
+				idSampleTumor, 
+				file("${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf") into mutect2Output 
+//		file("${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf.stats") into mutect2Stats
 
   when: 'mutect2' in tools && !params.onlyQC
 
@@ -235,25 +235,30 @@ process RunMutect2 {
     -R ${genomeFile}\
     -I ${bamTumor}  -tumor ${idSampleTumor} \
     -I ${bamNormal} -normal ${idSampleNormal} \
-    -L ${intervals} \
+    -L ${intervalBed} \
     --germline-resource ${commonSNPs} \
     ${PON} \
-    -O unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
+    -O ${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf
   """
 }
 
 mutect2Output = mutect2Output.groupTuple(by:[0,1,2,3])
+(mutect2Output, mutect2OutForStats) = mutect2Output.into(2)
 
-process FilterMutect2Calls {
+mutect2Stats = Channel.empty()
+
+process MergeMutect2Stats {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
   publishDir "${params.outDir}/VariantCalling/${idPatient}/Mutect2", mode: params.publishDirMode
 
   input:
-    set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForMT2Filter
-    set file("unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz"), 
-        file("unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.tbi"), 
-        file("unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.stats") from mutect2Output
+ 		set caller, 
+				idPatient, 
+				idSampleNormal, 
+				idSampleTumor, 
+				file(vcfFiles) from mutect2OutForStats
+		file(statsFiles) from mutect2Stats
     set file(genomeFile), file(genomeIndex), file(genomeDict), file(intervals), file(commonSNPs), file(commonSNPsIndex) from Channel.value([
         referenceMap.genomeFile,
         referenceMap.genomeIndex,
@@ -268,14 +273,19 @@ process FilterMutect2Calls {
         idPatient, 
         idSampleNormal, 
         idSampleTumor, 
-        file("filtered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz"), 
-        file("filtered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.tbi"), 
-        file("filtered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.filteringStats.tsv") into filteredMutect2Output
+        file("${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.stats") into mergedStatsFile
 
   when: 'mutect2' in tools && !params.onlyQC && params.pon
 
   script:     
+	stats = statsFiles.collect{ "-stats ${it}" }.join(' ')
   """
+  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+		MergeMutectStats \
+		${stats} \
+		-O ${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.stats
+
+
   # pileup summaries
   gatk --java-options "-Xmx${task.memory.toGiga()}g" \
     GetPileupSummaries \
@@ -284,23 +294,21 @@ process FilterMutect2Calls {
     -L ${commonSNPs} \
     -O ${idSampleTumor}_pileupsummaries.table
 
-  # calculate contamination
-  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
-    CalculateContamination \
-    -I ${idSampleTumor}_pileupsummaries.table \
-    -O ${idSampleTumor}_contamination.table
-  
-  # do the actual filtering
-  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
-    FilterMutectCalls \
-    -V unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz \
-    --contamination-table ${idSampleTumor}_contamination.table \
-    -R ${genomeFile} \
-    -O filtered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
-  """
+#  # calculate contamination
+#  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+#    CalculateContamination \
+#    -I ${idSampleTumor}_pileupsummaries.table \
+#    -O ${idSampleTumor}_contamination.table
+#  
+#  # do the actual filtering
+#  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+#    FilterMutectCalls \
+#    -V unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz \
+#    --contamination-table ${idSampleTumor}_contamination.table \
+#    -R ${genomeFile} \
+#    -O filtered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
+	"""
 }
-
-
 
 process RunFreeBayes {
   tag {idSampleTumor + "_vs_" + idSampleNormal + "-" + intervalBed.baseName}
@@ -338,8 +346,7 @@ freebayesOutput = freebayesOutput.groupTuple(by:[0,1,2,3])
 // we are merging the VCFs that are called separatelly for different intervals
 // so we can have a single sorted VCF containing all the calls for a given caller
 
-//vcfsToMerge = mutect2Output.mix(freebayesOutput)
-vcfsToMerge = freebayesOutput
+vcfsToMerge = mutect2Output.mix(freebayesOutput)
 if (params.verbose) vcfsToMerge = vcfsToMerge.view {
   "VCFs To be merged:\n\
   Tool  : ${it[0]}\tID    : ${it[1]}\tSample: [${it[3]}, ${it[2]}]\n\
@@ -369,6 +376,59 @@ process ConcatVCF {
   ${workflow.projectDir}/bin/concatenateVCFs.sh -i ${genomeIndex} -c ${task.cpus} -o ${outputFile} ${options}
   """
 }
+
+//process FilterMutect2Calls {
+//  tag {idSampleTumor + "_vs_" + idSampleNormal}
+//
+//  publishDir "${params.outDir}/VariantCalling/${idPatient}/Mutect2", mode: params.publishDirMode
+//
+//  input:
+//    set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForMT2Filter
+//    set file(genomeFile), file(genomeIndex), file(genomeDict), file(intervals), file(commonSNPs), file(commonSNPsIndex) from Channel.value([
+//        referenceMap.genomeFile,
+//        referenceMap.genomeIndex,
+//        referenceMap.genomeDict,
+//        referenceMap.intervals,
+//        referenceMap.commonSNPs,
+//        referenceMap.commonSNPsIndex
+//      ])
+//  
+//  output:
+//    set val("Mutect2"), 
+//        idPatient, 
+//        idSampleNormal, 
+//        idSampleTumor, 
+//        file("filtered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz"), 
+//        file("filtered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.tbi"), 
+//        file("filtered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.filteringStats.tsv") into filteredMutect2Output
+//
+//  when: 'mutect2' in tools && !params.onlyQC && params.pon
+//
+//  script:     
+//  """
+//  # pileup summaries
+//  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+//    GetPileupSummaries \
+//    -I ${bamTumor} \
+//    -V ${commonSNPs} \
+//    -L ${commonSNPs} \
+//    -O ${idSampleTumor}_pileupsummaries.table
+//
+//  # calculate contamination
+//  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+//    CalculateContamination \
+//    -I ${idSampleTumor}_pileupsummaries.table \
+//    -O ${idSampleTumor}_contamination.table
+//  
+//  # do the actual filtering
+//  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+//    FilterMutectCalls \
+//    -V unfiltered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz \
+//    --contamination-table ${idSampleTumor}_contamination.table \
+//    -R ${genomeFile} \
+//    -O filtered_${idSampleTumor}_vs_${idSampleNormal}.vcf.gz
+//  """
+//}
 
 if (params.verbose) vcfConcatenated = vcfConcatenated.view {
   "Variant Calling output:\n\
