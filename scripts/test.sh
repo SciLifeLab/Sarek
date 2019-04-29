@@ -6,7 +6,7 @@ KEEP=false
 GENOME=smallGRCh37
 PROFILE=singularity
 SAMPLE=Sarek-data/testdata/tsv/tiny.tsv
-TEST=ALL
+TEST=None
 TRAVIS=${TRAVIS:-false}
 CPUS=2
 
