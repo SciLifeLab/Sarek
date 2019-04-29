@@ -5,8 +5,6 @@ pipeline {
         JENKINS_API = credentials('api')
     }
 
-    agent("ship-1")
-
     stages {
         stage('Setup environment') {
             steps {
