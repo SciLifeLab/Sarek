@@ -13,12 +13,12 @@ pipeline {
         }
         stage('Build') {
             steps {
-              sh "./scripts/test.sh --profile docker --build"
+              sh "./scripts/test.sh --profile kraken,docker --build"
             }
         }
         stage('Tests') {
             steps {
-              sh "./scripts/test.sh --profile docker --test ALL"
+              sh "./scripts/test.sh --profile kraken,docker --test ALL"
             }
         }
     }
