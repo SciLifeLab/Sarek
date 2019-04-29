@@ -21,7 +21,7 @@ before_install:
 # PRs to master are only ok if coming from dev branch
   - '[ $TRAVIS_PULL_REQUEST = "false" ] || [ $TRAVIS_BRANCH != "master" ] || ([ $TRAVIS_PULL_REQUEST_SLUG = $TRAVIS_REPO_SLUG ] && [ $TRAVIS_PULL_REQUEST_BRANCH = "dev" ])'
 # Donwload containers
-  - "travis_retry ./scripts/containers.sh --profile docker --test $TEST"
+  - "travis_retry ./scripts/containers.sh --profile travis,docker --test $TEST"
 
 install:
   # Install Nextflow
@@ -30,7 +30,7 @@ install:
   - sudo mv nextflow /usr/local/bin/
 
 # Build references if needed
-before_script: "./scripts/test.sh --profile docker --test $TEST --build"
+before_script: "./scripts/test.sh --profile travis,docker --test $TEST --build"
 
 # Actual tests
-script: "./scripts/test.sh --profile docker --test $TEST"
+script: "./scripts/test.sh --profile travis,docker --test $TEST"
