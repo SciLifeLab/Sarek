@@ -191,7 +191,7 @@ if (params.verbose) bedIntervals = bedIntervals.view {
 bamsAll = bamsNormal.join(bamsTumor)
 
 // Manta, Strelka and Mutect2 filtering
-(bamsForManta, bamsForStrelka, bamsForStrelkaBP, bamsForPileupSummaries, bamsAll) = bamsAll.into(5)
+(bamsForManta, bamsForStrelka, bamsForStrelkaBP, bamsForPileupSummaries, bamsForCalculateContamination, bamsAll) = bamsAll.into(6)
 
 bamsTumorNormalIntervals = bamsAll.spread(bedIntervals)
 
@@ -370,6 +370,7 @@ process PileupSummariesForMutect2 {
 
   script:     
   """
+	## TODO merge these with GatherPileupSummaries
   # pileup summaries
   gatk --java-options "-Xmx${task.memory.toGiga()}g" \
     GetPileupSummaries \
@@ -378,31 +379,33 @@ process PileupSummariesForMutect2 {
     -L ${commonSNPs} \
     -O ${idSampleTumor}_pileupsummaries.table
 	"""
+    //-L ${commonSNPs} \
 }
 
-//process CalculateContamination {
-//  tag {idSampleTumor + "_vs_" + idSampleNormal}
-//
-//  publishDir "${params.outDir}/VariantCalling/${idPatient}/Mutect2", mode: params.publishDirMode
-//
-//  input:
-//    file("${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.stats") from pileupSummaries
-//  
-//  output:
-//    file("${idSampleTumor}_contamination.table") into contaminationTable
-//
-//  when: 'mutect2' in tools && !params.onlyQC && params.pon
-//
-//  script:     
-//  """
-//  # calculate contamination
-//  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
-//    CalculateContamination \
-//    -I ${idSampleTumor}_pileupsummaries.table \
-//    -O ${idSampleTumor}_contamination.table
-//	"""
-// }
-//
+process CalculateContamination {
+  tag {idSampleTumor + "_vs_" + idSampleNormal}
+
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/Mutect2", mode: params.publishDirMode
+
+  input:
+    set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForCalculateContamination
+    file("${idSampleTumor}_vs_${idSampleNormal}_pileupsummaries.table") from pileupSummaries
+  
+  output:
+    file("${idSampleTumor}_contamination.table") into contaminationTable
+
+  when: 'mutect2' in tools && !params.onlyQC && params.pon
+
+  script:     
+  """
+  # calculate contamination
+  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+    CalculateContamination \
+    -I ${idSampleTumor}_vs_${idSampleNormal}_pileupsummaries.table \
+    -O ${idSampleTumor}_contamination.table
+	"""
+ }
+
 //process FilterMutect2Calls {
 //  tag {idSampleTumor + "_vs_" + idSampleNormal}
 //
