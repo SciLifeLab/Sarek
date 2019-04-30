@@ -191,7 +191,7 @@ if (params.verbose) bedIntervals = bedIntervals.view {
 bamsAll = bamsNormal.join(bamsTumor)
 
 // Manta, Strelka and Mutect2 filtering
-(bamsForManta, bamsForStrelka, bamsForStrelkaBP, bamsForMT2Filter, bamsAll) = bamsAll.into(5)
+(bamsForManta, bamsForStrelka, bamsForStrelkaBP, bamsForPileupSummaries, bamsAll) = bamsAll.into(5)
 
 bamsTumorNormalIntervals = bamsAll.spread(bedIntervals)
 
@@ -247,8 +247,6 @@ process RunMutect2 {
 mutect2Output = mutect2Output.groupTuple(by:[0,1,2,3])
 (mutect2Output, mutect2OutForStats) = mutect2Output.into(2)
 
-//mutect2Stats = Channel.empty()
-
 process MergeMutect2Stats {
   tag {idSampleTumor + "_vs_" + idSampleNormal}
 
@@ -271,13 +269,9 @@ process MergeMutect2Stats {
       ])
   
   output:
-//      set val("Mutect2"), 
-//        idPatient, 
-//        idSampleNormal, 
-//        idSampleTumor, 
         file("${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.stats") into mergedStatsFile
 
-  when: 'mutect2' in tools && !params.onlyQC //&& params.pon
+  when: 'mutect2' in tools && !params.onlyQC
 
   script:     
 	stats = statsFiles.collect{ "-stats ${it}" }.join(' ')
@@ -356,6 +350,59 @@ process ConcatVCF {
   """
 }
 
+process PileupSummariesForMutect2 {
+  tag {idSampleTumor + "_vs_" + idSampleNormal}
+
+  publishDir "${params.outDir}/VariantCalling/${idPatient}/Mutect2", mode: params.publishDirMode
+
+  input:
+    set idPatient, idSampleNormal, file(bamNormal), file(baiNormal), idSampleTumor, file(bamTumor), file(baiTumor) from bamsForPileupSummaries
+    set file(commonSNPs), file(commonSNPsIndex) from Channel.value([
+        referenceMap.commonSNPs,
+        referenceMap.commonSNPsIndex
+      ])
+    file("${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.stats") from mergedStatsFile
+  
+  output:
+    file("${idSampleTumor}_pileupsummaries.table") into pileupSummaries
+
+  when: 'mutect2' in tools && !params.onlyQC && params.pon
+
+  script:     
+  """
+  # pileup summaries
+  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+    GetPileupSummaries \
+    -I ${bamTumor} \
+    -V ${commonSNPs} \
+    -L ${commonSNPs} \
+    -O ${idSampleTumor}_pileupsummaries.table
+	"""
+}
+
+//process CalculateContamination {
+//  tag {idSampleTumor + "_vs_" + idSampleNormal}
+//
+//  publishDir "${params.outDir}/VariantCalling/${idPatient}/Mutect2", mode: params.publishDirMode
+//
+//  input:
+//    file("${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.stats") from pileupSummaries
+//  
+//  output:
+//    file("${idSampleTumor}_contamination.table") into contaminationTable
+//
+//  when: 'mutect2' in tools && !params.onlyQC && params.pon
+//
+//  script:     
+//  """
+//  # calculate contamination
+//  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+//    CalculateContamination \
+//    -I ${idSampleTumor}_pileupsummaries.table \
+//    -O ${idSampleTumor}_contamination.table
+//	"""
+// }
+//
 //process FilterMutect2Calls {
 //  tag {idSampleTumor + "_vs_" + idSampleNormal}
 //
@@ -371,6 +418,7 @@ process ConcatVCF {
 //        referenceMap.commonSNPs,
 //        referenceMap.commonSNPsIndex
 //      ])
+//    file("${idSampleTumor}_vs_${idSampleNormal}.vcf.gz.stats") from mergedStatsFile
 //  
 //  output:
 //    set val("Mutect2"), 
@@ -385,20 +433,7 @@ process ConcatVCF {
 //
 //  script:     
 //  """
-//  # pileup summaries
-//  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
-//    GetPileupSummaries \
-//    -I ${bamTumor} \
-//    -V ${commonSNPs} \
-//    -L ${commonSNPs} \
-//    -O ${idSampleTumor}_pileupsummaries.table
-//
-//  # calculate contamination
-//  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
-//    CalculateContamination \
-//    -I ${idSampleTumor}_pileupsummaries.table \
-//    -O ${idSampleTumor}_contamination.table
-//  
+// 
 //  # do the actual filtering
 //  gatk --java-options "-Xmx${task.memory.toGiga()}g" \
 //    FilterMutectCalls \
@@ -434,8 +469,6 @@ process RunStrelka {
 
   when: 'strelka' in tools && !params.onlyQC
 
-  script:
-  beforeScript = params.targetBED ? "bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz ; tabix call_targets.bed.gz" : ""
   options = params.targetBED ? "--exome --callRegions call_targets.bed.gz" : ""
   """
   ${beforeScript}
