@@ -9,6 +9,8 @@ pipeline {
         stage('Setup environment') {
             steps {
                 sh "docker pull maxulysse/sarek:dev"
+                sh "docker pull maxulysse/snpeffgrch37:dev"
+                sh "docker pull maxulysse/vepgrch37:dev"
             }
         }
         stage('Build') {
@@ -16,9 +18,29 @@ pipeline {
               sh "./scripts/test.sh --profile kraken,docker --build"
             }
         }
-        stage('Tests') {
+        stage('MULTIPLE') {
             steps {
-              sh "./scripts/test.sh --profile kraken,docker --test ALL"
+                sh "./scripts/test.sh --profile kraken,docker --test MULTIPLE"
+            }
+        }
+        stage('SOMATIC') {
+            steps {
+              sh "./scripts/test.sh --profile kraken,docker --test SOMATIC"
+            }
+        }
+        stage('GERMLINE') {
+            steps {
+              sh "./scripts/test.sh --profile kraken,docker --test GERMLINE"
+            }
+        }
+        stage('TARGETED') {
+            steps {
+              sh "./scripts/test.sh --profile kraken,docker --test TARGETED"
+            }
+        }
+        stage('ANNOTATEALL') {
+            steps {
+              sh "./scripts/test.sh --profile kraken,docker --test ANNOTATEALL"
             }
         }
     }
