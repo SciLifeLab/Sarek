@@ -15,32 +15,32 @@ pipeline {
         }
         stage('Build') {
             steps {
-              sh "./scripts/test.sh --profile kraken,docker --build"
+              sh "./scripts/test.sh --profile kraken --build"
             }
         }
         stage('MULTIPLE') {
             steps {
-                sh "./scripts/test.sh --profile kraken,docker --test MULTIPLE"
+                sh "./scripts/test.sh --profile kraken --test MULTIPLE"
             }
         }
         stage('SOMATIC') {
             steps {
-              sh "./scripts/test.sh --profile kraken,docker --test SOMATIC"
+              sh "./scripts/test.sh --profile kraken --test SOMATIC"
             }
         }
         stage('GERMLINE') {
             steps {
-              sh "./scripts/test.sh --profile kraken,docker --test GERMLINE"
+              sh "./scripts/test.sh --profile kraken --test GERMLINE"
             }
         }
         stage('TARGETED') {
             steps {
-              sh "./scripts/test.sh --profile kraken,docker --test TARGETED"
+              sh "./scripts/test.sh --profile kraken --test TARGETED"
             }
         }
         stage('ANNOTATEALL') {
             steps {
-              sh "./scripts/test.sh --profile kraken,docker --test ANNOTATEALL"
+              sh "./scripts/test.sh --profile kraken --test ANNOTATEALL"
             }
         }
     }
