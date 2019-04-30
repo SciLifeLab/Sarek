@@ -68,7 +68,7 @@ vcfNotToAnnotate = Channel.create()
 if (annotateVCF == []) {
 // Sarek, by default, annotates all available vcfs that it can find in the VariantCalling directory
 // Excluding vcfs from FreeBayes, and g.vcf from HaplotypeCaller
-// Basically it's: VariantCalling/*/{HaplotypeCaller,Manta,MuTect2,Strelka}/*.vcf.gz
+// Basically it's: VariantCalling/*/{HaplotypeCaller,Manta,Mutect2,Strelka}/*.vcf.gz
 // Without *SmallIndels.vcf.gz from Manta, and *.genome.vcf.gz from Strelka
 // The small snippet `vcf.minus(vcf.fileName)[-2]` catches idPatient
 // This field is used to output final annotated VCFs in the correct directory
@@ -77,7 +77,7 @@ if (annotateVCF == []) {
       .flatten().map{vcf -> ['haplotypecaller', vcf.minus(vcf.fileName)[-2].toString(), vcf]},
     Channel.fromPath("${params.outDir}/VariantCalling/*/Manta/*[!candidate]SV.vcf.gz")
       .flatten().map{vcf -> ['manta', vcf.minus(vcf.fileName)[-2].toString(), vcf]},
-    Channel.fromPath("${params.outDir}/VariantCalling/*/MuTect2/*.vcf.gz")
+    Channel.fromPath("${params.outDir}/VariantCalling/*/Mutect2/*.vcf.gz")
       .flatten().map{vcf -> ['mutect2', vcf.minus(vcf.fileName)[-2].toString(), vcf]},
     Channel.fromPath("${params.outDir}/VariantCalling/*/Strelka/*{somatic,variant}*.vcf.gz")
       .flatten().map{vcf -> ['strelka', vcf.minus(vcf.fileName)[-2].toString(), vcf]},
@@ -335,7 +335,7 @@ def helpMessage() {
   log.info "       Possible values are:"
   log.info "         haplotypecaller (Annotate HaplotypeCaller output)"
   log.info "         manta (Annotate Manta output)"
-  log.info "         mutect2 (Annotate MuTect2 output)"
+  log.info "         mutect2 (Annotate Mutect2 output)"
   log.info "         strelka (Annotate Strelka output)"
   log.info "    --annotateVCF"
   log.info "       Option to configure which vcf to annotate."
