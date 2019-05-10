@@ -15,12 +15,12 @@ A set of common biallelic SNPs are used to look at other low-allele frequency va
 ```
 $ singularity shell /containers/sarek-latest.simg
 Singularity sarek-latest.simg:~> gatk SelectVariants  \
-																--output SweGen.common.biallelic.vcf \
-																--restrict-alleles-to BIALLELIC \
-																--select-type-to-include SNP \
-																--variant SweGen_hg38_stratified.SWAF.vcf.gz \
-																--reference /references/igenomes/Homo_sapiens/GATK/GRCh38/Sequence/WholeGenomeFasta/Homo_sapiens_assembly38.fasta \
-																-select AF >0.001
+                                      --output SweGen.common.biallelic.vcf \
+                                      --restrict-alleles-to BIALLELIC \
+                                      --select-type-to-include SNP \
+                                      --variant SweGen_hg38_stratified.SWAF.vcf.gz \
+                                      --reference /references/igenomes/Homo_sapiens/GATK/GRCh38/Sequence/WholeGenomeFasta/Homo_sapiens_assembly38.fasta \
+                                      -select AF >0.001
 ```
 
 
@@ -34,7 +34,7 @@ You can run Mutect2 without having a PON, but there will be no filtering, none o
 $ nextflow run somaticVC.nf -profile cpu16mem96g \
         --sample Preprocessing/Recalibrated/recalibrated.tsv \
         --genome GRCh38 \
-				--genome_base /reference \
+        --genome_base /reference \
         --tools mutect2 \
         --containerPath /containers \
         --pon PON.vcf.gz
