@@ -153,6 +153,10 @@ ch_notCompressedfiles = Channel.create()
 ch_referencesFiles
   .choice(ch_compressedfiles, ch_notCompressedfiles) {it =~ ".(gz|tar.bz2)" ? 0 : 1}
 
+ch_compressedfiles = ch_compressedfiles.filter { !(it =~ /.*COMMON.*/) }
+
+ch_compressedfiles = ch_compressedfiles.view{ "$it" }
+
 process DecompressFile {
   tag {f_reference}
 

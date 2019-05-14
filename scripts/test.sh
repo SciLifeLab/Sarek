@@ -86,6 +86,8 @@ then
   then
     echo "$(tput setaf 1)Building references$(tput sgr0)"
     nextflow run build.nf --refDir Sarek-data/reference --outDir References/$GENOME -profile $PROFILE --genome $GENOME -dump-channels
+    # copying common SNP database that is not decompressed
+    cp -v Sarek-data/reference/*COMMON* References/$GENOME
   fi
 fi
 
