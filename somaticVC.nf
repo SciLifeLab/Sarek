@@ -219,7 +219,7 @@ process RunMutect2 {
 		set idPatient, 
         idSampleNormal,
         idSampleTumor, 
-				file("${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf.stats") into mutect2Stats
+				file("${intervalBed.baseName}_${idSampleTumor}_vs_${idSampleNormal}.vcf.stats") optional true into mutect2Stats
 
   when: 'mutect2' in tools && !params.onlyQC
 
@@ -860,6 +860,8 @@ def checkParameterExistence(it, list) {
 
 def checkParamReturnFile(item) {
   params."${item}" = params.genomes[params.genome]."${item}"
+	if( !params."${item}" ) exit 1, " Error: file ${item} is missing." 
+
   return file(params."${item}")
 }
 
