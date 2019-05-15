@@ -503,6 +503,7 @@ process RunStrelka {
 
   when: 'strelka' in tools && !params.onlyQC
 
+  script:
   beforeScript = params.targetBED ? "bgzip --threads ${task.cpus} -c ${targetBED} > call_targets.bed.gz ; tabix call_targets.bed.gz" : ""
   options = params.targetBED ? "--exome --callRegions call_targets.bed.gz" : ""
   """
