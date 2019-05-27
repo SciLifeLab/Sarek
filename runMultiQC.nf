@@ -56,7 +56,6 @@ process GetVersionAll {
   publishDir "${params.outDir}/Reports/MultiQC", mode: params.publishDirMode
 
   input:
-    file(versions) from Channel.fromPath("${params.outDir}/Reports/ToolsVersion/*").collect().ifEmpty(null)
 
   output:
     file ("tool_versions_mqc.yaml") into versionsForMultiQC
@@ -82,6 +81,8 @@ process GetVersionAll {
   vep --help &> v_vep.txt 2>&1 || true
   freec --version | grep "Control-FREEC" &> v_controlfreec.txt || true
   R --version &> v_r.txt  || true
+  alleleCounter --version &> v_allelecount.txt  || true
+  cat ${baseDir}/scripts/ascat.R | grep "ASCAT version" &> v_ascat.txt  || true
 
   scrape_tool_versions.py &> tool_versions_mqc.yaml
   """
