@@ -224,29 +224,28 @@ process RunVEP {
   genome = params.genome == 'smallGRCh37' ? 'GRCh37' : params.genome
   dir_cache = (params.vep_cache && params.annotation_cache) ? " \${PWD}/${dataDir}" : "/.vep"
   cadd = (params.cadd_cache && params.cadd_WG_SNVs && params.cadd_InDels) ? "--plugin CADD,whole_genome_SNVs.tsv.gz,InDels.tsv.gz" : ""
-  genesplicer = params.genesplicer ? "--plugin GeneSplicer,/opt/conda/envs/sarek-2.3/bin/genesplicer,/opt/conda/envs/sarek-2.3/share/genesplicer-1.0-1/human,context=200,tmpdir=\$PWD/${reducedVCF}" : "--offline"
   """
-  mkdir ${reducedVCF}
 
   vep \
   -i ${vcf} \
   -o ${reducedVCF}_VEP.ann.vcf \
   --assembly ${genome} \
   ${cadd} \
-  ${genesplicer} \
   --cache \
   --cache_version ${cache_version} \
+  --offline \
+  --fasta ${dir_cache}/VEP/Homo_sapiens.GRCh38.dna.primary_assembly.fa \
+	--plugin MaxEntScan,${dir_cache}/VEP/Plugins/MaxEnt,SWA,NCSS \
   --dir_cache ${dir_cache} \
   --everything \
   --filter_common \
-  --fork ${task.cpus} \
   --format vcf \
   --per_gene \
   --stats_file ${reducedVCF}_VEP.summary.html \
   --total_length \
+  --fork 4 \
   --vcf
 
-  rm -rf ${reducedVCF}
   """
 }
 
