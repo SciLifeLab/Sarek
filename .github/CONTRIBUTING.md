@@ -1,31 +1,47 @@
-# Sarek Contributing Guidelines
+# nf-core/sarek: Contributing Guidelines
 
-Hi there! Many thanks for taking an interest in improving Sarek.
+Hi there! Many thanks for taking an interest in improving nf-core/sarek.
 
-We try to manage the required tasks for Sarek using GitHub issues, you probably came to this page when creating one. Please use the prefilled template to save time.
+We try to manage the required tasks for nf-core/sarek using GitHub issues, you probably came to this page when creating one. Please use the pre-filled template to save time.
 
 However, don't be put off by this template - other more general issues and suggestions are welcome! Contributions to the code are even more welcome ;)
 
-> If you need help using Sarek then the best place to go is the Gitter chatroom where you can ask us questions directly: https://gitter.im/SciLifeLab/Sarek
+> If you need help using or modifying nf-core/sarek then the best place to ask is on the pipeline channel on [Slack](https://nf-core-invite.herokuapp.com/).
+
+
 
 ## Contribution workflow
-If you'd like to write some code for Sarek, the standard workflow
+If you'd like to write some code for nf-core/sarek, the standard workflow
 is as follows:
 
 1. Check that there isn't already an issue about your idea in the
-   [Sarek issues](https://github.com/SciLifeLab/Sarek/issues) to avoid
+   [nf-core/sarek issues](https://github.com/nf-core/sarek/issues) to avoid
    duplicating work.
-    * Feel free to add a [new issue here](https://github.com/SciLifeLab/Sarek/issues/new/choose) for the same reason.
-2. Fork the Sarek repository to your GitHub account
-3. [Configure a remote for your fork](https://help.github.com/articles/configuring-a-remote-for-a-fork/)
-```
-git remote add upstream https://github.com/SciLifeLab/Sarek.git
-```
-
-4. [Sync your fork](https://help.github.com/articles/syncing-a-fork/)
-5. Make the necessary changes / additions within your forked repository
-6. Submit a [Pull Request](https://github.com/SciLifeLab/Sarek/compare) against the `dev` branch and wait for the code to be reviewed and merged.
+    * If there isn't one already, please create one so that others know you're working on this
+2. Fork the [nf-core/sarek repository](https://github.com/nf-core/sarek) to your GitHub account
+3. Make the necessary changes / additions within your forked repository
+4. Submit a Pull Request against the `dev` branch and wait for the code to be reviewed and merged.
 
 If you're not used to this workflow with git, you can start with some [basic docs from GitHub](https://help.github.com/articles/fork-a-repo/) or even their [excellent interactive tutorial](https://try.github.io/).
 
-For further information/help, please consult the [Sarek documentation](https://github.com/SciLifeLab/Sarek#documentation) and don't hesitate to get in touch on [Gitter](https://gitter.im/SciLifeLab/Sarek) or contact us: maxime.garcia@scilifelab.se, szilveszter.juhos@scilifelab.se
+
+## Tests
+When you create a pull request with changes, [Travis CI](https://travis-ci.org/) will run automatic tests.
+Typically, pull-requests are only fully reviewed when these tests are passing, though of course we can help out before then.
+
+There are typically two types of tests that run:
+
+### Lint Tests
+The nf-core has a [set of guidelines](http://nf-co.re/guidelines) which all pipelines must adhere to.
+To enforce these and ensure that all pipelines stay in sync, we have developed a helper tool which runs checks on the pipeline code. This is in the [nf-core/tools repository](https://github.com/nf-core/tools) and once installed can be run locally with the `nf-core lint <pipeline-directory>` command.
+
+If any failures or warnings are encountered, please follow the listed URL for more documentation.
+
+### Pipeline Tests
+Each nf-core pipeline should be set up with a minimal set of test-data.
+Travis CI then runs the pipeline on this data to ensure that it exists successfully.
+If there are any failures then the automated tests fail.
+These tests are run both with the latest available version of Nextflow and also the minimum required version that is stated in the pipeline code.
+
+## Getting help
+For further information/help, please consult the [nf-core/sarek documentation](https://github.com/nf-core/sarek#documentation) and don't hesitate to get in touch on the [sarek pipeline channel](https://nfcore.slack.com/channels/sarek) on [Slack](https://nf-co.re/join/slack).

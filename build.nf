@@ -1,145 +1,160 @@
 #!/usr/bin/env nextflow
-
 /*
-kate: syntax groovy; space-indent on; indent-width 2;
-================================================================================
-=                                 S  A  R  E  K                                =
-================================================================================
- New Germline (+ Somatic) Analysis Workflow. Started March 2016.
---------------------------------------------------------------------------------
- @Authors
- Sebastian DiLorenzo <sebastian.dilorenzo@bils.se> [@Sebastian-D]
- Jesper Eisfeldt <jesper.eisfeldt@scilifelab.se> [@J35P312]
- Phil Ewels <phil.ewels@scilifelab.se> [@ewels]
- Maxime Garcia <maxime.garcia@scilifelab.se> [@MaxUlysse]
- Szilveszter Juhos <szilveszter.juhos@scilifelab.se> [@szilvajuhos]
- Max Käller <max.kaller@scilifelab.se> [@gulfshores]
- Malin Larsson <malin.larsson@scilifelab.se> [@malinlarsson]
- Marcel Martin <marcel.martin@scilifelab.se> [@marcelm]
- Björn Nystedt <bjorn.nystedt@scilifelab.se> [@bjornnystedt]
- Pall Olason <pall.olason@scilifelab.se> [@pallolason]
- Johannes Alneberg <johannes.alneberg@scilifelab.se> [@alneberg]
---------------------------------------------------------------------------------
+========================================================================================
+                         nf-core/sarek
+========================================================================================
+ nf-core/sarek Analysis Pipeline.
  @Homepage
  https://sarek.scilifelab.se/
---------------------------------------------------------------------------------
  @Documentation
- https://github.com/SciLifeLab/Sarek/README.md
---------------------------------------------------------------------------------
- Processes overview
- - BuildWithDocker - Build containers using Docker
- - PullToSingularity - Pull Singularity containers from Docker Hub
- - PushToDocker - Push containers to Docker Hub
- - DecompressFile - Extract files if needed
- - BuildBWAindexes - Build indexes for BWA
- - BuildReferenceIndex - Build index for FASTA refs
- - BuildSAMToolsIndex - Build index with SAMTools
- - BuildVCFIndex - Build index for VCF files
- - BuildCache_snpEff - Download Cache for snpEff
- - BuildCache_VEP - Download taqbix index Cache for VEP
-================================================================================
-=                           C O N F I G U R A T I O N                          =
-================================================================================
+ https://github.com/nf-core/sarek/README.md
+----------------------------------------------------------------------------------------
 */
 
+def helpMessage() {
+    log.info nfcoreHeader()
+    log.info"""
+
+Usage:
+    --help
+      you're reading it
+
+BUILD REFERENCES:
+  nextflow run build.nf --build --outdir <pathToDirectory> [--offline]
+    --build
+      Will build reference files for smallGRCh37
+    --outdir <Directoy>
+      Specify an output directory
+
+    --offline
+      Will use data as the source for the reference files
+      Need to do:
+      `git clone --single-branch --branch sarek https://github.com/nf-core/test-datasets.git data`
+      Before transfering the repo to an offline location
+
+DOWNLOAD CACHE:
+  nextflow run build.nf --download_cache [--snpEff_cache <pathToSNPEFFcache>] [--vep_cache <pathToVEPcache>]
+                                         [--cadd_cache <pathToCADDcache> --cadd_version <CADD Version>]
+    --download_cache
+      Will download specified cache
+    --snpEff_cache <Directoy>
+      Specify path to snpEff cache
+      If none, will use snpEff version specified in configuration
+      Will use snpEff cache version for ${params.genome}: ${params.genomes[params.genome].snpeffDb} in igenomes configuration file:
+      Change with --genome or in configuration files
+    --vep_cache <Directoy>
+      Specify path to VEP cache
+      If none, will use VEP version specified in configuration
+      Will use VEP cache version for ${params.genome}: ${params.genomes[params.genome].vepCacheVersion} in igenomes configuration file:
+      Change with --genome or in configuration files
+    --cadd_cache <Directoy>
+      Specify path to CADD cache
+      Will use CADD version specified
+    --cadd_version <version>
+      Will specify which CADD version to download
+    """.stripIndent()
+}
+
+/*
+ * SET UP CONFIGURATION VARIABLES
+ */
+
+// Show help message
 if (params.help) exit 0, helpMessage()
-if (!SarekUtils.isAllowedParams(params)) exit 1, "params unknown, see --help for more information"
-if (!checkUppmaxProject()) exit 1, "No UPPMAX project ID found! Use --project <UPPMAX Project ID>"
-if (params.verbose) SarekUtils.verbose()
 
-// Check for awsbatch profile configuration
-// make sure queue is defined
-if (workflow.profile == 'awsbatch') {
-    if (!params.awsqueue) exit 1, "Provide the job queue for aws batch!"
+// Default value for params
+params.build = null
+params.offline = null
+params.cadd_cache = null
+params.cadd_version = 'v1.5'
+params.genome = 'smallGRCh37'
+params.snpEff_cache = null
+params.vep_cache = null
+
+ch_referencesFiles = Channel.empty()
+
+pathToSource = params.offline ? "data/reference/" : "https://github.com/nf-core/test-datasets/raw/sarek/reference"
+
+if (params.build) ch_referencesFiles = ch_referencesFiles.mix(
+  Channel.fromPath("${pathToSource}/1000G_phase1.indels.b37.small.vcf.gz"),
+  Channel.fromPath("${pathToSource}/1000G_phase3_20130502_SNP_maf0.3.small.loci"),
+  Channel.fromPath("${pathToSource}/1000G_phase3_20130502_SNP_maf0.3.small.loci.gc"),
+  Channel.fromPath("${pathToSource}/Mills_and_1000G_gold_standard.indels.b37.small.vcf.gz"),
+  Channel.fromPath("${pathToSource}/dbsnp_138.b37.small.vcf.gz"),
+  Channel.fromPath("${pathToSource}/human_g1k_v37_decoy.small.fasta.gz"),
+  Channel.fromPath("${pathToSource}/small.intervals"))
+
+ch_referencesFiles = ch_referencesFiles.dump(tag:'Reference Files')
+
+// Check if genome exists in the config file
+if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
+    exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
 }
 
-// Define containers to handle (build/push or pull)
-containersList = defineContainersList()
-if (params.containers) {
-  containers = params.containers.split(',').collect {it.trim()}
-  if (params.containers != ['all'] && !checkContainers(containers,containersList)) exit 1, 'Unknown container(s), see --help for more information'
-  containers = containers == ['all'] ? Channel.from(containersList) : Channel.from(containers)
-} else containers = Channel.empty()
-
-if (params.containers && !params.docker && !params.singularity) exit 1, 'No container technology choosed, specify --docker or --singularity, see --help for more information'
-
-ch_referencesFiles = Channel.fromPath("${params.refDir}/*")
-
-/*
-================================================================================
-=                               P R O C E S S E S                              =
-================================================================================
-*/
-
-startMessage()
-
-/*
-================================================================================
-=                B  U  I  L  D      C  O  N  T  A  I  N  E  R  S               =
-================================================================================
-*/
-
-(dockerContainers, singularityContainers) = containers.into(2)
-
-process BuildWithDocker {
-  tag {"${params.repository}/${container}:${params.tag}"}
-
-  input:
-    val container from dockerContainers
-
-  output:
-    val container into containersBuilt
-
-  when: params.docker
-
-  script:
-  path = container == "sarek" ? "${baseDir}" : "${baseDir}/containers/${container}/."
-  """
-  docker build -t ${params.repository}/${container}:${params.tag} ${path}
-  """
+// Has the run name been specified by the user?
+//  this has the bonus effect of catching both -name and --name
+custom_runName = params.name
+if ( !(workflow.runName ==~ /[a-z]+_[a-z]+/) ){
+  custom_runName = workflow.runName
 }
 
-containersBuilt = containersBuilt.dump(tag:'Built')
-
-process PullToSingularity {
-  tag {"${params.repository}/${container}:${params.tag}"}
-
-  publishDir "${params.containerPath}", mode: params.publishDirMode
-
-  input:
-    val container from singularityContainers
-
-  output:
-    file("${container}-${params.tag}.simg") into imagePulled
-
-  when: params.singularity
-
-  script:
-  """
-  singularity build ${container}-${params.tag}.simg docker://${params.repository}/${container}:${params.tag}
-  """
+if ( workflow.profile == 'awsbatch') {
+  // AWSBatch sanity checking
+  if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
+  // Check outdir paths to be S3 buckets if running on AWSBatch
+  // related: https://github.com/nextflow-io/nextflow/issues/813
+  if (!params.outdir.startsWith('s3:')) exit 1, "Outdir not on S3 - specify S3 Bucket to run on AWSBatch!"
+  // Prevent trace files to be stored on S3 since S3 does not support rolling files.
+  if (workflow.tracedir.startsWith('s3:')) exit 1, "Specify a local tracedir or run without trace! S3 cannot be used for tracefiles."
 }
 
-imagePulled.dump(tag:'Pulled')
-
-process PushToDocker {
-  tag {params.repository + "/" + container + ":" + params.tag}
-
-  input:
-    val container from containersBuilt
-
-  output:
-    val container into containersPushed
-
-  when: params.push
-
-  script:
-  """
-  docker push ${params.repository}/${container}:${params.tag}
-  """
+// Header log info
+log.info nfcoreHeader()
+def summary = [:]
+if (workflow.revision) summary['Pipeline Release'] = workflow.revision
+summary['Run Name']         = custom_runName ?: workflow.runName
+summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
+if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
+summary['Output dir']       = params.outdir
+summary['Launch dir']       = workflow.launchDir
+summary['Working dir']      = workflow.workDir
+summary['Script dir']       = workflow.projectDir
+summary['User']             = workflow.userName
+if (workflow.profile == 'awsbatch'){
+   summary['AWS Region']    = params.awsregion
+   summary['AWS Queue']     = params.awsqueue
 }
+summary['Config Profile'] = workflow.profile
+if (params.config_profile_description) summary['Config Description'] = params.config_profile_description
+if (params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
+if (params.config_profile_url)         summary['Config URL']         = params.config_profile_url
+if (params.email) {
+  summary['E-mail Address']  = params.email
+  summary['MultiQC maxsize'] = params.maxMultiqcEmailFileSize
+}
+log.info summary.collect { k,v -> "${k.padRight(18)}: $v" }.join("\n")
+if (params.monochrome_logs) log.info "----------------------------------------------------"
+else log.info "\033[2m----------------------------------------------------\033[0m"
 
-containersPushed.dump(tag:'Pushed')
+// Check the hostnames against configured profiles
+checkHostname()
+
+def create_workflow_summary(summary) {
+    def yaml_file = workDir.resolve('workflow_summary_mqc.yaml')
+    yaml_file.text  = """
+    id: 'nf-core-sarek-summary'
+    description: " - this information is collected when the pipeline is started."
+    section_name: 'nf-core/sarek Workflow Summary'
+    section_href: 'https://github.com/nf-core/sarek'
+    plot_type: 'html'
+    data: |
+        <dl class=\"dl-horizontal\">
+${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>" }.join("\n")}
+        </dl>
+    """.stripIndent()
+
+   return yaml_file
+}
 
 /*
 ================================================================================
@@ -151,11 +166,7 @@ ch_compressedfiles = Channel.create()
 ch_notCompressedfiles = Channel.create()
 
 ch_referencesFiles
-  .choice(ch_compressedfiles, ch_notCompressedfiles) {it =~ ".(gz|tar.bz2)" ? 0 : 1}
-
-ch_compressedfiles = ch_compressedfiles.filter { !(it =~ /.*COMMON.*/) }
-
-ch_compressedfiles = ch_compressedfiles.view{ "$it" }
+  .choice(ch_compressedfiles, ch_notCompressedfiles) {it =~ ".gz" ? 0 : 1}
 
 process DecompressFile {
   tag {f_reference}
@@ -167,23 +178,14 @@ process DecompressFile {
     file("*.{vcf,fasta,loci}") into ch_decompressedFiles
 
   script:
-  realReferenceFile="readlink ${f_reference}"
-  if (f_reference =~ ".gz")
-    """
-    gzip -d -c \$(${realReferenceFile}) > ${f_reference.baseName}
-    """
-  else if (f_reference =~ ".tar.bz2")
-    """
-    tar xvjf \$(${realReferenceFile})
-    """
+  """
+  gzip -d -c -f ${f_reference} > ${f_reference.baseName}
+  """
 }
 
 ch_decompressedFiles = ch_decompressedFiles.dump(tag:'DecompressedFile')
 
 ch_fastaFile = Channel.create()
-ch_fastaForBWA = Channel.create()
-ch_fastaReference = Channel.create()
-ch_fastaForSAMTools = Channel.create()
 ch_otherFile = Channel.create()
 ch_vcfFile = Channel.create()
 
@@ -197,12 +199,12 @@ ch_decompressedFiles
 
 ch_notCompressedfiles
   .mix(ch_fastaFileToKeep, ch_vcfFileToKeep, ch_otherFile)
-  .collectFile(storeDir: params.outDir)
+  .collectFile(storeDir: params.outdir)
 
 process BuildBWAindexes {
   tag {f_reference}
 
-  publishDir params.outDir, mode: params.publishDirMode
+  publishDir params.outdir, mode: params.publishDirMode
 
   input:
     file(f_reference) from ch_fastaForBWA
@@ -221,7 +223,7 @@ bwaIndexes.dump(tag:'bwaIndexes')
 process BuildReferenceIndex {
   tag {f_reference}
 
-  publishDir params.outDir, mode: params.publishDirMode
+  publishDir params.outdir, mode: params.publishDirMode
 
   input:
     file(f_reference) from ch_fastaReference
@@ -243,7 +245,7 @@ ch_referenceIndex.dump(tag:'dict')
 process BuildSAMToolsIndex {
   tag {f_reference}
 
-  publishDir params.outDir, mode: params.publishDirMode
+  publishDir params.outdir, mode: params.publishDirMode
 
   input:
     file(f_reference) from ch_fastaForSAMTools
@@ -262,7 +264,7 @@ ch_samtoolsIndex.dump(tag:'fai')
 process BuildVCFIndex {
   tag {f_reference}
 
-  publishDir params.outDir, mode: params.publishDirMode
+  publishDir params.outdir, mode: params.publishDirMode
 
   input:
     file(f_reference) from ch_vcfFile
@@ -295,7 +297,7 @@ process BuildCache_snpEff {
   output:
     file("*")
 
-  when: params.snpEff_cache
+  when: params.snpEff_cache && params.download_cache && !params.offline
 
   script:
   """
@@ -314,11 +316,11 @@ process BuildCache_VEP {
   output:
     file("*")
 
-  when: params.vep_cache
+  when: params.vep_cache && params.download_cache && !params.offline
 
   script:
   genome = params.genome == "smallGRCh37" ? "GRCh37" : params.genome
-  species = genome =~ "GRCh3*" ? "homo_sapiens" : ""
+  species = genome =~ "GRCh3*" ? "homo_sapiens" : genome =~ "GRCm3*" ? "mus_musculus" : ""
   """
   vep_install \
     -a cf \
@@ -352,7 +354,7 @@ process DownloadCADD {
   output:
     set file("*.tsv.gz"), file("*.tsv.gz.tbi")
 
-  when: params.cadd_cache
+  when: params.cadd_cache && params.download_cache && !params.offline
 
   script:
   """
@@ -361,153 +363,67 @@ process DownloadCADD {
   """
 }
 
+def nfcoreHeader(){
+    // Log colors ANSI codes
+    c_reset  = params.monochrome_logs ? '' : "\033[0m";
+    c_dim    = params.monochrome_logs ? '' : "\033[2m";
+    c_black  = params.monochrome_logs ? '' : "\033[0;30m";
+    c_red    = params.monochrome_logs ? '' : "\033[0;31m";
+    c_green  = params.monochrome_logs ? '' : "\033[0;32m";
+    c_yellow = params.monochrome_logs ? '' : "\033[0;33m";
+    c_blue   = params.monochrome_logs ? '' : "\033[0;34m";
+    c_purple = params.monochrome_logs ? '' : "\033[0;35m";
+    c_cyan   = params.monochrome_logs ? '' : "\033[0;36m";
+    c_white  = params.monochrome_logs ? '' : "\033[0;37m";
+
+    return """    ${c_dim}----------------------------------------------------${c_reset}
+                                            ${c_green},--.${c_black}/${c_green},-.${c_reset}
+    ${c_blue}        ___     __   __   __   ___     ${c_green}/,-._.--~\'${c_reset}
+    ${c_blue}  |\\ | |__  __ /  ` /  \\ |__) |__         ${c_yellow}}  {${c_reset}
+    ${c_blue}  | \\| |       \\__, \\__/ |  \\ |___     ${c_green}\\`-._,-`-,${c_reset}
+                                            ${c_green}`._,._,\'${c_reset}
+        ${c_white}____${c_reset}
+      ${c_white}.´ _  `.${c_reset}
+     ${c_white}/  ${c_green}|\\${c_reset}`-_ \\${c_reset}     ${c_blue} __        __   ___     ${c_reset}
+    ${c_white}|   ${c_green}| \\${c_reset}  `-|${c_reset}    ${c_blue}|__`  /\\  |__) |__  |__/${c_reset}
+     ${c_white}\\ ${c_green}|   \\${c_reset}  /${c_reset}     ${c_blue}.__| /¯¯\\ |  \\ |___ |  \\${c_reset}
+      ${c_white}`${c_green}|${c_reset}____${c_green}\\${c_reset}´${c_reset}
+
+    ${c_purple}  nf-core/sarek v${workflow.manifest.version}${c_reset}
+    ${c_dim}----------------------------------------------------${c_reset}
+    """.stripIndent()
+}
+
+def checkHostname(){
+    def c_reset = params.monochrome_logs ? '' : "\033[0m"
+    def c_white = params.monochrome_logs ? '' : "\033[0;37m"
+    def c_red = params.monochrome_logs ? '' : "\033[1;91m"
+    def c_yellow_bold = params.monochrome_logs ? '' : "\033[1;93m"
+    if (params.hostnames){
+        def hostname = "hostname".execute().text.trim()
+        params.hostnames.each { prof, hnames ->
+            hnames.each { hname ->
+                if (hostname.contains(hname) && !workflow.profile.contains(prof)){
+                    log.error "====================================================\n" +
+                            "  ${c_red}WARNING!${c_reset} You are running with `-profile $workflow.profile`\n" +
+                            "  but your machine hostname is ${c_white}'$hostname'${c_reset}\n" +
+                            "  ${c_yellow_bold}It's highly recommended that you use `-profile $prof${c_reset}`\n" +
+                            "============================================================"
+                }
+            }
+        }
+    }
+}
+
 /*
 ================================================================================
 =                               F U N C T I O N S                              =
 ================================================================================
 */
 
-def checkContainerExistence(container, list) {
-  try {assert list.contains(container)}
-  catch (AssertionError ae) {
-    println("Unknown container: ${container}")
-    return false
-  }
-  return true
-}
-
-def checkContainers(containers, containersList) {
-  containerExists = true
-  containers.each{
-    test = checkContainerExistence(it, containersList)
-    !(test) ? containerExists = false : ""
-  }
-  return containerExists ? true : false
-}
-
 def checkFile(it) {
   // Check file existence
   final f = file(it)
   if (!f.exists()) exit 1, "Missing file: ${it}, see --help for more information"
   return true
-}
-
-def checkUppmaxProject() {
-  // check if UPPMAX project number is specified
-  return !(workflow.profile == 'slurm' && !params.project)
-}
-
-def defineContainersList(){
-  // Return list of authorized containers
-  return [
-    'r-base',
-    'runallelecount',
-    'sarek',
-    'snpeffgrch37',
-    'snpeffgrch38',
-    'vepgrch37',
-    'vepgrch38'
-    ]
-}
-
-def grabRevision() {
-  // Return the same string executed from github or not
-  return workflow.revision ?: workflow.commitId ?: workflow.scriptId.substring(0,10)
-}
-
-def helpMessage() {
-  // Display help message
-  this.sarekMessage()
-  log.info "    Usage:"
-  log.info "    --help"
-  log.info "       you're reading it"
-  log.info "         BUILD CONTAINERS:"
-  log.info "           nextflow run build.nf [--docker] [--push]"
-  log.info "              [--containers <container1...>] [--singularity]"
-  log.info "              [--containerPath <path>]"
-  log.info "              [--tag <tag>] [--repository <repository>]"
-  log.info "        --containers: Choose which containers to build"
-  log.info "           Default: all"
-  log.info "           Possible values:"
-  log.info "             all, r-base, runallelecount, sarek"
-  log.info "             snpeffgrch37, snpeffgrch38, vepgrch37, vepgrch38"
-  log.info "        --docker: Build containers using Docker"
-  log.info "        --push: Push containers to DockerHub"
-  log.info "        --repository: Build containers under given repository"
-  log.info "           Default: maxulysse"
-  log.info "        --singularity: Download Singularity images"
-  log.info "        --containerPath: Select where to download images"
-  log.info "           Default: \$PWD"
-  log.info "        --tag`: Choose the tag for the containers"
-  log.info "           Default (version number): " + workflow.manifest.version
-  log.info "         BUILD REFERENCES:"
-  log.info "           nextflow run build.nf [--refDir <pathToRefDir> --outDir <pathToOutDir>]"
-  log.info "        --refDir <Directoy>"
-  log.info "           Specify a directory containing reference files"
-  log.info "        --outDir <Directoy>"
-  log.info "           Specify an output directory"
-  log.info "         DOWNLOAD CACHE:"
-  log.info "           nextflow run build.nf [--snpEff_cache <pathToSNPEFFcache>] [--vep_cache <pathToVEPcache>]"
-  log.info "        --snpEff_cache <Directoy>"
-  log.info "           Specify path to snpEff cache"
-  log.info "           Will use snpEff version specified in configuration"
-  log.info "        --vep_cache <Directoy>"
-  log.info "           Specify path to VEP cache"
-  log.info "           Will use VEP version specified in configuration"
-  log.info "        --cadd_cache <Directoy>"
-  log.info "           Specify path to CADD cache"
-  log.info "           Will use CADD version specified"
-  log.info "        --cadd_version <version>"
-  log.info "           Will specify which CADD version to download"
-}
-
-def minimalInformationMessage() {
-  // Minimal information message
-  log.info "Command Line: " + workflow.commandLine
-  log.info "Project Dir : " + workflow.projectDir
-  log.info "Launch Dir  : " + workflow.launchDir
-  log.info "Work Dir    : " + workflow.workDir
-  log.info "Out Dir     : " + params.outDir
-  log.info "Genome      : " + params.genome
-  log.info "Containers"
-  if (params.repository != "") log.info "  Repository   : " + params.repository
-  if (params.containerPath != "") log.info "  ContainerPath: " + params.containerPath
-  log.info "  Tag          : " + params.tag
-}
-
-def nextflowMessage() {
-  // Nextflow message (version + build)
-  log.info "N E X T F L O W  ~  version ${workflow.nextflow.version} ${workflow.nextflow.build}"
-}
-
-def sarekMessage() {
-  // Display Sarek message
-  log.info "Sarek - Workflow For Somatic And Germline Variations ~ ${workflow.manifest.version} - " + this.grabRevision() + (workflow.commitId ? " [${workflow.commitId}]" : "")
-}
-
-def startMessage() {
-  // Display start message
-  SarekUtils.sarek_ascii()
-  this.sarekMessage()
-  this.minimalInformationMessage()
-}
-
-workflow.onComplete {
-  // Display complete message
-  this.nextflowMessage()
-  this.sarekMessage()
-  this.minimalInformationMessage()
-  log.info "Completed at: " + workflow.complete
-  log.info "Duration    : " + workflow.duration
-  log.info "Success     : " + workflow.success
-  log.info "Exit status : " + workflow.exitStatus
-  log.info "Error report: " + (workflow.errorReport ?: '-')
-}
-
-workflow.onError {
-  // Display error message
-  this.nextflowMessage()
-  this.sarekMessage()
-  log.info "Workflow execution stopped with the following message:"
-  log.info "  " + workflow.errorMessage
 }

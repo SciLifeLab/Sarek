@@ -1,18 +1,19 @@
-## Documentation
+# nf-core/sarek: Documentation
 
-The Sarek pipeline comes with the following documentation:
+The nf-core/sarek documentation is split into the following files:
 
-01. [Installation documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/INSTALL.md)
-02. [Installation documentation specific for UPPMAX `rackham`](https://github.com/SciLifeLab/Sarek/blob/master/docs/INSTALL_RACKHAM.md)
-03. [Installation documentation specific for UPPMAX `bianca`](https://github.com/SciLifeLab/Sarek/blob/master/docs/INSTALL_BIANCA.md)
-04. [Tests documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/TESTS.md)
-05. [Reference files documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/REFERENCES.md)
-06. [Configuration and profiles documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/CONFIG.md)
-07. [Intervals documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/INTERVALS.md)
-08. [Running the pipeline](https://github.com/SciLifeLab/Sarek/blob/master/docs/USAGE.md)
-09. [Examples](https://github.com/SciLifeLab/Sarek/blob/master/docs/USE_CASES.md)
-10. [TSV file documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/INPUT.md)
-11. [Processes documentation](https://github.com/SciLifeLab/Sarek/blob/master/docs/PROCESS.md)
-12. [Documentation about containers](https://github.com/SciLifeLab/Sarek/blob/master/docs/CONTAINERS.md)
-13. [More information about ASCAT](https://github.com/SciLifeLab/Sarek/blob/master/docs/ASCAT.md)
-14. [Output documentation structure](https://github.com/SciLifeLab/Sarek/blob/master/docs/OUTPUT.md)
+1. [Installation](https://nf-co.re/usage/installation)
+2. Pipeline configuration
+    * [Local installation](https://nf-co.re/usage/local_installation)
+    * [Adding your own system config](https://nf-co.re/usage/adding_own_config)
+    * [Install on a secure cluster](install_bianca.md)
+    * [Reference genomes](https://nf-co.re/usage/reference_genomes)
+    * [Extra documentation on reference](reference.md)
+3. [Running the pipeline](usage.md)
+    * [Examples](use_cases.md)
+    * [Input files documentation](input.md)
+    * [Documentation about containers](containers.md)
+4. [Output and how to interpret the results](output.md)
+    * [Complementary information about ASCAT](ascat.md)
+    * [Extra documentation on annotation](annotation.md)
+5. [Troubleshooting](https://nf-co.re/usage/troubleshooting)

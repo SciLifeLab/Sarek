@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+#!/bin/env Rscript
 # Description:
 # R-script for converting output from AlleleCount to BAF and LogR values.
 #
