@@ -103,17 +103,6 @@ def helpMessage() {
 // Show help message
 if (params.help) exit 0, helpMessage()
 
-// Default value for params
-
-// Set deprecated params to null
-params.noReports = null
-params.annotateVCF = null
-params.genomeDict = null
-params.genomeFile = null
-params.genomeIndex = null
-params.sample = null
-params.sampleDir = null
-
 // Print warning message
 if (params.noReports) log.warn "The params `--noReports` is deprecated -- it will be removed in a future release.\n\tPlease check: https://github.com/nf-core/sarek/blob/master/docs/usage.md#--skipQC"
 if (params.annotateVCF) log.warn "The params `--annotateVCF` is deprecated -- it will be removed in a future release.\n\tPlease check: https://github.com/nf-core/sarek/blob/master/docs/usage.md#--input"
@@ -127,36 +116,6 @@ if (params.sampleDir) log.warn "The params `--sampleDir` is deprecated -- it wil
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
     exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
 }
-
-// TODO: Should be set up?
-// params.email = null
-// params.hostnames = null
-// params.markdup_java_options = null
-// params.max_cpus = null
-// params.max_memory = null
-// params.maxMultiqcEmailFileSize = null
-// params.max_time = null
-// params.monochrome_logs = null
-// params.name = null
-// params.outdir = null
-// params.plaintext_email = null
-// params.monochrome_logs = null
-
-// Decide what will happen in sarek
-// Which tools to annotate with --step annotate
-params.annotateTools = null
-// No g.vcf produced
-params.noGVCF = null
-// Strelka will not use Manta candidateSmallIndels
-params.noStrelkaBP = null
-// Which QC tools not to use
-params.skipQC = null
-// Which step to begin with
-params.step = 'mapping'
-// Which tools to use
-params.tools = null
-// What is the input
-params.input = null
 
 stepList = defineStepList()
 step = params.step ? params.step.toLowerCase() : ''
@@ -179,57 +138,26 @@ annoList = defineAnnoList()
 annotateTools = params.annotateTools ? params.annotateTools.split(',').collect{it.trim().toLowerCase()} : []
 if (!checkParameterList(annotateTools,annoList)) exit 1, 'Unknown tool(s) to annotate, see --help for more information'
 
-// Use annotation cache
-params.annotation_cache = null
-// Use cadd cache
-params.cadd_cache = null
-// Use genesplicer
-params.genesplicer = null
-// Specify a multiqc config
-params.multiqc_config = null
-// Estimate interval size
-params.nucleotidesPerSecond = 1000.0
-// Specify PublishDirMode
-params.publishDirMode = 'copy'
-// Enable Saving Indexes 
-params.saveGenomeIndex = null
-// Specify a sequencing center to be writen in BAM header in MapReads process
-params.sequencing_center = null
-
 // Initialize each params in params.genomes, catch the command line first if it was defined
-params.acLoci = params.genome ? params.genomes[params.genome].acLoci ?: null : null
-params.acLociGC = params.genome ? params.genomes[params.genome].acLociGC ?: null : null
-params.bwaIndex = params.genome && 'mapping' in step ? params.genomes[params.genome].bwa ?: null : null
-params.chrDir = params.genome ? params.genomes[params.genome].chrDir ?: null : null
-params.chrLength = params.genome  ? params.genomes[params.genome].chrLength ?: null : null
-params.dbsnp = params.genome && ('mapping' in step || 'controlfreec' in tools || 'haplotypecaller' in tools || 'mutect2' in tools) ? params.genomes[params.genome].dbsnp ?: null : null
-params.dbsnpIndex = params.genome ? params.genomes[params.genome].dbsnpIndex ?: null : null
-params.dict = params.genome ? params.genomes[params.genome].dict ?: null : null
+// params.fasta has to be the first one
 params.fasta = params.genome && !('annotate' in step) ? params.genomes[params.genome].fasta ?: null : null
-params.fastaFai = params.genome ? params.genomes[params.genome].fastaFai ?: null : null
+// The rest can be sorted
+params.acLoci = params.genome && 'ascat' in tools ? params.genomes[params.genome].acLoci ?: null : null
+params.acLociGC = params.genome && 'ascat' in tools ? params.genomes[params.genome].acLociGC ?: null : null
+params.bwaIndex = params.genome && params.fasta && 'mapping' in step ? params.genomes[params.genome].bwaIndex ?: null : null
+params.chrDir = params.genome && 'controlfreec' in tools ? params.genomes[params.genome].chrDir ?: null : null
+params.chrLength = params.genome && 'controlfreec' in tools ? params.genomes[params.genome].chrLength ?: null : null
+params.dbsnp = params.genome && ('mapping' in step || 'controlfreec' in tools || 'haplotypecaller' in tools || 'mutect2' in tools) ? params.genomes[params.genome].dbsnp ?: null : null
+params.dbsnpIndex = params.genome && params.dbsnp ? params.genomes[params.genome].dbsnpIndex ?: null : null
+params.dict = params.genome && params.fasta ? params.genomes[params.genome].dict ?: null : null
+params.fastaFai = params.genome && params.fasta ? params.genomes[params.genome].fastaFai ?: null : null
 params.germlineResource = params.genome && 'mutect2' in tools ? params.genomes[params.genome].germlineResource ?: null : null
-params.germlineResourceIndex = params.genome ? params.genomes[params.genome].germlineResourceIndex ?: null : null
+params.germlineResourceIndex = params.genome && params.germlineResource ? params.genomes[params.genome].germlineResourceIndex ?: null : null
 params.intervals = params.genome && !('annotate' in step) ? params.genomes[params.genome].intervals ?: null : null
 params.knownIndels = params.genome && 'mapping' in step ? params.genomes[params.genome].knownIndels ?: null : null
-params.knownIndelsIndex = params.genome ? params.genomes[params.genome].knownIndelsIndex ?: null : null
-params.snpeffDb = params.genome ? params.genomes[params.genome].snpeffDb ?: null : null
-params.vepCacheVersion = params.genome ? params.genomes[params.genome].vepCacheVersion ?: null : null
-
-// PON optionnal file for GATK Mutect2 Panel of Normal
-params.pon = false
-
-// TargetBED optionnal file for targeted sequencing
-params.targetBED = false
-
-// Optionnal CADD files
-params.cadd_InDels = false
-params.cadd_InDels_tbi = false
-params.cadd_WG_SNVs = false
-params.cadd_WG_SNVs_tbi = false
-
-// Optionnal directories for cache
-params.snpEff_cache = null
-params.vep_cache = null
+params.knownIndelsIndex = params.genome && params.knownIndels ? params.genomes[params.genome].knownIndelsIndex ?: null : null
+params.snpeffDb = params.genome && 'snpeff' in tools ? params.genomes[params.genome].snpeffDb ?: null : null
+params.vepCacheVersion = params.genome && 'vep' in tools ? params.genomes[params.genome].vepCacheVersion ?: null : null
 
 // Handle deprecation
 if (params.noReports) skipQC = skipQClist
@@ -310,17 +238,17 @@ ch_fastaFai = params.fastaFai && !('annotate' in step) ? Channel.value(file(para
 ch_germlineResource = params.germlineResource && 'mutect2' in tools ? Channel.value(file(params.germlineResource)) : "null"
 ch_intervals = params.intervals && !('annotate' in step) ? Channel.value(file(params.intervals)) : "null"
 
-// knownIndels is currently a list of file, so transform it in a channel
+// knownIndels is currently a list of file for smallGRCh37, so transform it in a channel
 li_knownIndels = []
 if (params.knownIndels && ('mapping' in step)) params.knownIndels.each { li_knownIndels.add(file(it)) }
-ch_knownIndels = params.knownIndels ? Channel.value(li_knownIndels.collect()) : "null"
+ch_knownIndels = params.knownIndels && params.genome == 'smallGRCh37' ? Channel.value(li_knownIndels.collect()) : params.knownIndels ? Channel.value(file(params.knownIndels)) : "null"
 
 ch_snpEff_cache = params.snpEff_cache ? Channel.value(file(params.snpEff_cache)) : "null"
 ch_snpeffDb = params.snpeffDb ? Channel.value(params.snpeffDb) : "null"
 ch_vepCacheVersion = params.vepCacheVersion ? Channel.value(params.vepCacheVersion) : "null"
 ch_vep_cache = params.vep_cache ? Channel.value(file(params.vep_cache)) : "null"
 
-// Optionnal files, not defined within the params.genomes[params.genome] scope
+// Optional files, not defined within the params.genomes[params.genome] scope
 ch_cadd_InDels = params.cadd_InDels ? Channel.value(file(params.cadd_InDels)) : "null"
 ch_cadd_InDels_tbi = params.cadd_InDels_tbi ? Channel.value(file(params.cadd_InDels_tbi)) : "null"
 ch_cadd_WG_SNVs = params.cadd_WG_SNVs ? Channel.value(file(params.cadd_WG_SNVs)) : "null"
@@ -346,10 +274,12 @@ if (params.targetBED)           summary['Target BED']        = params.targetBED
 if (params.step)                summary['Step']              = params.step
 if (params.tools)               summary['Tools']             = tools.join(', ')
 if (params.skipQC)              summary['QC tools skip']     = skipQC.join(', ')
-summary['GVCF']              = params.noGVCF ? 'No' : 'Yes'
-summary['Strelka BP']        = params.noStrelkaBP ? 'No' : 'Yes'
-if (params.sequencing_center)   summary['Sequenced by']      = params.sequencing_center
-if (params.pon)                 summary['Panel of normals']  = params.pon
+
+if ('haplotypecaller' in tools)              summary['GVCF']              = params.noGVCF ? 'No' : 'Yes'
+if ('strelka' in tools && 'manta' in tools ) summary['Strelka BP']        = params.noStrelkaBP ? 'No' : 'Yes'
+if (params.sequencing_center)                summary['Sequenced by']      = params.sequencing_center
+if (params.pon && 'mutect2' in tools)        summary['Panel of normals']  = params.pon
+
 summary['Save Genome Index'] = params.saveGenomeIndex ? 'Yes' : 'No'
 summary['Nucleotides/s']     = params.nucleotidesPerSecond
 summary['Output dir']        = params.outdir
@@ -357,18 +287,25 @@ summary['Launch dir']        = workflow.launchDir
 summary['Working dir']       = workflow.workDir
 summary['Script dir']        = workflow.projectDir
 summary['User']              = workflow.userName
+summary['genome']            = params.genome
 
-if (params.acLoci)              summary['acLoci']            = params.acLoci
-if (params.acLociGC)            summary['acLociGC']          = params.acLociGC
-if (params.chrDir)              summary['chrDir']            = params.chrDir
-if (params.chrLength)           summary['chrLength']         = params.chrLength
-if (params.dbsnp)               summary['dbsnp']             = params.dbsnp
-if (params.fasta)               summary['fasta']             = params.fasta
-if (params.germlineResource)    summary['germlineResource']  = params.germlineResource
-if (params.intervals)           summary['intervals']         = params.intervals
-if (params.knownIndels)         summary['knownIndels']       = params.knownIndels.join(', ')
-if (params.snpeffDb)            summary['snpeffDb']          = params.snpeffDb
-if (params.vepCacheVersion)     summary['vepCacheVersion']   = params.vepCacheVersion
+if (params.fasta)                 summary['fasta']                 = params.fasta
+if (params.fastaFai)              summary['fastaFai']              = params.fastaFai
+if (params.dict)                  summary['dict']                  = params.dict
+if (params.bwaIndex)              summary['bwaIndex']              = params.bwaIndex
+if (params.germlineResource)      summary['germlineResource']      = params.germlineResource
+if (params.germlineResourceIndex) summary['germlineResourceIndex'] = params.germlineResourceIndex
+if (params.intervals)             summary['intervals']             = params.intervals
+if (params.acLoci)                summary['acLoci']                = params.acLoci
+if (params.acLociGC)              summary['acLociGC']              = params.acLociGC
+if (params.chrDir)                summary['chrDir']                = params.chrDir
+if (params.chrLength)             summary['chrLength']             = params.chrLength
+if (params.dbsnp)                 summary['dbsnp']                 = params.dbsnp
+if (params.dbsnpIndex)            summary['dbsnpIndex']            = params.dbsnpIndex
+if (params.knownIndels)           summary['knownIndels']           = params.knownIndels
+if (params.knownIndelsIndex)      summary['knownIndelsIndex']      = params.knownIndelsIndex
+if (params.snpeffDb)              summary['snpeffDb']              = params.snpeffDb
+if (params.vepCacheVersion)       summary['vepCacheVersion']       = params.vepCacheVersion
 
 if (workflow.profile == 'awsbatch') {
     summary['AWS Region']        = params.awsregion
@@ -664,19 +601,19 @@ process FastQCFQ {
 
     tag {idPatient + "-" + idRun}
 
-    publishDir "${params.outdir}/Reports/${idSample}/FastQC/${idRun}", mode: params.publishDirMode
+    publishDir "${params.outdir}/Reports/${idSample}/FastQC/${idSample}_${idRun}", mode: params.publishDirMode
 
     input:
-        set idPatient, idSample, idRun, file("${idRun}_R1.fastq.gz"), file("${idRun}_R2.fastq.gz") from inputPairReadsFastQC
+        set idPatient, idSample, idRun, file("${idSample}_${idRun}_R1.fastq.gz"), file("${idSample}_${idRun}_R2.fastq.gz") from inputPairReadsFastQC
 
     output:
-        file "*_fastqc.{zip,html}" into fastQCFQReport
+        file("*.{html,zip}") into fastQCFQReport
 
     when: step == 'mapping' && !('fastqc' in skipQC)
     
     script:
     """
-    fastqc -t 2 -q ${idRun}_R1.fastq.gz ${idRun}_R2.fastq.gz
+    fastqc -t 2 -q ${idSample}_${idRun}_R1.fastq.gz ${idSample}_${idRun}_R2.fastq.gz
     """
 }
 
@@ -685,19 +622,19 @@ process FastQCBAM {
 
     tag {idPatient + "-" + idRun}
 
-    publishDir "${params.outdir}/Reports/${idSample}/FastQC/${idRun}", mode: params.publishDirMode
+    publishDir "${params.outdir}/Reports/${idSample}/FastQC/${idSample}_${idRun}", mode: params.publishDirMode
 
     input:
-        set idPatient, idSample, idRun, file("${idRun}.bam") from inputBAMFastQC
+        set idPatient, idSample, idRun, file("${idSample}_${idRun}.bam") from inputBAMFastQC
 
     output:
-        file "*_fastqc.{zip,html}" into fastQCBAMReport
+        file("*.{html,zip}") into fastQCBAMReport
 
     when: step == 'mapping' && !('fastqc' in skipQC)
 
     script:
     """
-    fastqc -t 2 -q "${idRun}.bam"
+    fastqc -t 2 -q ${idSample}_${idRun}.bam
     """
 }
 
@@ -718,8 +655,8 @@ process MapReads {
         file(fasta) from ch_fasta
 
     output:
-        set idPatient, idSample, idRun, file("${idRun}.bam") into bamMapped
-        set idPatient, idSample, file("${idRun}.bam") into bamMappedBamQC
+        set idPatient, idSample, idRun, file("${idSample}_${idRun}.bam") into bamMapped
+        set idPatient, idSample, file("${idSample}_${idRun}.bam") into bamMappedBamQC
 
     when: step == 'mapping'
 
@@ -740,7 +677,7 @@ process MapReads {
         ${convertToFastq}
         bwa mem -K 100000000 -R \"${readGroup}\" ${extra} -t ${task.cpus} -M ${fasta} \
         ${input} | \
-        samtools sort --threads ${task.cpus} -m 2G - > ${idRun}.bam
+        samtools sort --threads ${task.cpus} -m 2G - > ${idSample}_${idRun}.bam
     """
 }
 
@@ -828,6 +765,8 @@ markDuplicatesReport = markDuplicatesReport.dump(tag:'MD Report')
 (bamMD, bamMDToJoin) = duplicateMarkedBams.into(2)
 bamBaseRecalibrator = bamMD.combine(intBaseRecalibrator)
 
+bamBaseRecalibrator = bamBaseRecalibrator.dump(tag:'BAM FOR BASERECALIBRATOR')
+
 // STEP 3: CREATING RECALIBRATION TABLES
 
 process BaseRecalibrator {
@@ -840,8 +779,8 @@ process BaseRecalibrator {
         set idPatient, idSample, file(bam), file(bai), file(intervalBed) from bamBaseRecalibrator
         file(dbsnp) from ch_dbsnp
         file(dbsnpIndex) from ch_dbsnpIndex
-        file(dict) from ch_dict
         file(fasta) from ch_fasta
+        file(dict) from ch_dict
         file(fastaFai) from ch_fastaFai
         file(knownIndels) from ch_knownIndels
         file(knownIndelsIndex) from ch_knownIndelsIndex
@@ -2431,24 +2370,19 @@ compressVCFOutVEP = compressVCFOutVEP.dump(tag:'VCF')
 
 // STEP MULTIQC
 
-multiQCReport = Channel.empty()
-    .mix(
-        bamQCReport,
-        bcftoolsReport,
-        fastQCReport,
-        markDuplicatesReport,
-        samtoolsStatsReport,
-        snpeffReport,
-        vcftoolsReport
-    ).collect()
-
 process MultiQC {
     publishDir "${params.outdir}/Reports/MultiQC", mode: params.publishDirMode
 
     input:
         file (multiqcConfig) from Channel.value(params.multiqc_config ? file(params.multiqc_config) : "")
-        file (reports) from multiQCReport
         file (versions) from yamlSoftwareVersion
+        file ('bamQC/*') from bamQCReport.collect().ifEmpty([])
+        file ('BCFToolsStats/*') from bcftoolsReport.collect().ifEmpty([])
+        file ('FastQC/*') from fastQCReport.collect().ifEmpty([])
+        file ('MarkDuplicates/*') from markDuplicatesReport.collect().ifEmpty([])
+        file ('SamToolsStats/*') from samtoolsStatsReport.collect().ifEmpty([])
+        file ('snpEff/*') from snpeffReport.collect().ifEmpty([])
+        file ('VCFTools/*') from vcftoolsReport.collect().ifEmpty([])
 
     output:
         set file("*multiqc_report.html"), file("*multiqc_data") into multiQCOut
@@ -2553,7 +2487,7 @@ workflow.onComplete {
     c_green  = params.monochrome_logs ? '' : "\033[0;32m";
     c_purple = params.monochrome_logs ? '' : "\033[0;35m";
 
-    if (workflow.stats.ignoredCountFmt > 0 && workflow.success) {
+    if (workflow.stats.ignoredCount > 0 && workflow.success) {
         log.info "${c_purple}Warning, pipeline completed, but with errored process(es)${c_reset}"
         log.info "${c_red}Number of ignored errored process(es) : ${workflow.stats.ignoredCountFmt}${c_reset}"
         log.info "${c_green}Number of successfully ran process(es) : ${workflow.stats.succeedCountFmt}${c_reset}"
