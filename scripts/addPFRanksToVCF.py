@@ -71,7 +71,7 @@ class addPFRanksToVCF:
     ann = ";RankScore=" + str(self.family_id) + ":" + str(rank)
     for c in cols:
       line = line + c
-      if cols.index(c) == 8:
+      if cols.index(c) == 7:  # 0-based index
         line = line + ann
       if cols.index(c) < len(cols):
         line = line + "\t"
@@ -91,7 +91,6 @@ class addPFRanksToVCF:
 
 # This is the surrogate for main(): everything happens here
 def annotateVCF(vcf,csv,family):
-  print("Processing file {}\n\treading ranks from {} ".format(vcf,csv))
   ranker = addPFRanksToVCF(family)
 
   # make a dict with coords and ranks
