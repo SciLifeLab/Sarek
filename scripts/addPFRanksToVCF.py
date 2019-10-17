@@ -57,6 +57,7 @@ class addPFRanksToVCF:
     for line in vcffile:
       if self.chrom_line.match(line):
         print("##INFO=<ID=RankScore,Number=.,Type=String,Description=\"The (somatic) rank score for this variant calculated by https://github.com/NBISweden/pathfindr. family_id:rank_score.\">")
+        line = line.replace("NORMAL",str(self.family_id))
         print(line,end="")
         return
       if self.header_line.match(line):
@@ -84,20 +85,19 @@ class addPFRanksToVCF:
     self.start_idx = cols.index("start")
 
 
+# This is the surrogate for main(): everything happens here
+
 @click.command(context_settings = dict( help_option_names = ['-h', '--help'] ))
 @click.option('--vcf',      '-v', type=str, help='VCF file to annotate', required=True)
 @click.option('--csv',      '-c', type=str, help='CSV file with ranked scores', required=True)
 @click.option('--family',   '-f', type=str, help='family ID as expected in scout yaml file (usually sample name of the normal)', required=True)
 
-# This is the surrogate for main(): everything happens here
 def annotateVCF(vcf,csv,family):
   ranker = addPFRanksToVCF(family)
 
   # make a dict with coords and ranks
   ranker.readRanks(csv)
   ranker.printVCF(vcf)
-
-
 
 if __name__ == "__main__":
   annotateVCF()

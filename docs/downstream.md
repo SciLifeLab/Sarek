@@ -72,6 +72,40 @@ parameter is the name of the normal sample in the VCF file. MuTect2 (GATK versio
 ```
 
 not showing sample names, only the `TUMOR` and `NORMAL` columns. For Scout, the `NORMAL` part has to be altered to
-reflect actual sample name: this sample name will be also used in the RankScore annotation. 
+reflect actual sample name: this sample name will be also used in the RankScore annotation. By providing the something
+like `-f ThisIsIt` , the header line will be 
+
+```
+#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  TUMOR  ThisIsIt 
+```
+
+and annotations will be like `RankScore=ThisIsIt:7` . The `.yaml` file for Scout to load the case has to be prepared in
+a way, that the `family` entry and the `sample_id` in the `samples:` sections also contain this key. Example:
+
+```
+---
+
+owner:  BTB
+human_genome_build: 38
+# family has to be the same as the NORMAL column in the VCF
+# also have to be the same as the sample_id
+family: 'ScoreTest'
+# family name will appear in the Scout table
+family_name: 'Mutect2Testing'
+samples:
+  - analysis_type: wgs
+    sample_id: ScoreTest
+    tumor_type: medulloblastoma
+    phenotype: affected
+    father: 0
+    mother: 0
+    expected_coverage: 90
+    sex: male
+
+# This VCF contains the RankScore annotations already  
+vcf_cancer: testM2.vcf
+
+```
+
 
 
